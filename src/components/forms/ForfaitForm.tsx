@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Forfait, Soin } from '../../types';
+import { Forfait, Soin, Product } from '../../types';
 import { X, Save, Plus, Minus, Calculator } from 'lucide-react';
 import { soinService } from '../../services/soinService';
 import { forfaitService } from '../../services/forfaitService';
+import { productService } from '../../services/productService';
 
 interface ForfaitFormProps {
   forfait?: Forfait;
@@ -24,12 +25,13 @@ const ForfaitForm: React.FC<ForfaitFormProps> = ({ forfait, onSave, onCancel }) 
   });
 
   const [availableSoins, setAvailableSoins] = useState<Soin[]>([]);
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [selectedSoins, setSelectedSoins] = useState<Array<{soin: Soin, quantity: number}>>([]);
   const [loading, setLoading] = useState(true);
   const [calculatedTotal, setCalculatedTotal] = useState(0);
 
   useEffect(() => {
-    loadSoins();
+    loadInitialData();
   }, []);
 
   useEffect(() => {
@@ -55,16 +57,47 @@ const ForfaitForm: React.FC<ForfaitFormProps> = ({ forfait, onSave, onCancel }) 
     }
   }, [selectedSoins]);
 
-  const loadSoins = async () => {
+  const loadInitialData = async () => {
     try {
       setLoading(true);
-      const soins = await soinService.getAllActive();
+      const [soins, products] = await Promise.all([
+        soinService.getAllActive(),
+        productService.getAll()
+      ]);
       setAvailableSoins(soins);
+      setAllProducts(products);
     } catch (error) {
-      console.error('Erreur lors du chargement des soins:', error);
+      console.error('Erreur lors du chargement des données:', error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const calculateConsumablesCost = (): number => {
+    return selectedSoins.reduce((totalCost, item) => {
+      const { soin, quantity } = item;
+      
+      // Calculer le coût des consommables pour ce soin
+      const soinConsumablesCost = (soin.expectedConsumables || []).reduce((soinCost, consumable) => {
+        const product = allProducts.find(p => p.id === consumable.productId);
+        if (product) {
+          return soinCost + (product.unitPrice * consumable.quantity);
+        }
+        return soinCost;
+      }, 0);
+      
+      return totalCost + (soinConsumablesCost * quantity);
+    }, 0);
+  };
+
+  const calculateMargin = () => {
+    const consumablesCost = calculateConsumablesCost();
+    const margin = formData.prixReduit - consumablesCost;
+    const marginPercentage = formData.prixReduit > 0 
+      ? Math.round((margin / formData.prixReduit) * 100)
+      : 0;
+    
+    return { margin, marginPercentage };
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -117,6 +150,8 @@ const ForfaitForm: React.FC<ForfaitFormProps> = ({ forfait, onSave, onCancel }) 
     }
     return 0;
   };
+
+  const consumablesCost = calculateConsumablesCost();
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
