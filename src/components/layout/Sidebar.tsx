@@ -8,7 +8,8 @@ import {
   TrendingUp, 
   Package,
   Gift,
-  DollarSign
+  DollarSign,
+  Settings
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -21,6 +22,7 @@ const menuItems = [
   { id: 'patients', label: 'Patients', icon: Users },
   { id: 'treatments', label: 'Catalogue Soins', icon: Stethoscope },
   { id: 'pricelist', label: 'Liste des Prix', icon: DollarSign },
+  { id: 'pricing-consumables', label: 'Tarifs & Consommables', icon: Settings },
   { id: 'appointments', label: 'Rendez-vous', icon: Calendar },
   { id: 'invoices', label: 'Facturation', icon: FileText },
   { id: 'forfaits', label: 'Forfaits', icon: Gift },

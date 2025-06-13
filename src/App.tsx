@@ -12,6 +12,7 @@ import Invoices from './components/modules/Invoices';
 import Analytics from './components/modules/Analytics';
 import Inventory from './components/modules/Inventory';
 import ForfaitManagement from './components/modules/ForfaitManagement';
+import PricingAndConsumables from './components/modules/PricingAndConsumables';
 import { Forfait } from './types';
 
 function App() {
@@ -55,6 +56,8 @@ function App() {
         return <TreatmentCatalog onForfaitSelect={handleForfaitSelection} />;
       case 'pricelist':
         return <PriceList />;
+      case 'pricing-consumables':
+        return <PricingAndConsumables />;
       case 'appointments':
         return <Appointments />;
       case 'invoices':

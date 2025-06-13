@@ -216,7 +216,10 @@ export const soinService = {
       
       const { data, error } = await supabase
         .from('soins')
-        .insert([dbSoin])
+        .insert([{
+          ...dbSoin,
+          last_modified_by: (await supabase.auth.getUser()).data.user?.id
+        }])
         .select(`
           *,
           appareils (*),
@@ -243,7 +246,10 @@ export const soinService = {
       
       const { data, error } = await supabase
         .from('soins')
-        .update(dbSoin)
+        .update({
+          ...dbSoin,
+          last_modified_by: (await supabase.auth.getUser()).data.user?.id
+        })
         .eq('id', id)
         .select(`
           *,

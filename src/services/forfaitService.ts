@@ -153,7 +153,10 @@ export const forfaitService = {
       
       const { data, error } = await supabase
         .from('forfaits')
-        .insert([dbForfait])
+        .insert([{
+          ...dbForfait,
+          last_modified_by: (await supabase.auth.getUser()).data.user?.id
+        }])
         .select()
         .single();
 
@@ -176,7 +179,10 @@ export const forfaitService = {
       
       const { data, error } = await supabase
         .from('forfaits')
-        .update(dbForfait)
+        .update({
+          ...dbForfait,
+          last_modified_by: (await supabase.auth.getUser()).data.user?.id
+        })
         .eq('id', id)
         .select()
         .single();

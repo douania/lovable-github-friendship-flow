@@ -41,6 +41,11 @@ const SoinForm: React.FC<SoinFormProps> = ({ soin, appareilId, zoneId, onSave, o
   }, []);
 
   useEffect(() => {
+    if (soin && soin.expectedConsumables) {
+      setSelectedExpectedConsumables(soin.expectedConsumables);
+    }
+  }, [soin]);
+  useEffect(() => {
     if (formData.appareilId) {
       loadZones(formData.appareilId);
     }
@@ -118,6 +123,7 @@ const SoinForm: React.FC<SoinFormProps> = ({ soin, appareilId, zoneId, onSave, o
     e.preventDefault();
     onSave({
       ...formData,
+      expectedConsumables: selectedExpectedConsumables,
       createdAt: soin?.createdAt || new Date().toISOString()
     });
   };
@@ -374,6 +380,16 @@ const SoinForm: React.FC<SoinFormProps> = ({ soin, appareilId, zoneId, onSave, o
                     <div className="flex-1">
                       <p className="font-medium text-gray-800">{getProductName(item.productId)}</p>
                       <p className="text-sm text-gray-600">Unité: {getProductUnit(item.productId)}</p>
+                      {(() => {
+                        const product = allProducts.find(p => p.id === item.productId);
+                        const isLowStock = product && product.quantity < item.quantity;
+                        return isLowStock && (
+                          <div className="flex items-center space-x-1 text-orange-600 mt-1">
+                            <AlertTriangle className="w-3 h-3" />
+                            <span className="text-xs">Stock insuffisant ({product.quantity} disponible)</span>
+                          </div>
+                        );
+                      })()}
                     </div>
                     <div className="flex items-center space-x-2">
                       <button
