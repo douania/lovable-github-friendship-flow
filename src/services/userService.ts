@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase';
 export interface UserRole {
   id: string;
   userId: string;
-  role: 'admin' | 'praticien' | 'staff';
+  role: 'admin' | 'praticien' | 'staff' | 'user';
   createdAt: string;
 }
 
@@ -75,7 +75,7 @@ export const userService = {
   },
 
   // Update user role (admin only)
-  async updateUserRole(userId: string, role: 'admin' | 'praticien' | 'staff'): Promise<UserRole> {
+  async updateUserRole(userId: string, role: 'admin' | 'praticien' | 'staff' | 'user'): Promise<UserRole> {
     try {
       const { data, error } = await supabase
         .from('user_roles')
@@ -97,7 +97,7 @@ export const userService = {
   },
 
   // Create user role (usually handled automatically by trigger)
-  async createUserRole(userId: string, role: 'admin' | 'praticien' | 'staff' = 'praticien'): Promise<UserRole> {
+  async createUserRole(userId: string, role: 'admin' | 'praticien' | 'staff' | 'user' = 'user'): Promise<UserRole> {
     try {
       const { data, error } = await supabase
         .from('user_roles')
