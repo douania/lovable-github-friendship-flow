@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
+import { userService } from '../services/userService';
 
 interface UserWithRole extends User {
   role?: string;
@@ -48,21 +49,17 @@ export const useAuth = () => {
 
   const getUserWithRole = async (user: User): Promise<UserWithRole> => {
     try {
-      const { data: roleData } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', user.id)
-        .maybeSingle();
+      const role = await userService.getCurrentUserRole();
       
       return {
         ...user,
-        role: roleData?.role || 'praticien' // Default role
+        role: role || 'praticien'
       };
     } catch (error) {
       console.error('Erreur lors de la récupération du rôle:', error);
       return {
         ...user,
-        role: 'praticien' // Default role in case of error
+        role: 'praticien'
       };
     }
   };
