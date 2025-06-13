@@ -58,6 +58,18 @@ const SoinForm: React.FC<SoinFormProps> = ({ soin, appareilId, zoneId, onSave, o
     }
   };
 
+  const loadProducts = async () => {
+    try {
+      setLoadingProducts(true);
+      const data = await productService.getAll();
+      setAllProducts(data);
+    } catch (error) {
+      console.error('Erreur lors du chargement des produits:', error);
+    } finally {
+      setLoadingProducts(false);
+    }
+  };
+
   const loadZones = async (appareilId: string) => {
     try {
       const data = await soinService.getZonesByAppareil(appareilId);
@@ -65,6 +77,41 @@ const SoinForm: React.FC<SoinFormProps> = ({ soin, appareilId, zoneId, onSave, o
     } catch (error) {
       console.error('Erreur lors du chargement des zones:', error);
     }
+  };
+
+  const addExpectedConsumable = (productId: string, quantity: number) => {
+    const existingIndex = selectedExpectedConsumables.findIndex(item => item.productId === productId);
+    if (existingIndex >= 0) {
+      updateExpectedConsumableQuantity(productId, selectedExpectedConsumables[existingIndex].quantity + quantity);
+    } else {
+      setSelectedExpectedConsumables(prev => [...prev, { productId, quantity }]);
+    }
+  };
+
+  const updateExpectedConsumableQuantity = (productId: string, newQuantity: number) => {
+    if (newQuantity <= 0) {
+      removeExpectedConsumable(productId);
+    } else {
+      setSelectedExpectedConsumables(prev =>
+        prev.map(item =>
+          item.productId === productId ? { ...item, quantity: newQuantity } : item
+        )
+      );
+    }
+  };
+
+  const removeExpectedConsumable = (productId: string) => {
+    setSelectedExpectedConsumables(prev => prev.filter(item => item.productId !== productId));
+  };
+
+  const getProductName = (productId: string) => {
+    const product = allProducts.find(p => p.id === productId);
+    return product ? product.name : 'Produit inconnu';
+  };
+
+  const getProductUnit = (productId: string) => {
+    const product = allProducts.find(p => p.id === productId);
+    return product ? (product.unit || 'unité') : 'unité';
   };
 
   const handleSubmit = (e: React.FormEvent) => {
