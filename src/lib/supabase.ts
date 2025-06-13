@@ -392,6 +392,9 @@ export interface Database {
           zone_id: string | null;
           duree: number;
           prix: number;
+          contre_indications: string[];
+          conseils_post_traitement: string[];
+          expected_consumables: any;
           is_active: boolean;
           ordre: number;
           created_at: string;
@@ -404,6 +407,9 @@ export interface Database {
           zone_id?: string | null;
           duree?: number;
           prix?: number;
+          contre_indications?: string[];
+          conseils_post_traitement?: string[];
+          expected_consumables?: any;
           is_active?: boolean;
           ordre?: number;
           created_at?: string;
@@ -416,6 +422,9 @@ export interface Database {
           zone_id?: string | null;
           duree?: number;
           prix?: number;
+          contre_indications?: string[];
+          conseils_post_traitement?: string[];
+          expected_consumables?: any;
           is_active?: boolean;
           ordre?: number;
           created_at?: string;
