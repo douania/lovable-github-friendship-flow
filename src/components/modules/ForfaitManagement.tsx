@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, Edit, Eye, Trash2, Package, DollarSign, Calendar, Star } from 'lucide-react';
+import { Search, Plus, Edit, Eye, Trash2, Package, DollarSign, Calendar, Star, X } from 'lucide-react';
 import { Forfait } from '../../types';
 import { forfaitService } from '../../services/forfaitService';
 import ForfaitForm from '../forms/ForfaitForm';
