@@ -1,5 +1,4 @@
 
-import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import SoinsCatalog from './SoinsCatalog';
 import ForfaitsCatalog from './ForfaitsCatalog';
