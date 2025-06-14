@@ -17,20 +17,20 @@ export const consultationService = {
     return data?.map(consultation => ({
       id: consultation.id,
       patientId: consultation.patient_id,
-      appointmentId: consultation.appointment_id,
-      soinId: consultation.soin_id,
-      practitionerId: consultation.practitioner_id,
+      appointmentId: consultation.appointment_id || undefined,
+      soinId: consultation.soin_id || '',
+      practitionerId: consultation.practitioner_id || '',
       consultationDate: consultation.consultation_date,
       notesPreTreatment: consultation.notes_pre_treatment || '',
       notesPostTreatment: consultation.notes_post_treatment || '',
       photosBefore: consultation.photos_before || [],
       photosAfter: consultation.photos_after || [],
       sideEffects: consultation.side_effects || '',
-      nextAppointmentRecommended: consultation.next_appointment_recommended,
+      nextAppointmentRecommended: consultation.next_appointment_recommended || undefined,
       consentSigned: consultation.consent_signed || false,
-      satisfactionRating: consultation.satisfaction_rating,
+      satisfactionRating: consultation.satisfaction_rating || undefined,
       createdAt: consultation.created_at,
-      updatedAt: consultation.updated_at
+      updatedAt: consultation.updated_at || ''
     })) || [];
   },
 
@@ -49,20 +49,20 @@ export const consultationService = {
     return data?.map(consultation => ({
       id: consultation.id,
       patientId: consultation.patient_id,
-      appointmentId: consultation.appointment_id,
-      soinId: consultation.soin_id,
-      practitionerId: consultation.practitioner_id,
+      appointmentId: consultation.appointment_id || undefined,
+      soinId: consultation.soin_id || '',
+      practitionerId: consultation.practitioner_id || '',
       consultationDate: consultation.consultation_date,
       notesPreTreatment: consultation.notes_pre_treatment || '',
       notesPostTreatment: consultation.notes_post_treatment || '',
       photosBefore: consultation.photos_before || [],
       photosAfter: consultation.photos_after || [],
       sideEffects: consultation.side_effects || '',
-      nextAppointmentRecommended: consultation.next_appointment_recommended,
+      nextAppointmentRecommended: consultation.next_appointment_recommended || undefined,
       consentSigned: consultation.consent_signed || false,
-      satisfactionRating: consultation.satisfaction_rating,
+      satisfactionRating: consultation.satisfaction_rating || undefined,
       createdAt: consultation.created_at,
-      updatedAt: consultation.updated_at
+      updatedAt: consultation.updated_at || ''
     })) || [];
   },
 
@@ -71,7 +71,7 @@ export const consultationService = {
       .from('consultations')
       .insert({
         patient_id: consultationData.patientId,
-        appointment_id: consultationData.appointmentId,
+        appointment_id: consultationData.appointmentId || null,
         soin_id: consultationData.soinId,
         practitioner_id: consultationData.practitionerId,
         consultation_date: consultationData.consultationDate,
@@ -80,9 +80,9 @@ export const consultationService = {
         photos_before: consultationData.photosBefore,
         photos_after: consultationData.photosAfter,
         side_effects: consultationData.sideEffects,
-        next_appointment_recommended: consultationData.nextAppointmentRecommended,
+        next_appointment_recommended: consultationData.nextAppointmentRecommended || null,
         consent_signed: consultationData.consentSigned,
-        satisfaction_rating: consultationData.satisfactionRating
+        satisfaction_rating: consultationData.satisfactionRating || null
       })
       .select()
       .single();
@@ -97,20 +97,20 @@ export const consultationService = {
     return {
       id: data.id,
       patientId: data.patient_id,
-      appointmentId: data.appointment_id,
-      soinId: data.soin_id,
-      practitionerId: data.practitioner_id,
+      appointmentId: data.appointment_id || undefined,
+      soinId: data.soin_id || '',
+      practitionerId: data.practitioner_id || '',
       consultationDate: data.consultation_date,
       notesPreTreatment: data.notes_pre_treatment || '',
       notesPostTreatment: data.notes_post_treatment || '',
       photosBefore: data.photos_before || [],
       photosAfter: data.photos_after || [],
       sideEffects: data.side_effects || '',
-      nextAppointmentRecommended: data.next_appointment_recommended,
+      nextAppointmentRecommended: data.next_appointment_recommended || undefined,
       consentSigned: data.consent_signed || false,
-      satisfactionRating: data.satisfaction_rating,
+      satisfactionRating: data.satisfaction_rating || undefined,
       createdAt: data.created_at,
-      updatedAt: data.updated_at
+      updatedAt: data.updated_at || ''
     };
   },
 
@@ -118,7 +118,7 @@ export const consultationService = {
     const updateData: any = {};
     
     if (consultationData.patientId) updateData.patient_id = consultationData.patientId;
-    if (consultationData.appointmentId) updateData.appointment_id = consultationData.appointmentId;
+    if (consultationData.appointmentId !== undefined) updateData.appointment_id = consultationData.appointmentId || null;
     if (consultationData.soinId) updateData.soin_id = consultationData.soinId;
     if (consultationData.practitionerId) updateData.practitioner_id = consultationData.practitionerId;
     if (consultationData.consultationDate) updateData.consultation_date = consultationData.consultationDate;
@@ -127,9 +127,9 @@ export const consultationService = {
     if (consultationData.photosBefore) updateData.photos_before = consultationData.photosBefore;
     if (consultationData.photosAfter) updateData.photos_after = consultationData.photosAfter;
     if (consultationData.sideEffects !== undefined) updateData.side_effects = consultationData.sideEffects;
-    if (consultationData.nextAppointmentRecommended) updateData.next_appointment_recommended = consultationData.nextAppointmentRecommended;
+    if (consultationData.nextAppointmentRecommended !== undefined) updateData.next_appointment_recommended = consultationData.nextAppointmentRecommended || null;
     if (consultationData.consentSigned !== undefined) updateData.consent_signed = consultationData.consentSigned;
-    if (consultationData.satisfactionRating !== undefined) updateData.satisfaction_rating = consultationData.satisfactionRating;
+    if (consultationData.satisfactionRating !== undefined) updateData.satisfaction_rating = consultationData.satisfactionRating || null;
 
     const { data, error } = await supabase
       .from('consultations')
@@ -148,20 +148,20 @@ export const consultationService = {
     return {
       id: data.id,
       patientId: data.patient_id,
-      appointmentId: data.appointment_id,
-      soinId: data.soin_id,
-      practitionerId: data.practitioner_id,
+      appointmentId: data.appointment_id || undefined,
+      soinId: data.soin_id || '',
+      practitionerId: data.practitioner_id || '',
       consultationDate: data.consultation_date,
       notesPreTreatment: data.notes_pre_treatment || '',
       notesPostTreatment: data.notes_post_treatment || '',
       photosBefore: data.photos_before || [],
       photosAfter: data.photos_after || [],
       sideEffects: data.side_effects || '',
-      nextAppointmentRecommended: data.next_appointment_recommended,
+      nextAppointmentRecommended: data.next_appointment_recommended || undefined,
       consentSigned: data.consent_signed || false,
-      satisfactionRating: data.satisfaction_rating,
+      satisfactionRating: data.satisfaction_rating || undefined,
       createdAt: data.created_at,
-      updatedAt: data.updated_at
+      updatedAt: data.updated_at || ''
     };
   }
 };

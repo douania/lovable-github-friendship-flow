@@ -1,6 +1,5 @@
-
 import { supabase } from '../integrations/supabase/client';
-import { Quote } from '../types/consultation';
+import { Quote, QuoteItem } from '../types/consultation';
 
 export const quoteService = {
   async getAllQuotes(): Promise<Quote[]> {
@@ -18,17 +17,24 @@ export const quoteService = {
       id: quote.id,
       quoteNumber: quote.quote_number,
       patientId: quote.patient_id,
-      practitionerId: quote.practitioner_id,
-      treatmentItems: Array.isArray(quote.treatment_items) ? quote.treatment_items : [],
+      practitionerId: quote.practitioner_id || undefined,
+      treatmentItems: Array.isArray(quote.treatment_items) 
+        ? (quote.treatment_items as any[]).map((item: any) => ({
+            soinId: item.soinId || '',
+            quantity: item.quantity || 0,
+            unitPrice: item.unitPrice || 0,
+            total: item.total || 0
+          }))
+        : [],
       subtotal: quote.subtotal,
       discountAmount: quote.discount_amount || 0,
       taxAmount: quote.tax_amount || 0,
       totalAmount: quote.total_amount,
       status: quote.status as Quote['status'],
-      validUntil: quote.valid_until,
+      validUntil: quote.valid_until || undefined,
       notes: quote.notes || '',
       createdAt: quote.created_at,
-      updatedAt: quote.updated_at
+      updatedAt: quote.updated_at || ''
     })) || [];
   },
 
@@ -38,14 +44,14 @@ export const quoteService = {
       .insert({
         quote_number: quoteData.quoteNumber,
         patient_id: quoteData.patientId,
-        practitioner_id: quoteData.practitionerId,
+        practitioner_id: quoteData.practitionerId || null,
         treatment_items: quoteData.treatmentItems as any,
         subtotal: quoteData.subtotal,
         discount_amount: quoteData.discountAmount,
         tax_amount: quoteData.taxAmount,
         total_amount: quoteData.totalAmount,
         status: quoteData.status,
-        valid_until: quoteData.validUntil,
+        valid_until: quoteData.validUntil || null,
         notes: quoteData.notes
       })
       .select()
@@ -62,17 +68,24 @@ export const quoteService = {
       id: data.id,
       quoteNumber: data.quote_number,
       patientId: data.patient_id,
-      practitionerId: data.practitioner_id,
-      treatmentItems: Array.isArray(data.treatment_items) ? data.treatment_items : [],
+      practitionerId: data.practitioner_id || undefined,
+      treatmentItems: Array.isArray(data.treatment_items) 
+        ? (data.treatment_items as any[]).map((item: any) => ({
+            soinId: item.soinId || '',
+            quantity: item.quantity || 0,
+            unitPrice: item.unitPrice || 0,
+            total: item.total || 0
+          }))
+        : [],
       subtotal: data.subtotal,
       discountAmount: data.discount_amount || 0,
       taxAmount: data.tax_amount || 0,
       totalAmount: data.total_amount,
       status: data.status as Quote['status'],
-      validUntil: data.valid_until,
+      validUntil: data.valid_until || undefined,
       notes: data.notes || '',
       createdAt: data.created_at,
-      updatedAt: data.updated_at
+      updatedAt: data.updated_at || ''
     };
   },
 
@@ -81,14 +94,14 @@ export const quoteService = {
     
     if (quoteData.quoteNumber) updateData.quote_number = quoteData.quoteNumber;
     if (quoteData.patientId) updateData.patient_id = quoteData.patientId;
-    if (quoteData.practitionerId) updateData.practitioner_id = quoteData.practitionerId;
+    if (quoteData.practitionerId !== undefined) updateData.practitioner_id = quoteData.practitionerId || null;
     if (quoteData.treatmentItems) updateData.treatment_items = quoteData.treatmentItems as any;
     if (quoteData.subtotal !== undefined) updateData.subtotal = quoteData.subtotal;
     if (quoteData.discountAmount !== undefined) updateData.discount_amount = quoteData.discountAmount;
     if (quoteData.taxAmount !== undefined) updateData.tax_amount = quoteData.taxAmount;
     if (quoteData.totalAmount !== undefined) updateData.total_amount = quoteData.totalAmount;
     if (quoteData.status) updateData.status = quoteData.status;
-    if (quoteData.validUntil) updateData.valid_until = quoteData.validUntil;
+    if (quoteData.validUntil !== undefined) updateData.valid_until = quoteData.validUntil || null;
     if (quoteData.notes !== undefined) updateData.notes = quoteData.notes;
 
     const { data, error } = await supabase
@@ -109,17 +122,24 @@ export const quoteService = {
       id: data.id,
       quoteNumber: data.quote_number,
       patientId: data.patient_id,
-      practitionerId: data.practitioner_id,
-      treatmentItems: Array.isArray(data.treatment_items) ? data.treatment_items : [],
+      practitionerId: data.practitioner_id || undefined,
+      treatmentItems: Array.isArray(data.treatment_items) 
+        ? (data.treatment_items as any[]).map((item: any) => ({
+            soinId: item.soinId || '',
+            quantity: item.quantity || 0,
+            unitPrice: item.unitPrice || 0,
+            total: item.total || 0
+          }))
+        : [],
       subtotal: data.subtotal,
       discountAmount: data.discount_amount || 0,
       taxAmount: data.tax_amount || 0,
       totalAmount: data.total_amount,
       status: data.status as Quote['status'],
-      validUntil: data.valid_until,
+      validUntil: data.valid_until || undefined,
       notes: data.notes || '',
       createdAt: data.created_at,
-      updatedAt: data.updated_at
+      updatedAt: data.updated_at || ''
     };
   },
 
