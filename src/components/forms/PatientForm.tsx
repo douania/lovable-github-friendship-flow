@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Patient } from '../../types';
 
@@ -19,7 +18,7 @@ const PatientForm: React.FC<PatientFormProps> = ({ patient, onSave, onCancel }) 
     medicalHistory: patient?.medicalHistory || '',
     contraindications: patient?.contraindications || [],
     createdAt: patient?.createdAt || new Date().toISOString(),
-    lastVisit: patient?.lastVisit || null
+    lastVisit: patient?.lastVisit || undefined
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -35,6 +34,14 @@ const PatientForm: React.FC<PatientFormProps> = ({ patient, onSave, onCancel }) 
     }));
   };
 
+  const handleContraindicationsChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const contraindications = e.target.value.split(',').map(item => item.trim()).filter(Boolean);
+    setFormData(prev => ({
+      ...prev,
+      contraindications
+    }));
+  };
+  
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -52,12 +59,11 @@ const PatientForm: React.FC<PatientFormProps> = ({ patient, onSave, onCancel }) 
                 type="text"
                 name="firstName"
                 value={formData.firstName}
-                onChange={handleInputChange}
+                onChange={(e) => setFormData(prev => ({ ...prev, firstName: e.target.value }))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
                 required
               />
             </div>
-
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Nom
@@ -66,79 +72,11 @@ const PatientForm: React.FC<PatientFormProps> = ({ patient, onSave, onCancel }) 
                 type="text"
                 name="lastName"
                 value={formData.lastName}
-                onChange={handleInputChange}
+                onChange={(e) => setFormData(prev => ({ ...prev, lastName: e.target.value }))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
                 required
               />
             </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Email
-            </label>
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Téléphone
-            </label>
-            <input
-              type="tel"
-              name="phone"
-              value={formData.phone}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Date de naissance
-            </label>
-            <input
-              type="date"
-              name="dateOfBirth"
-              value={formData.dateOfBirth}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Type de peau
-            </label>
-            <input
-              type="text"
-              name="skinType"
-              value={formData.skinType}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Historique médical
-            </label>
-            <textarea
-              name="medicalHistory"
-              value={formData.medicalHistory}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
-              rows={3}
-            />
           </div>
 
           <div className="flex justify-end space-x-2 pt-4">

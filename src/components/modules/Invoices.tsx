@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Invoice, Patient, Forfait } from '../../types';
 import { invoiceService } from '../../services/invoiceService';
@@ -18,7 +19,7 @@ const Invoices: React.FC<InvoicesProps> = ({ preselectedForfait, onClearPreselec
   const [invoices, setInvoices] = useState<InvoiceWithPatient[]>([]);
   const [patients, setPatients] = useState<Patient[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | undefined>(undefined);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -34,7 +35,7 @@ const Invoices: React.FC<InvoicesProps> = ({ preselectedForfait, onClearPreselec
       const invoicesData = await invoiceService.getAllInvoices();
       // Fetch patient data for each invoice
       const invoicesWithPatient = await Promise.all(
-        invoicesData.map(async (invoice) => {
+        invoicesData.map(async (invoice: Invoice) => {
           const patient = await patientService.getPatientById(invoice.patientId);
           return { ...invoice, patient };
         })
@@ -62,7 +63,7 @@ const Invoices: React.FC<InvoicesProps> = ({ preselectedForfait, onClearPreselec
 
   const closeForm = () => {
     setIsFormOpen(false);
-    setSelectedInvoice(null);
+    setSelectedInvoice(undefined);
   };
 
   const handleEditInvoice = (invoice: Invoice) => {

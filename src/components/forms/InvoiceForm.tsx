@@ -1,6 +1,6 @@
 
-import React, { useState, useEffect } from 'react';
-import { Invoice, Patient, Treatment } from '../../types';
+import React, { useState } from 'react';
+import { Invoice, Patient } from '../../types';
 
 interface InvoiceFormProps {
   invoice?: Invoice;

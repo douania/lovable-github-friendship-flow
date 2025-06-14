@@ -1,37 +1,8 @@
+
 import { supabase } from '../lib/supabase';
 import { Patient } from '../types';
 
-// Fonction pour convertir les données de la DB vers le type Patient
-const mapDbPatientToPatient = (dbPatient: any): Patient => ({
-  id: dbPatient.id,
-  firstName: dbPatient.first_name,
-  lastName: dbPatient.last_name,
-  email: dbPatient.email,
-  phone: dbPatient.phone,
-  dateOfBirth: dbPatient.date_of_birth,
-  skinType: dbPatient.skin_type,
-  medicalHistory: dbPatient.medical_history,
-  contraindications: dbPatient.contraindications || [],
-  createdAt: dbPatient.created_at,
-  lastVisit: dbPatient.last_visit
-});
-
-// Fonction pour convertir le type Patient vers les données de la DB
-const mapPatientToDbPatient = (patient: Omit<Patient, 'id'>) => ({
-  first_name: patient.firstName,
-  last_name: patient.lastName,
-  email: patient.email,
-  phone: patient.phone,
-  date_of_birth: patient.dateOfBirth,
-  skin_type: patient.skinType,
-  medical_history: patient.medicalHistory,
-  contraindications: patient.contraindications,
-  created_at: patient.createdAt,
-  last_visit: patient.lastVisit || null
-});
-
 export const patientService = {
-  // Récupérer tous les patients
   async getAll(): Promise<Patient[]> {
     try {
       const { data, error } = await supabase
@@ -39,19 +10,31 @@ export const patientService = {
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Erreur lors de la récupération des patients:', error);
-        throw error;
-      }
-
-      return data?.map(mapDbPatientToPatient) || [];
+      if (error) throw error;
+      
+      return data?.map(patient => ({
+        id: patient.id,
+        firstName: patient.first_name,
+        lastName: patient.last_name,
+        email: patient.email,
+        phone: patient.phone,
+        dateOfBirth: patient.date_of_birth,
+        skinType: patient.skin_type,
+        medicalHistory: patient.medical_history,
+        contraindications: patient.contraindications,
+        createdAt: patient.created_at,
+        lastVisit: patient.last_visit
+      })) || [];
     } catch (error) {
-      console.error('Erreur dans getAll patients:', error);
+      console.error('Error fetching patients:', error);
       throw error;
     }
   },
 
-  // Récupérer un patient par ID
+  async getAllPatients(): Promise<Patient[]> {
+    return this.getAll();
+  },
+
   async getById(id: string): Promise<Patient | null> {
     try {
       const { data, error } = await supabase
@@ -60,69 +43,112 @@ export const patientService = {
         .eq('id', id)
         .single();
 
-      if (error) {
-        if (error.code === 'PGRST116') {
-          return null; // Patient non trouvé
-        }
-        console.error('Erreur lors de la récupération du patient:', error);
-        throw error;
-      }
-
-      return data ? mapDbPatientToPatient(data) : null;
+      if (error) throw error;
+      
+      if (!data) return null;
+      
+      return {
+        id: data.id,
+        firstName: data.first_name,
+        lastName: data.last_name,
+        email: data.email,
+        phone: data.phone,
+        dateOfBirth: data.date_of_birth,
+        skinType: data.skin_type,
+        medicalHistory: data.medical_history,
+        contraindications: data.contraindications,
+        createdAt: data.created_at,
+        lastVisit: data.last_visit
+      };
     } catch (error) {
-      console.error('Erreur dans getById patient:', error);
+      console.error('Error fetching patient by ID:', error);
       throw error;
     }
   },
 
-  // Créer un nouveau patient
+  async getPatientById(id: string): Promise<Patient | null> {
+    return this.getById(id);
+  },
+
   async create(patientData: Omit<Patient, 'id'>): Promise<Patient> {
     try {
-      const dbPatient = mapPatientToDbPatient(patientData);
-      
       const { data, error } = await supabase
         .from('patients')
-        .insert([dbPatient])
+        .insert([{
+          first_name: patientData.firstName,
+          last_name: patientData.lastName,
+          email: patientData.email,
+          phone: patientData.phone,
+          date_of_birth: patientData.dateOfBirth,
+          skin_type: patientData.skinType,
+          medical_history: patientData.medicalHistory,
+          contraindications: patientData.contraindications,
+          last_visit: patientData.lastVisit || null
+        }])
         .select()
         .single();
 
-      if (error) {
-        console.error('Erreur lors de la création du patient:', error);
-        throw error;
-      }
-
-      return mapDbPatientToPatient(data);
+      if (error) throw error;
+      
+      return {
+        id: data.id,
+        firstName: data.first_name,
+        lastName: data.last_name,
+        email: data.email,
+        phone: data.phone,
+        dateOfBirth: data.date_of_birth,
+        skinType: data.skin_type,
+        medicalHistory: data.medical_history,
+        contraindications: data.contraindications,
+        createdAt: data.created_at,
+        lastVisit: data.last_visit
+      };
     } catch (error) {
-      console.error('Erreur dans create patient:', error);
+      console.error('Error creating patient:', error);
       throw error;
     }
   },
 
-  // Mettre à jour un patient
   async update(id: string, patientData: Omit<Patient, 'id'>): Promise<Patient> {
     try {
-      const dbPatient = mapPatientToDbPatient(patientData);
-      
       const { data, error } = await supabase
         .from('patients')
-        .update(dbPatient)
+        .update({
+          first_name: patientData.firstName,
+          last_name: patientData.lastName,
+          email: patientData.email,
+          phone: patientData.phone,
+          date_of_birth: patientData.dateOfBirth,
+          skin_type: patientData.skinType,
+          medical_history: patientData.medicalHistory,
+          contraindications: patientData.contraindications,
+          last_visit: patientData.lastVisit || null
+        })
         .eq('id', id)
         .select()
         .single();
 
-      if (error) {
-        console.error('Erreur lors de la mise à jour du patient:', error);
-        throw error;
-      }
-
-      return mapDbPatientToPatient(data);
+      if (error) throw error;
+      
+      return {
+        id: data.id,
+        firstName: data.first_name,
+        lastName: data.last_name,
+        email: data.email,
+        phone: data.phone,
+        dateOfBirth: data.date_of_birth,
+        skinType: data.skin_type,
+        medicalHistory: data.medical_history,
+        contraindications: data.contraindications,
+        createdAt: data.created_at,
+        lastVisit: data.last_visit
+      };
     } catch (error) {
-      console.error('Erreur dans update patient:', error);
+      console.error('Error updating patient:', error);
       throw error;
     }
   },
 
-  // Supprimer un patient
   async delete(id: string): Promise<void> {
     try {
       const { error } = await supabase
@@ -130,33 +156,38 @@ export const patientService = {
         .delete()
         .eq('id', id);
 
-      if (error) {
-        console.error('Erreur lors de la suppression du patient:', error);
-        throw error;
-      }
+      if (error) throw error;
     } catch (error) {
-      console.error('Erreur dans delete patient:', error);
+      console.error('Error deleting patient:', error);
       throw error;
     }
   },
 
-  // Rechercher des patients
   async search(searchTerm: string): Promise<Patient[]> {
     try {
       const { data, error } = await supabase
         .from('patients')
         .select('*')
-        .or(`first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%,phone.ilike.%${searchTerm}%`)
+        .or(`first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`)
         .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Erreur lors de la recherche de patients:', error);
-        throw error;
-      }
-
-      return data?.map(mapDbPatientToPatient) || [];
+      if (error) throw error;
+      
+      return data?.map(patient => ({
+        id: patient.id,
+        firstName: patient.first_name,
+        lastName: patient.last_name,
+        email: patient.email,
+        phone: patient.phone,
+        dateOfBirth: patient.date_of_birth,
+        skinType: patient.skin_type,
+        medicalHistory: patient.medical_history,
+        contraindications: patient.contraindications,
+        createdAt: patient.created_at,
+        lastVisit: patient.last_visit
+      })) || [];
     } catch (error) {
-      console.error('Erreur dans search patients:', error);
+      console.error('Error searching patients:', error);
       throw error;
     }
   }

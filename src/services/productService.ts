@@ -1,3 +1,4 @@
+
 import { supabase } from '../lib/supabase';
 import { Product } from '../types';
 
@@ -15,6 +16,10 @@ export const productService = {
       console.error('Error fetching products:', error);
       throw error;
     }
+  },
+
+  async getAll(): Promise<Product[]> {
+    return this.getAllProducts();
   },
 
   async getProductById(id: string): Promise<Product | null> {
@@ -76,6 +81,20 @@ export const productService = {
       if (error) throw error;
     } catch (error) {
       console.error('Error deleting product:', error);
+      throw error;
+    }
+  },
+
+  async decrementProductQuantity(productId: string, quantity: number): Promise<void> {
+    try {
+      const { error } = await supabase.rpc('decrement_product_quantity', {
+        product_id: productId,
+        decrement_amount: quantity
+      });
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error decrementing product quantity:', error);
       throw error;
     }
   },
