@@ -15,6 +15,7 @@ const mapDbSoinToSoin = (dbSoin: any, appareil?: Appareil, zone?: Zone): Soin =>
   conseilsPostTraitement: dbSoin.conseils_post_traitement || [],
   expectedConsumables: dbSoin.expected_consumables || [],
   isActive: dbSoin.is_active,
+  createdAt: dbSoin.created_at,
   appareil: appareil,
   zone: zone
 });
@@ -49,7 +50,7 @@ const mapDbForfaitToForfait = (dbForfait: any): Forfait => ({
 });
 
 // Fonction pour convertir le type Forfait vers les données de la DB
-const mapForfaitToDbForfait = (forfait: Omit<Forfait, 'id' | 'created_at'>) => ({
+const mapForfaitToDbForfait = (forfait: Omit<Forfait, 'id' | 'createdAt'>) => ({
   nom: forfait.nom,
   description: forfait.description,
   soin_ids: forfait.soinIds,
@@ -85,6 +86,11 @@ export const soinService = {
       console.error('Erreur dans getAllSoins:', error);
       throw error;
     }
+  },
+
+  // Alias pour getAllSoins (pour compatibilité)
+  async getAllActive(): Promise<Soin[]> {
+    return this.getAllSoins();
   },
 
   // Récupérer un soin par ID
@@ -142,6 +148,11 @@ export const soinService = {
     }
   },
 
+  // Alias pour createSoin (pour compatibilité)
+  async create(soinData: Omit<Soin, 'id'>): Promise<Soin> {
+    return this.createSoin(soinData);
+  },
+
   // Mettre à jour un soin
   async updateSoin(id: string, soinData: Omit<Soin, 'id'>): Promise<Soin> {
     try {
@@ -168,6 +179,11 @@ export const soinService = {
       console.error('Erreur dans updateSoin:', error);
       throw error;
     }
+  },
+
+  // Alias pour updateSoin (pour compatibilité)
+  async update(id: string, soinData: Omit<Soin, 'id'>): Promise<Soin> {
+    return this.updateSoin(id, soinData);
   },
 
   // Supprimer un soin
@@ -210,7 +226,7 @@ export const soinService = {
   },
 
   // Créer un nouveau forfait
-  async createForfait(forfaitData: Omit<Forfait, 'id' | 'created_at'>): Promise<Forfait> {
+  async createForfait(forfaitData: Omit<Forfait, 'id' | 'createdAt'>): Promise<Forfait> {
     try {
       const dbForfait = mapForfaitToDbForfait(forfaitData);
       
@@ -233,7 +249,7 @@ export const soinService = {
   },
 
   // Mettre à jour un forfait
-  async updateForfait(id: string, forfaitData: Omit<Forfait, 'id' | 'created_at'>): Promise<Forfait> {
+  async updateForfait(id: string, forfaitData: Omit<Forfait, 'id' | 'createdAt'>): Promise<Forfait> {
     try {
       const dbForfait = mapForfaitToDbForfait(forfaitData);
       
