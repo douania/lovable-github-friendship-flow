@@ -116,6 +116,7 @@ export const invoiceService = {
       const { data, error } = await supabase
         .from('invoices')
         .insert({
+          id: crypto.randomUUID(),
           patient_id: invoiceData.patientId,
           treatment_ids: invoiceData.treatmentIds,
           amount: invoiceData.amount,

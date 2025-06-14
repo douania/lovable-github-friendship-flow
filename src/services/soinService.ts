@@ -1,6 +1,6 @@
 
 import { supabase } from '../integrations/supabase/client';
-import { Soin, Appareil, Zone } from '../types';
+import { Soin, Appareil, Zone, Forfait } from '../types';
 
 export const soinService = {
   async getAll(): Promise<Soin[]> {
@@ -27,7 +27,7 @@ export const soinService = {
         prix: soin.prix,
         contreIndications: soin.contre_indications || [],
         conseilsPostTraitement: soin.conseils_post_traitement || [],
-        expectedConsumables: soin.expected_consumables || [],
+        expectedConsumables: Array.isArray(soin.expected_consumables) ? soin.expected_consumables as Array<{ productId: string; quantity: number; }> : [],
         isActive: soin.is_active || true,
         createdAt: soin.created_at || '',
         appareil: soin.appareils ? {
@@ -57,6 +57,10 @@ export const soinService = {
     return this.getAll();
   },
 
+  async getAllActive(): Promise<Soin[]> {
+    return this.getAll();
+  },
+
   async getById(id: string): Promise<Soin | null> {
     try {
       const { data, error } = await supabase
@@ -82,7 +86,7 @@ export const soinService = {
         prix: data.prix,
         contreIndications: data.contre_indications || [],
         conseilsPostTraitement: data.conseils_post_traitement || [],
-        expectedConsumables: data.expected_consumables || [],
+        expectedConsumables: Array.isArray(data.expected_consumables) ? data.expected_consumables as Array<{ productId: string; quantity: number; }> : [],
         isActive: data.is_active || true,
         createdAt: data.created_at || '',
         appareil: data.appareils ? {
@@ -143,7 +147,7 @@ export const soinService = {
         prix: data.prix,
         contreIndications: data.contre_indications || [],
         conseilsPostTraitement: data.conseils_post_traitement || [],
-        expectedConsumables: data.expected_consumables || [],
+        expectedConsumables: Array.isArray(data.expected_consumables) ? data.expected_consumables as Array<{ productId: string; quantity: number; }> : [],
         isActive: data.is_active || true,
         createdAt: data.created_at || ''
       };
@@ -151,6 +155,10 @@ export const soinService = {
       console.error('Error creating soin:', error);
       throw error;
     }
+  },
+
+  async createSoin(soinData: Omit<Soin, 'id'>): Promise<Soin> {
+    return this.create(soinData);
   },
 
   async update(id: string, soinData: Omit<Soin, 'id'>): Promise<Soin> {
@@ -185,7 +193,7 @@ export const soinService = {
         prix: data.prix,
         contreIndications: data.contre_indications || [],
         conseilsPostTraitement: data.conseils_post_traitement || [],
-        expectedConsumables: data.expected_consumables || [],
+        expectedConsumables: Array.isArray(data.expected_consumables) ? data.expected_consumables as Array<{ productId: string; quantity: number; }> : [],
         isActive: data.is_active || true,
         createdAt: data.created_at || ''
       };
@@ -193,6 +201,10 @@ export const soinService = {
       console.error('Error updating soin:', error);
       throw error;
     }
+  },
+
+  async updateSoin(id: string, soinData: Omit<Soin, 'id'>): Promise<Soin> {
+    return this.update(id, soinData);
   },
 
   async delete(id: string): Promise<void> {
@@ -205,6 +217,133 @@ export const soinService = {
       if (error) throw error;
     } catch (error) {
       console.error('Error deleting soin:', error);
+      throw error;
+    }
+  },
+
+  async deleteSoin(id: string): Promise<void> {
+    return this.delete(id);
+  },
+
+  // Forfait methods
+  async getAllForfaits(): Promise<Forfait[]> {
+    try {
+      const { data, error } = await supabase
+        .from('forfaits')
+        .select('*')
+        .eq('is_active', true)
+        .order('nom');
+
+      if (error) throw error;
+      
+      return data?.map(forfait => ({
+        id: forfait.id,
+        nom: forfait.nom,
+        description: forfait.description || '',
+        soinIds: forfait.soin_ids || [],
+        prixTotal: forfait.prix_total,
+        prixReduit: forfait.prix_reduit,
+        nbSeances: forfait.nb_seances,
+        validiteMois: forfait.validite_mois,
+        isActive: forfait.is_active || true,
+        ordre: forfait.ordre || 0,
+        createdAt: forfait.created_at || ''
+      })) || [];
+    } catch (error) {
+      console.error('Error fetching forfaits:', error);
+      throw error;
+    }
+  },
+
+  async createForfait(forfaitData: Omit<Forfait, 'id' | 'createdAt'>): Promise<Forfait> {
+    try {
+      const { data, error } = await supabase
+        .from('forfaits')
+        .insert([{
+          nom: forfaitData.nom,
+          description: forfaitData.description,
+          soin_ids: forfaitData.soinIds,
+          prix_total: forfaitData.prixTotal,
+          prix_reduit: forfaitData.prixReduit,
+          nb_seances: forfaitData.nbSeances,
+          validite_mois: forfaitData.validiteMois,
+          is_active: forfaitData.isActive,
+          ordre: forfaitData.ordre
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      return {
+        id: data.id,
+        nom: data.nom,
+        description: data.description || '',
+        soinIds: data.soin_ids || [],
+        prixTotal: data.prix_total,
+        prixReduit: data.prix_reduit,
+        nbSeances: data.nb_seances,
+        validiteMois: data.validite_mois,
+        isActive: data.is_active || true,
+        ordre: data.ordre || 0,
+        createdAt: data.created_at || ''
+      };
+    } catch (error) {
+      console.error('Error creating forfait:', error);
+      throw error;
+    }
+  },
+
+  async updateForfait(id: string, forfaitData: Omit<Forfait, 'id' | 'createdAt'>): Promise<Forfait> {
+    try {
+      const { data, error } = await supabase
+        .from('forfaits')
+        .update({
+          nom: forfaitData.nom,
+          description: forfaitData.description,
+          soin_ids: forfaitData.soinIds,
+          prix_total: forfaitData.prixTotal,
+          prix_reduit: forfaitData.prixReduit,
+          nb_seances: forfaitData.nbSeances,
+          validite_mois: forfaitData.validiteMois,
+          is_active: forfaitData.isActive,
+          ordre: forfaitData.ordre
+        })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      return {
+        id: data.id,
+        nom: data.nom,
+        description: data.description || '',
+        soinIds: data.soin_ids || [],
+        prixTotal: data.prix_total,
+        prixReduit: data.prix_reduit,
+        nbSeances: data.nb_seances,
+        validiteMois: data.validite_mois,
+        isActive: data.is_active || true,
+        ordre: data.ordre || 0,
+        createdAt: data.created_at || ''
+      };
+    } catch (error) {
+      console.error('Error updating forfait:', error);
+      throw error;
+    }
+  },
+
+  async deleteForfait(id: string): Promise<void> {
+    try {
+      const { error } = await supabase
+        .from('forfaits')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error deleting forfait:', error);
       throw error;
     }
   },
