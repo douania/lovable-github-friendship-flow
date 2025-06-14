@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Calendar as CalendarIcon, Clock, User } from 'lucide-react';
 import { appointmentService } from '../../services/appointmentService';
@@ -220,7 +219,7 @@ const Calendar: React.FC = () => {
                             {day}
                           </div>
                           <div className="space-y-1">
-                            {dayAppointments.slice(0, 2).map((apt, i) => (
+                            {dayAppointments.slice(0, 2).map((apt) => (
                               <div
                                 key={apt.id}
                                 className={`text-xs px-1 py-0.5 rounded truncate ${getStatusColor(apt.status)}`}

@@ -6,9 +6,14 @@ import { patientService } from '../../services/patientService';
 import { soinService } from '../../services/soinService';
 import { Consultation } from '../../types/consultation';
 
+interface EnrichedConsultation extends Consultation {
+  patientName?: string;
+  soinName?: string;
+}
+
 const Consultations: React.FC = () => {
-  const [consultations, setConsultations] = useState<Consultation[]>([]);
-  const [filteredConsultations, setFilteredConsultations] = useState<Consultation[]>([]);
+  const [consultations, setConsultations] = useState<EnrichedConsultation[]>([]);
+  const [filteredConsultations, setFilteredConsultations] = useState<EnrichedConsultation[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
 
@@ -23,11 +28,11 @@ const Consultations: React.FC = () => {
   const loadConsultations = async () => {
     try {
       setLoading(true);
-      const consultationsData = await consultationService.getAllConsultations();
+      const consultationsData = await consultationService.getAll();
       
       // Enrichir avec les noms des patients et soins
       const enrichedConsultations = await Promise.all(
-        consultationsData.map(async (consultation) => {
+        consultationsData.map(async (consultation: Consultation) => {
           try {
             const [patient, soin] = await Promise.all([
               patientService.getById(consultation.patientId),
@@ -49,7 +54,7 @@ const Consultations: React.FC = () => {
         })
       );
 
-      setConsultations(enrichedConsultations as any);
+      setConsultations(enrichedConsultations);
     } catch (error) {
       console.error('Erreur lors du chargement des consultations:', error);
     } finally {
@@ -62,8 +67,8 @@ const Consultations: React.FC = () => {
 
     if (searchTerm) {
       filtered = filtered.filter(consultation => 
-        (consultation as any).patientName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (consultation as any).soinName?.toLowerCase().includes(searchTerm.toLowerCase())
+        consultation.patientName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        consultation.soinName?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
@@ -148,12 +153,12 @@ const Consultations: React.FC = () => {
                   <tr key={consultation.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">
-                        {(consultation as any).patientName}
+                        {consultation.patientName}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">
-                        {(consultation as any).soinName}
+                        {consultation.soinName}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
