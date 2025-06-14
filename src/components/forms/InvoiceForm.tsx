@@ -1,136 +1,148 @@
+
 import React, { useState, useEffect } from 'react';
-import { Forfait, Patient } from '../../types';
-import { supabase } from '../../lib/supabase';
+import { X } from 'lucide-react';
+import { Invoice, Patient, Forfait } from '../../types';
+import { patientService } from '../../services/patientService';
+import { useToast } from '../../hooks/use-toast';
 
 interface InvoiceFormProps {
-  invoice?: any;
+  invoice?: Invoice;
   patients: Patient[];
   preselectedForfait?: Forfait | null;
-  onSave: (invoiceData: any) => void;
+  onSave: (invoiceData: Omit<Invoice, 'id'>) => void;
   onCancel: () => void;
 }
 
-export default function InvoiceForm({ 
+const InvoiceForm: React.FC<InvoiceFormProps> = ({ 
   invoice, 
   patients, 
   preselectedForfait, 
   onSave, 
   onCancel 
-}: InvoiceFormProps) {
+}) => {
+  const { toast } = useToast();
   const [formData, setFormData] = useState({
-    patient_id: invoice?.patient_id || '',
-    treatment_ids: invoice?.treatment_ids || [],
-    amount: invoice?.amount || 0,
-    status: invoice?.status || 'unpaid',
-    payment_method: invoice?.payment_method || 'cash'
+    patientId: invoice?.patientId || '',
+    items: invoice?.items || [],
+    total: invoice?.total || 0,
+    status: invoice?.status || 'pending',
+    createdAt: invoice?.createdAt || new Date().toISOString()
   });
 
-  const [treatments, setTreatments] = useState<any[]>([]);
-  const [soins, setSoins] = useState<any[]>([]);
-  const [forfaits, setForfaits] = useState<Forfait[]>([]);
-  const [selectedForfait, setSelectedForfait] = useState<Forfait | null>(preselectedForfait || null);
-
   useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
-    try {
-      const [treatmentsResult, soinsResult, forfaitsResult] = await Promise.all([
-        supabase.from('treatments').select('*').eq('is_active', true),
-        supabase.from('soins').select('*').eq('is_active', true),
-        supabase.from('forfaits').select('*').eq('is_active', true)
-      ]);
-
-      if (treatmentsResult.data) setTreatments(treatmentsResult.data);
-      if (soinsResult.data) setSoins(soinsResult.data);
-      if (forfaitsResult.data) setForfaits(forfaitsResult.data);
-    } catch (error) {
-      console.error('Error loading data:', error);
+    if (preselectedForfait) {
+      setFormData(prev => ({
+        ...prev,
+        items: [{
+          type: 'forfait',
+          id: preselectedForfait.id,
+          name: preselectedForfait.nom,
+          price: preselectedForfait.prixReduit,
+          quantity: 1
+        }],
+        total: preselectedForfait.prixReduit
+      }));
     }
-  };
+  }, [preselectedForfait]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!formData.patientId) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez sélectionner un patient",
+        variant: "destructive"
+      });
+      return;
+    }
+
     onSave(formData);
   };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const selectedPatient = patients.find(p => p.id === formData.patientId);
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <h2 className="text-xl font-bold mb-4">
-          {invoice ? 'Modifier la facture' : 'Nouvelle facture'}
-        </h2>
-        
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-bold">
+            {invoice ? 'Modifier la facture' : 'Nouvelle facture'}
+          </h2>
+          <button onClick={onCancel} className="text-gray-500 hover:text-gray-700">
+            <X size={24} />
+          </button>
+        </div>
+
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Patient selection */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Patient
             </label>
             <select
-              value={formData.patient_id}
-              onChange={(e) => setFormData({ ...formData, patient_id: e.target.value })}
-              className="w-full border border-gray-300 rounded-md px-3 py-2"
+              name="patientId"
+              value={formData.patientId}
+              onChange={handleInputChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
               required
             >
               <option value="">Sélectionner un patient</option>
-              {patients.map((patient) => (
+              {patients.map(patient => (
                 <option key={patient.id} value={patient.id}>
-                  {patient.first_name} {patient.last_name}
+                  {patient.firstName} {patient.lastName}
                 </option>
               ))}
             </select>
           </div>
 
-          {/* Amount */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Montant
-            </label>
-            <input
-              type="number"
-              value={formData.amount}
-              onChange={(e) => setFormData({ ...formData, amount: parseFloat(e.target.value) || 0 })}
-              className="w-full border border-gray-300 rounded-md px-3 py-2"
-              required
-            />
-          </div>
+          {selectedPatient && (
+            <div className="bg-gray-50 p-3 rounded-md">
+              <h3 className="font-medium">Informations patient :</h3>
+              <p className="text-sm text-gray-600">
+                {selectedPatient.firstName} {selectedPatient.lastName}
+              </p>
+              <p className="text-sm text-gray-600">{selectedPatient.email}</p>
+              <p className="text-sm text-gray-600">{selectedPatient.phone}</p>
+            </div>
+          )}
 
-          {/* Status */}
+          {preselectedForfait && (
+            <div className="bg-blue-50 p-3 rounded-md">
+              <h3 className="font-medium text-blue-800">Forfait présélectionné :</h3>
+              <p className="text-sm text-blue-600">{preselectedForfait.nom}</p>
+              <p className="text-sm text-blue-600">{preselectedForfait.prixReduit} €</p>
+            </div>
+          )}
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Statut
             </label>
             <select
+              name="status"
               value={formData.status}
-              onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-              className="w-full border border-gray-300 rounded-md px-3 py-2"
+              onChange={handleInputChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
             >
-              <option value="paid">Payé</option>
-              <option value="partial">Partiellement payé</option>
-              <option value="unpaid">Non payé</option>
+              <option value="pending">En attente</option>
+              <option value="paid">Payée</option>
+              <option value="cancelled">Annulée</option>
             </select>
           </div>
 
-          {/* Payment method */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Méthode de paiement
-            </label>
-            <select
-              value={formData.payment_method}
-              onChange={(e) => setFormData({ ...formData, payment_method: e.target.value })}
-              className="w-full border border-gray-300 rounded-md px-3 py-2"
-            >
-              <option value="cash">Espèces</option>
-              <option value="mobile_money">Mobile Money</option>
-              <option value="card">Carte</option>
-              <option value="bank_transfer">Virement bancaire</option>
-            </select>
+          <div className="bg-gray-50 p-3 rounded-md">
+            <p className="font-medium">Total : {formData.total} €</p>
           </div>
 
-          <div className="flex justify-end space-x-3 pt-4">
+          <div className="flex justify-end space-x-2 pt-4">
             <button
               type="button"
               onClick={onCancel}
@@ -149,4 +161,6 @@ export default function InvoiceForm({
       </div>
     </div>
   );
-}
+};
+
+export default InvoiceForm;

@@ -36,7 +36,7 @@ export const soinService = {
     }
   },
 
-  // Soin CRUD methods
+  // Soin CRUD methods - Updated method names to match usage
   async getAllSoins(): Promise<Soin[]> {
     try {
       const { data, error } = await supabase
@@ -48,6 +48,27 @@ export const soinService = {
       return data || [];
     } catch (error) {
       console.error('Error fetching soins:', error);
+      throw error;
+    }
+  },
+
+  // Alias for compatibility
+  async getAll(): Promise<Soin[]> {
+    return this.getAllSoins();
+  },
+
+  async getAllActive(): Promise<Soin[]> {
+    try {
+      const { data, error } = await supabase
+        .from('soins')
+        .select('*')
+        .eq('is_active', true)
+        .order('nom');
+
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching active soins:', error);
       throw error;
     }
   },
@@ -68,6 +89,11 @@ export const soinService = {
     }
   },
 
+  // Alias for compatibility
+  async create(soinData: Omit<Soin, 'id'>): Promise<Soin> {
+    return this.createSoin(soinData);
+  },
+
   async updateSoin(id: string, soinData: Omit<Soin, 'id'>): Promise<Soin> {
     try {
       const { data, error } = await supabase
@@ -85,6 +111,11 @@ export const soinService = {
     }
   },
 
+  // Alias for compatibility
+  async update(id: string, soinData: Omit<Soin, 'id'>): Promise<Soin> {
+    return this.updateSoin(id, soinData);
+  },
+
   async deleteSoin(id: string): Promise<void> {
     try {
       const { error } = await supabase
@@ -97,6 +128,11 @@ export const soinService = {
       console.error('Error deleting soin:', error);
       throw error;
     }
+  },
+
+  // Alias for compatibility
+  async delete(id: string): Promise<void> {
+    return this.deleteSoin(id);
   },
 
   // Forfait CRUD methods
