@@ -63,6 +63,52 @@ export interface Product {
   supplier?: string;
   expiryDate?: string;
   lastRestocked: string;
+  // Nouveaux champs avancés
+  usageType?: 'fixed' | 'variable' | 'zone_based';
+  baseUnitsPerSession?: number;
+  unitVariations?: Array<{
+    factor: string;
+    value: string;
+    units: number;
+  }>;
+  storageConditions?: string;
+  batchNumber?: string;
+  isPrescriptionRequired?: boolean;
+  administrationMethod?: string;
+  concentration?: string;
+  volumePerUnit?: number;
+}
+
+export interface ConsumableVariationFactor {
+  id: string;
+  productId: string;
+  factorType: 'zone' | 'age' | 'skin_type' | 'severity' | 'experience' | 'session_number';
+  factorValue: string;
+  baseUnits: number;
+  multiplier: number;
+  minUnits: number;
+  maxUnits: number;
+  notes?: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ActualConsumptionHistory {
+  id: string;
+  appointmentId: string;
+  productId: string;
+  soinId?: string;
+  patientAge?: number;
+  treatmentZone?: string;
+  skinType?: string;
+  unitsUsed: number;
+  costPerUnit?: number;
+  totalCost?: number;
+  varianceFromExpected?: number;
+  notes?: string;
+  practitionerId?: string;
+  createdAt: string;
 }
 
 export interface Appareil {

@@ -19,9 +19,21 @@ export const productService = {
         quantity: product.quantity,
         minQuantity: product.min_quantity,
         unitPrice: product.unit_price,
+        sellingPrice: product.selling_price,
+        unit: product.unit,
         supplier: product.supplier || '',
         expiryDate: product.expiry_date || undefined,
-        lastRestocked: product.last_restocked
+        lastRestocked: product.last_restocked,
+        // Nouveaux champs avancés
+        usageType: product.usage_type,
+        baseUnitsPerSession: product.base_units_per_session,
+        unitVariations: product.unit_variations,
+        storageConditions: product.storage_conditions,
+        batchNumber: product.batch_number,
+        isPrescriptionRequired: product.is_prescription_required,
+        administrationMethod: product.administration_method,
+        concentration: product.concentration,
+        volumePerUnit: product.volume_per_unit
       })) || [];
     } catch (error) {
       console.error('Error fetching products:', error);
@@ -50,9 +62,21 @@ export const productService = {
         quantity: data.quantity,
         minQuantity: data.min_quantity,
         unitPrice: data.unit_price,
+        sellingPrice: data.selling_price,
+        unit: data.unit,
         supplier: data.supplier || '',
         expiryDate: data.expiry_date || undefined,
-        lastRestocked: data.last_restocked
+        lastRestocked: data.last_restocked,
+        // Nouveaux champs avancés
+        usageType: data.usage_type,
+        baseUnitsPerSession: data.base_units_per_session,
+        unitVariations: data.unit_variations,
+        storageConditions: data.storage_conditions,
+        batchNumber: data.batch_number,
+        isPrescriptionRequired: data.is_prescription_required,
+        administrationMethod: data.administration_method,
+        concentration: data.concentration,
+        volumePerUnit: data.volume_per_unit
       } : null;
     } catch (error) {
       console.error('Error fetching product by ID:', error);
@@ -70,9 +94,21 @@ export const productService = {
           quantity: productData.quantity,
           min_quantity: productData.minQuantity,
           unit_price: productData.unitPrice,
+          selling_price: productData.sellingPrice,
+          unit: productData.unit,
           supplier: productData.supplier,
           expiry_date: productData.expiryDate || null,
-          last_restocked: productData.lastRestocked
+          last_restocked: productData.lastRestocked,
+          // Nouveaux champs avancés
+          usage_type: productData.usageType,
+          base_units_per_session: productData.baseUnitsPerSession,
+          unit_variations: productData.unitVariations || [],
+          storage_conditions: productData.storageConditions,
+          batch_number: productData.batchNumber,
+          is_prescription_required: productData.isPrescriptionRequired,
+          administration_method: productData.administrationMethod,
+          concentration: productData.concentration,
+          volume_per_unit: productData.volumePerUnit
         }])
         .select()
         .single();
@@ -86,9 +122,21 @@ export const productService = {
         quantity: data.quantity,
         minQuantity: data.min_quantity,
         unitPrice: data.unit_price,
+        sellingPrice: data.selling_price,
+        unit: data.unit,
         supplier: data.supplier || '',
         expiryDate: data.expiry_date || undefined,
-        lastRestocked: data.last_restocked
+        lastRestocked: data.last_restocked,
+        // Nouveaux champs avancés
+        usageType: data.usage_type,
+        baseUnitsPerSession: data.base_units_per_session,
+        unitVariations: data.unit_variations,
+        storageConditions: data.storage_conditions,
+        batchNumber: data.batch_number,
+        isPrescriptionRequired: data.is_prescription_required,
+        administrationMethod: data.administration_method,
+        concentration: data.concentration,
+        volumePerUnit: data.volume_per_unit
       };
     } catch (error) {
       console.error('Error creating product:', error);
@@ -106,9 +154,21 @@ export const productService = {
           quantity: productData.quantity,
           min_quantity: productData.minQuantity,
           unit_price: productData.unitPrice,
+          selling_price: productData.sellingPrice,
+          unit: productData.unit,
           supplier: productData.supplier,
           expiry_date: productData.expiryDate || null,
-          last_restocked: productData.lastRestocked
+          last_restocked: productData.lastRestocked,
+          // Nouveaux champs avancés
+          usage_type: productData.usageType,
+          base_units_per_session: productData.baseUnitsPerSession,
+          unit_variations: productData.unitVariations || [],
+          storage_conditions: productData.storageConditions,
+          batch_number: productData.batchNumber,
+          is_prescription_required: productData.isPrescriptionRequired,
+          administration_method: productData.administrationMethod,
+          concentration: productData.concentration,
+          volume_per_unit: productData.volumePerUnit
         })
         .eq('id', id)
         .select()
@@ -123,9 +183,21 @@ export const productService = {
         quantity: data.quantity,
         minQuantity: data.min_quantity,
         unitPrice: data.unit_price,
+        sellingPrice: data.selling_price,
+        unit: data.unit,
         supplier: data.supplier || '',
         expiryDate: data.expiry_date || undefined,
-        lastRestocked: data.last_restocked
+        lastRestocked: data.last_restocked,
+        // Nouveaux champs avancés
+        usageType: data.usage_type,
+        baseUnitsPerSession: data.base_units_per_session,
+        unitVariations: data.unit_variations,
+        storageConditions: data.storage_conditions,
+        batchNumber: data.batch_number,
+        isPrescriptionRequired: data.is_prescription_required,
+        administrationMethod: data.administration_method,
+        concentration: data.concentration,
+        volumePerUnit: data.volume_per_unit
       };
     } catch (error) {
       console.error('Error updating product:', error);
@@ -203,9 +275,21 @@ export const productService = {
         quantity: product.quantity,
         minQuantity: product.min_quantity,
         unitPrice: product.unit_price,
+        sellingPrice: product.selling_price,
+        unit: product.unit,
         supplier: product.supplier || '',
         expiryDate: product.expiry_date || undefined,
-        lastRestocked: product.last_restocked
+        lastRestocked: product.last_restocked,
+        // Nouveaux champs avancés
+        usageType: product.usage_type,
+        baseUnitsPerSession: product.base_units_per_session,
+        unitVariations: product.unit_variations,
+        storageConditions: product.storage_conditions,
+        batchNumber: product.batch_number,
+        isPrescriptionRequired: product.is_prescription_required,
+        administrationMethod: product.administration_method,
+        concentration: product.concentration,
+        volumePerUnit: product.volume_per_unit
       })) || [];
     } catch (error) {
       console.error('Error fetching products below minimum quantity:', error);

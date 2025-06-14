@@ -9,6 +9,79 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      actual_consumption_history: {
+        Row: {
+          appointment_id: string | null
+          cost_per_unit: number | null
+          created_at: string | null
+          id: string
+          notes: string | null
+          patient_age: number | null
+          practitioner_id: string | null
+          product_id: string | null
+          skin_type: string | null
+          soin_id: string | null
+          total_cost: number | null
+          treatment_zone: string | null
+          units_used: number
+          variance_from_expected: number | null
+        }
+        Insert: {
+          appointment_id?: string | null
+          cost_per_unit?: number | null
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          patient_age?: number | null
+          practitioner_id?: string | null
+          product_id?: string | null
+          skin_type?: string | null
+          soin_id?: string | null
+          total_cost?: number | null
+          treatment_zone?: string | null
+          units_used: number
+          variance_from_expected?: number | null
+        }
+        Update: {
+          appointment_id?: string | null
+          cost_per_unit?: number | null
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          patient_age?: number | null
+          practitioner_id?: string | null
+          product_id?: string | null
+          skin_type?: string | null
+          soin_id?: string | null
+          total_cost?: number | null
+          treatment_zone?: string | null
+          units_used?: number
+          variance_from_expected?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "actual_consumption_history_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "actual_consumption_history_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "actual_consumption_history_soin_id_fkey"
+            columns: ["soin_id"]
+            isOneToOne: false
+            referencedRelation: "soins"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       appareils: {
         Row: {
           created_at: string | null
@@ -207,6 +280,59 @@ export type Database = {
             columns: ["soin_id"]
             isOneToOne: false
             referencedRelation: "soins"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      consumable_variation_factors: {
+        Row: {
+          base_units: number | null
+          created_at: string | null
+          factor_type: string
+          factor_value: string
+          id: string
+          is_active: boolean | null
+          max_units: number | null
+          min_units: number | null
+          multiplier: number | null
+          notes: string | null
+          product_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          base_units?: number | null
+          created_at?: string | null
+          factor_type: string
+          factor_value: string
+          id?: string
+          is_active?: boolean | null
+          max_units?: number | null
+          min_units?: number | null
+          multiplier?: number | null
+          notes?: string | null
+          product_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          base_units?: number | null
+          created_at?: string | null
+          factor_type?: string
+          factor_value?: string
+          id?: string
+          is_active?: boolean | null
+          max_units?: number | null
+          min_units?: number | null
+          multiplier?: number | null
+          notes?: string | null
+          product_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consumable_variation_factors_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
             referencedColumns: ["id"]
           },
         ]
@@ -521,40 +647,73 @@ export type Database = {
       }
       products: {
         Row: {
+          administration_method: string | null
+          base_units_per_session: number | null
+          batch_number: string | null
           category: string
+          concentration: string | null
           created_at: string | null
           expiry_date: string | null
           id: string
+          is_prescription_required: boolean | null
           last_restocked: string
           min_quantity: number
           name: string
           quantity: number
+          selling_price: number | null
+          storage_conditions: string | null
           supplier: string | null
+          unit: string | null
           unit_price: number
+          unit_variations: Json | null
+          usage_type: string | null
+          volume_per_unit: number | null
         }
         Insert: {
+          administration_method?: string | null
+          base_units_per_session?: number | null
+          batch_number?: string | null
           category: string
+          concentration?: string | null
           created_at?: string | null
           expiry_date?: string | null
           id?: string
+          is_prescription_required?: boolean | null
           last_restocked?: string
           min_quantity?: number
           name: string
           quantity?: number
+          selling_price?: number | null
+          storage_conditions?: string | null
           supplier?: string | null
+          unit?: string | null
           unit_price?: number
+          unit_variations?: Json | null
+          usage_type?: string | null
+          volume_per_unit?: number | null
         }
         Update: {
+          administration_method?: string | null
+          base_units_per_session?: number | null
+          batch_number?: string | null
           category?: string
+          concentration?: string | null
           created_at?: string | null
           expiry_date?: string | null
           id?: string
+          is_prescription_required?: boolean | null
           last_restocked?: string
           min_quantity?: number
           name?: string
           quantity?: number
+          selling_price?: number | null
+          storage_conditions?: string | null
           supplier?: string | null
+          unit?: string | null
           unit_price?: number
+          unit_variations?: Json | null
+          usage_type?: string | null
+          volume_per_unit?: number | null
         }
         Relationships: []
       }
