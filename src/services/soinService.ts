@@ -1,6 +1,25 @@
-
 import { supabase } from '../lib/supabase';
 import { Soin, Forfait, Appareil, Zone } from '../types';
+
+// Fonction pour convertir les données de la DB vers le type Appareil
+const mapDbAppareilToAppareil = (dbAppareil: any): Appareil => ({
+  id: dbAppareil.id,
+  nom: dbAppareil.nom,
+  description: dbAppareil.description || '',
+  icone: dbAppareil.icone || '',
+  imageUrl: dbAppareil.image_url || '',
+  isActive: dbAppareil.is_active || false,
+  ordre: dbAppareil.ordre || 0,
+  createdAt: dbAppareil.created_at || ''
+});
+
+// Fonction pour convertir les données de la DB vers le type Zone
+const mapDbZoneToZone = (dbZone: any): Zone => ({
+  id: dbZone.id,
+  nom: dbZone.nom,
+  description: dbZone.description || '',
+  createdAt: dbZone.created_at || ''
+});
 
 // Fonction pour convertir les données de la DB vers le type Soin
 const mapDbSoinToSoin = (dbSoin: any, appareil?: Appareil, zone?: Zone): Soin => ({
@@ -81,7 +100,11 @@ export const soinService = {
         throw error;
       }
 
-      return data?.map(soin => mapDbSoinToSoin(soin, soin.appareils, soin.zones)) || [];
+      return data?.map(soin => mapDbSoinToSoin(
+        soin, 
+        soin.appareils ? mapDbAppareilToAppareil(soin.appareils) : undefined,
+        soin.zones ? mapDbZoneToZone(soin.zones) : undefined
+      )) || [];
     } catch (error) {
       console.error('Erreur dans getAllSoins:', error);
       throw error;
@@ -114,7 +137,11 @@ export const soinService = {
         throw error;
       }
 
-      return data ? mapDbSoinToSoin(data, data.appareils, data.zones) : null;
+      return data ? mapDbSoinToSoin(
+        data, 
+        data.appareils ? mapDbAppareilToAppareil(data.appareils) : undefined,
+        data.zones ? mapDbZoneToZone(data.zones) : undefined
+      ) : null;
     } catch (error) {
       console.error('Erreur dans getSoinById:', error);
       throw error;
@@ -124,11 +151,20 @@ export const soinService = {
   // Créer un nouveau soin
   async createSoin(soinData: Omit<Soin, 'id'>): Promise<Soin> {
     try {
-      const dbSoin = mapSoinToDbSoin(soinData);
-      
       const { data, error } = await supabase
         .from('soins')
-        .insert([dbSoin])
+        .insert([{
+          nom: soinData.nom,
+          description: soinData.description,
+          appareil_id: soinData.appareilId,
+          zone_id: soinData.zoneId,
+          duree: soinData.duree,
+          prix: soinData.prix,
+          contre_indications: soinData.contreIndications,
+          conseils_post_traitement: soinData.conseilsPostTraitement,
+          expected_consumables: soinData.expectedConsumables,
+          is_active: soinData.isActive
+        }])
         .select(`
           *,
           appareils(*),
@@ -141,7 +177,11 @@ export const soinService = {
         throw error;
       }
 
-      return mapDbSoinToSoin(data, data.appareils, data.zones);
+      return mapDbSoinToSoin(
+        data, 
+        data.appareils ? mapDbAppareilToAppareil(data.appareils) : undefined,
+        data.zones ? mapDbZoneToZone(data.zones) : undefined
+      );
     } catch (error) {
       console.error('Erreur dans createSoin:', error);
       throw error;

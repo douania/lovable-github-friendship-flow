@@ -11,7 +11,19 @@ export const productService = {
         .order('name');
 
       if (error) throw error;
-      return data || [];
+      
+      return data?.map(product => ({
+        id: product.id,
+        name: product.name,
+        category: product.category,
+        quantity: product.quantity,
+        minQuantity: product.min_quantity,
+        unitPrice: product.unit_price,
+        supplier: product.supplier || '',
+        expiryDate: product.expiry_date || undefined,
+        lastRestocked: product.last_restocked,
+        createdAt: product.created_at || ''
+      })) || [];
     } catch (error) {
       console.error('Error fetching products:', error);
       throw error;
@@ -31,7 +43,19 @@ export const productService = {
         .single();
 
       if (error) throw error;
-      return data || null;
+      
+      return data ? {
+        id: data.id,
+        name: data.name,
+        category: data.category,
+        quantity: data.quantity,
+        minQuantity: data.min_quantity,
+        unitPrice: data.unit_price,
+        supplier: data.supplier || '',
+        expiryDate: data.expiry_date || undefined,
+        lastRestocked: data.last_restocked,
+        createdAt: data.created_at || ''
+      } : null;
     } catch (error) {
       console.error('Error fetching product by ID:', error);
       throw error;
@@ -42,12 +66,33 @@ export const productService = {
     try {
       const { data, error } = await supabase
         .from('products')
-        .insert([productData])
+        .insert([{
+          name: productData.name,
+          category: productData.category,
+          quantity: productData.quantity,
+          min_quantity: productData.minQuantity,
+          unit_price: productData.unitPrice,
+          supplier: productData.supplier,
+          expiry_date: productData.expiryDate || null,
+          last_restocked: productData.lastRestocked
+        }])
         .select()
         .single();
 
       if (error) throw error;
-      return data;
+      
+      return {
+        id: data.id,
+        name: data.name,
+        category: data.category,
+        quantity: data.quantity,
+        minQuantity: data.min_quantity,
+        unitPrice: data.unit_price,
+        supplier: data.supplier || '',
+        expiryDate: data.expiry_date || undefined,
+        lastRestocked: data.last_restocked,
+        createdAt: data.created_at || ''
+      };
     } catch (error) {
       console.error('Error creating product:', error);
       throw error;
@@ -58,13 +103,34 @@ export const productService = {
     try {
       const { data, error } = await supabase
         .from('products')
-        .update(productData)
+        .update({
+          name: productData.name,
+          category: productData.category,
+          quantity: productData.quantity,
+          min_quantity: productData.minQuantity,
+          unit_price: productData.unitPrice,
+          supplier: productData.supplier,
+          expiry_date: productData.expiryDate || null,
+          last_restocked: productData.lastRestocked
+        })
         .eq('id', id)
         .select()
         .single();
 
       if (error) throw error;
-      return data;
+      
+      return {
+        id: data.id,
+        name: data.name,
+        category: data.category,
+        quantity: data.quantity,
+        minQuantity: data.min_quantity,
+        unitPrice: data.unit_price,
+        supplier: data.supplier || '',
+        expiryDate: data.expiry_date || undefined,
+        lastRestocked: data.last_restocked,
+        createdAt: data.created_at || ''
+      };
     } catch (error) {
       console.error('Error updating product:', error);
       throw error;
@@ -87,12 +153,23 @@ export const productService = {
 
   async decrementProductQuantity(productId: string, quantity: number): Promise<void> {
     try {
-      const { error } = await supabase.rpc('decrement_product_quantity', {
-        product_id: productId,
-        decrement_amount: quantity
-      });
+      // For now, we'll manually handle the decrement
+      const { data: product, error: fetchError } = await supabase
+        .from('products')
+        .select('quantity')
+        .eq('id', productId)
+        .single();
 
-      if (error) throw error;
+      if (fetchError) throw fetchError;
+
+      const newQuantity = Math.max(0, product.quantity - quantity);
+
+      const { error: updateError } = await supabase
+        .from('products')
+        .update({ quantity: newQuantity })
+        .eq('id', productId);
+
+      if (updateError) throw updateError;
     } catch (error) {
       console.error('Error decrementing product quantity:', error);
       throw error;
@@ -122,7 +199,19 @@ export const productService = {
         .lt('quantity', 'min_quantity');
 
       if (error) throw error;
-      return data || [];
+      
+      return data?.map(product => ({
+        id: product.id,
+        name: product.name,
+        category: product.category,
+        quantity: product.quantity,
+        minQuantity: product.min_quantity,
+        unitPrice: product.unit_price,
+        supplier: product.supplier || '',
+        expiryDate: product.expiry_date || undefined,
+        lastRestocked: product.last_restocked,
+        createdAt: product.created_at || ''
+      })) || [];
     } catch (error) {
       console.error('Error fetching products below minimum quantity:', error);
       throw error;

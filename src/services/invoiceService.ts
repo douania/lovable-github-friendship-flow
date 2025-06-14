@@ -1,4 +1,3 @@
-
 import { supabase } from '../integrations/supabase/client';
 import { Invoice } from '../types';
 
@@ -15,7 +14,7 @@ export const invoiceService = {
       return data?.map(invoice => ({
         id: invoice.id,
         patientId: invoice.patient_id,
-        treatmentIds: invoice.treatment_ids,
+        treatmentIds: invoice.treatment_ids || [],
         amount: invoice.amount,
         status: invoice.status as Invoice['status'],
         paymentMethod: invoice.payment_method as Invoice['paymentMethod'],
@@ -45,7 +44,7 @@ export const invoiceService = {
       return data?.map(invoice => ({
         id: invoice.id,
         patientId: invoice.patient_id,
-        treatmentIds: invoice.treatment_ids,
+        treatmentIds: invoice.treatment_ids || [],
         amount: invoice.amount,
         status: invoice.status as Invoice['status'],
         paymentMethod: invoice.payment_method as Invoice['paymentMethod'],
@@ -71,7 +70,7 @@ export const invoiceService = {
       return data?.map(invoice => ({
         id: invoice.id,
         patientId: invoice.patient_id,
-        treatmentIds: invoice.treatment_ids,
+        treatmentIds: invoice.treatment_ids || [],
         amount: invoice.amount,
         status: invoice.status as Invoice['status'],
         paymentMethod: invoice.payment_method as Invoice['paymentMethod'],
@@ -98,7 +97,7 @@ export const invoiceService = {
       return {
         id: data.id,
         patientId: data.patient_id,
-        treatmentIds: data.treatment_ids,
+        treatmentIds: data.treatment_ids || [],
         amount: data.amount,
         status: data.status as Invoice['status'],
         paymentMethod: data.payment_method as Invoice['paymentMethod'],
@@ -121,7 +120,6 @@ export const invoiceService = {
           amount: invoiceData.amount,
           status: invoiceData.status,
           payment_method: invoiceData.paymentMethod,
-          created_at: invoiceData.createdAt,
           paid_at: invoiceData.paidAt || null
         })
         .select()
@@ -132,7 +130,7 @@ export const invoiceService = {
       return {
         id: data.id,
         patientId: data.patient_id,
-        treatmentIds: data.treatment_ids,
+        treatmentIds: data.treatment_ids || [],
         amount: data.amount,
         status: data.status as Invoice['status'],
         paymentMethod: data.payment_method as Invoice['paymentMethod'],
@@ -170,7 +168,7 @@ export const invoiceService = {
       return {
         id: data.id,
         patientId: data.patient_id,
-        treatmentIds: data.treatment_ids,
+        treatmentIds: data.treatment_ids || [],
         amount: data.amount,
         status: data.status as Invoice['status'],
         paymentMethod: data.payment_method as Invoice['paymentMethod'],

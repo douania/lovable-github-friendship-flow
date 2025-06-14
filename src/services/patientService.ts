@@ -1,4 +1,3 @@
-
 import { supabase } from '../integrations/supabase/client';
 import { Patient } from '../types';
 
@@ -183,7 +182,7 @@ export const patientService = {
         skinType: patient.skin_type || '',
         medicalHistory: patient.medical_history || '',
         contraindications: patient.contraindications || [],
-        createdAt: data.created_at || '',
+        createdAt: patient.created_at || '',
         lastVisit: patient.last_visit || undefined
       })) || [];
     } catch (error) {
