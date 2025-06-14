@@ -37,7 +37,7 @@ const Invoices: React.FC<InvoicesProps> = ({ preselectedForfait, onClearPreselec
       const invoicesWithPatient = await Promise.all(
         invoicesData.map(async (invoice: Invoice) => {
           const patient = await patientService.getPatientById(invoice.patientId);
-          return { ...invoice, patient };
+          return { ...invoice, patient: patient || undefined };
         })
       );
       setInvoices(invoicesWithPatient);
@@ -93,15 +93,16 @@ const Invoices: React.FC<InvoicesProps> = ({ preselectedForfait, onClearPreselec
       if (selectedInvoice) {
         // Update existing invoice
         const updatedInvoice = await invoiceService.updateInvoice(selectedInvoice.id, invoiceData);
+        const patient = await patientService.getPatientById(updatedInvoice.patientId);
         setInvoices(
-          invoices.map((invoice) => (invoice.id === updatedInvoice.id ? { ...updatedInvoice, patient: invoice.patient } : invoice))
+          invoices.map((invoice) => (invoice.id === updatedInvoice.id ? { ...updatedInvoice, patient: patient || undefined } : invoice))
         );
       } else {
         // Create new invoice
         const newInvoice = await invoiceService.createInvoice(invoiceData);
         // Fetch patient data for the new invoice
         const patient = await patientService.getPatientById(newInvoice.patientId);
-        setInvoices([...invoices, { ...newInvoice, patient }]);
+        setInvoices([...invoices, { ...newInvoice, patient: patient || undefined }]);
       }
       closeForm();
     } catch (err: any) {

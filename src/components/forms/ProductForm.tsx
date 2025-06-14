@@ -17,8 +17,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSave, onCancel }) 
     unitPrice: product?.unitPrice || 0,
     supplier: product?.supplier || '',
     expiryDate: product?.expiryDate || '',
-    lastRestocked: product?.lastRestocked || new Date().toISOString().split('T')[0],
-    createdAt: product?.createdAt || new Date().toISOString()
+    lastRestocked: product?.lastRestocked || new Date().toISOString().split('T')[0]
   });
 
   const handleSubmit = (e: React.FormEvent) => {

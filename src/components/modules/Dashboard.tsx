@@ -1,13 +1,12 @@
+
 import React from 'react';
 import { 
   Users, 
   Calendar, 
   DollarSign, 
-  AlertTriangle, 
-  TrendingUp,
+  AlertTriangle,
   Clock,
-  Star,
-  Package
+  Star
 } from 'lucide-react';
 import { mockPatients, mockTreatments, mockProducts } from '../../data/mockData';
 

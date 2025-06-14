@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { TrendingUp, TrendingDown, AlertTriangle, DollarSign, Package, Calendar, Filter, Download } from 'lucide-react';
+import { TrendingUp, TrendingDown, AlertTriangle, DollarSign, Package, Calendar, Download } from 'lucide-react';
 import { consumptionService } from '../../services/consumptionService';
 import { ConsumptionReport, StockAlert } from '../../types';
 
@@ -8,7 +8,6 @@ const ConsumptionReports: React.FC = () => {
   const [alerts, setAlerts] = useState<StockAlert[]>([]);
   const [stats, setStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [selectedPeriod, setSelectedPeriod] = useState('30');
   const [selectedSeverity, setSelectedSeverity] = useState('all');
 
   useEffect(() => {

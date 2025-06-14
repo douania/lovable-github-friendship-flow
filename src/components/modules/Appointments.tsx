@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Calendar, Clock, Plus, Search, Filter, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { Calendar, Clock, Plus, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import { Appointment } from '../../types';
 import { appointmentService } from '../../services/appointmentService';
 import { patientService } from '../../services/patientService';
@@ -59,7 +59,7 @@ const Appointments: React.FC = () => {
     try {
       const data = await appointmentService.getByDate(selectedDate);
       setAppointments(data);
-    } catch (err) {
+    } catch (err) {  
       console.error('Erreur lors du chargement des rendez-vous:', err);
       setError('Erreur lors du chargement des rendez-vous.');
     }

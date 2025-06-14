@@ -1,6 +1,7 @@
+
 import React, { useState } from 'react';
 import { TrendingUp, DollarSign, Users, Calendar, Star, Package } from 'lucide-react';
-import { mockPatients, mockTreatments, mockProducts } from '../../data/mockData';
+import { mockPatients, mockProducts } from '../../data/mockData';
 
 const Analytics: React.FC = () => {
   const [selectedPeriod, setSelectedPeriod] = useState('month');
@@ -21,7 +22,7 @@ const Analytics: React.FC = () => {
     { month: 'Fév', revenue: 3200000, appointments: 48 },
     { month: 'Mar', revenue: 2900000, appointments: 45 },
     { month: 'Avr', revenue: 3500000, appointments: 52 },
-    { month: 'Mai', revenue: 3100000, payment: 49 }
+    { month: 'Mai', revenue: 3100000, appointments: 49 }
   ];
 
   const paymentMethods = [
@@ -114,11 +115,11 @@ const Analytics: React.FC = () => {
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
           <h2 className="text-lg font-semibold text-gray-800 mb-4">Top Soins par Revenus</h2>
           <div className="space-y-4">
-            {topTreatments.map((treatment, index) => (
-              <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+            {topTreatments.map((treatment) => (
+              <div key={treatment.name} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
                 <div className="flex items-center space-x-3">
                   <div className="w-8 h-8 bg-pink-100 rounded-lg flex items-center justify-center">
-                    <span className="text-sm font-bold text-pink-600">{index + 1}</span>
+                    <span className="text-sm font-bold text-pink-600">{topTreatments.indexOf(treatment) + 1}</span>
                   </div>
                   <div>
                     <p className="font-medium text-gray-800">{treatment.name}</p>
@@ -139,8 +140,8 @@ const Analytics: React.FC = () => {
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
           <h2 className="text-lg font-semibold text-gray-800 mb-4">Répartition des Paiements</h2>
           <div className="space-y-4">
-            {paymentMethods.map((method, index) => (
-              <div key={index} className="p-4 bg-gray-50 rounded-xl">
+            {paymentMethods.map((method) => (
+              <div key={method.method} className="p-4 bg-gray-50 rounded-xl">
                 <div className="flex justify-between items-center mb-2">
                   <span className="font-medium text-gray-800">{method.method}</span>
                   <span className="text-sm text-gray-600">{method.percentage}%</span>
@@ -161,8 +162,8 @@ const Analytics: React.FC = () => {
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
         <h2 className="text-lg font-semibold text-gray-800 mb-4">Évolution Mensuelle</h2>
         <div className="grid grid-cols-5 gap-4">
-          {monthlyData.map((data, index) => (
-            <div key={index} className="text-center">
+          {monthlyData.map((data) => (
+            <div key={data.month} className="text-center">
               <div className="mb-2">
                 <div 
                   className="bg-gradient-to-t from-pink-500 to-orange-400 rounded-lg mx-auto"
@@ -183,7 +184,7 @@ const Analytics: React.FC = () => {
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
           <h2 className="text-lg font-semibold text-gray-800 mb-4">Patients Fidèles</h2>
           <div className="space-y-3">
-            {mockPatients.slice(0, 5).map((patient, index) => (
+            {mockPatients.slice(0, 5).map((patient) => (
               <div key={patient.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
                 <div className="flex items-center space-x-3">
                   <div className="w-8 h-8 bg-gradient-to-r from-pink-100 to-orange-100 rounded-full flex items-center justify-center">
