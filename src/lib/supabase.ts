@@ -1,44 +1,16 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabaseUrl = 'https://jhxxhwvljsyxdjsnctrg.supabase.co';
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpoeHhod3ZsanN5eGRqc25jdHJnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkyMTA4OTQsImV4cCI6MjA2NDc4Njg5NH0.BECLwXoIRVjDHkMHQNItOnSy0HuSn_nY57u_8JzXkAI';
 
-let supabase: any;
-
-// Check if environment variables are properly configured
-if (!supabaseUrl || !supabaseAnonKey || 
-    supabaseUrl === 'your_supabase_project_url_here' || 
-    supabaseAnonKey === 'your_supabase_anon_key_here') {
-  console.error('Supabase environment variables are not properly configured. Please set up your Supabase credentials.');
-  
-  // Create a mock client to prevent the app from crashing
-  supabase = {
-    auth: {
-      signUp: () => Promise.resolve({ data: null, error: new Error('Supabase not configured') }),
-      signInWithPassword: () => Promise.resolve({ data: null, error: new Error('Supabase not configured') }),
-      signOut: () => Promise.resolve({ error: null }),
-      getSession: () => Promise.resolve({ data: { session: null }, error: null }),
-      onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } })
-    },
-    from: () => ({
-      select: () => Promise.resolve({ data: [], error: null }),
-      insert: () => Promise.resolve({ data: null, error: new Error('Supabase not configured') }),
-      update: () => Promise.resolve({ data: null, error: new Error('Supabase not configured') }),
-      delete: () => Promise.resolve({ data: null, error: new Error('Supabase not configured') })
-    })
-  };
-} else {
-  supabase = createClient(supabaseUrl, supabaseAnonKey, {
-    auth: {
-      autoRefreshToken: true,
-      persistSession: true,
-      detectSessionInUrl: false
-    }
-  });
-}
-
-export { supabase };
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: false
+  }
+});
 
 // Database types
 export interface Database {

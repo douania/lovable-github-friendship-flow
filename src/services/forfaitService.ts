@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase';
-import { Forfait, Soin } from '../types';
+import { Forfait } from '../types';
 
 // Fonction pour convertir les données de la DB vers le type Forfait
 const mapDbForfaitToForfait = (dbForfait: any): Forfait => ({
@@ -257,6 +257,33 @@ export const forfaitService = {
       return data?.reduce((total, soin) => total + soin.prix, 0) || 0;
     } catch (error) {
       console.error('Erreur dans calculateTotalPrice:', error);
+      throw error;
+    }
+  },
+
+  // Calculer le prix total des soins d'un forfait
+  async calculateForfaitValue(forfaitId: string): Promise<number> {
+    try {
+      const { data: forfait, error } = await supabase
+        .from('forfaits')
+        .select('soin_ids')
+        .eq('id', forfaitId)
+        .single();
+
+      if (error) throw error;
+
+      if (!forfait?.soin_ids?.length) return 0;
+
+      const { data: soins, error: soinsError } = await supabase
+        .from('soins')
+        .select('prix')
+        .in('id', forfait.soin_ids);
+
+      if (soinsError) throw soinsError;
+
+      return soins?.reduce((total: number, soin: any) => total + soin.prix, 0) || 0;
+    } catch (error) {
+      console.error('Error calculating forfait value:', error);
       throw error;
     }
   }

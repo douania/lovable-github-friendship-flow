@@ -359,5 +359,39 @@ export const consumptionService = {
       console.error('Erreur dans getConsumptionStats:', error);
       throw error;
     }
+  },
+
+  // Récupérer les tendances de consommation
+  async getConsumptionTrends(period: string = '30d'): Promise<any[]> {
+    try {
+      const { data, error } = await supabase
+        .from('consumption_reports')
+        .select('*')
+        .gte('report_date', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
+        .order('report_date');
+
+      if (error) throw error;
+
+      // Group by product and calculate trends
+      const grouped = data?.reduce((acc: any, report: any) => {
+        if (!acc[report.product_id]) {
+          acc[report.product_id] = [];
+        }
+        acc[report.product_id].push(report);
+        return acc;
+      }, {});
+
+      return Object.entries(grouped || {}).map(([productId, reports]: [string, any]) => ({
+        productId,
+        totalConsumed: (reports as any[]).reduce((sum: number, r: any) => sum + r.actual_quantity, 0),
+        averageConsumption: (reports as any[]).reduce((sum: number, r: any) => sum + r.actual_quantity, 0) / (reports as any[]).length,
+        variance: (reports as any[]).reduce((acc: number, report: any) => {
+          return acc + Math.abs(report.variance_quantity || 0);
+        }, 0)
+      }));
+    } catch (error) {
+      console.error('Error fetching consumption trends:', error);
+      throw error;
+    }
   }
 };

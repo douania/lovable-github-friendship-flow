@@ -258,5 +258,37 @@ export const invoiceService = {
       console.error('Erreur dans getRevenueStats:', error);
       throw error;
     }
+  },
+
+  async getInvoicesByStatus(status: string): Promise<any[]> {
+    try {
+      const { data, error } = await supabase
+        .from('invoices')
+        .select('*')
+        .eq('status', status)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching invoices by status:', error);
+      throw error;
+    }
+  },
+
+  async getTotalRevenue(): Promise<number> {
+    try {
+      const { data, error } = await supabase
+        .from('invoices')
+        .select('amount')
+        .eq('status', 'paid');
+
+      if (error) throw error;
+
+      return data?.reduce((acc: number, invoice: any) => acc + invoice.amount, 0) || 0;
+    } catch (error) {
+      console.error('Error calculating total revenue:', error);
+      throw error;
+    }
   }
 };

@@ -16,8 +16,8 @@ const SoinForm: React.FC<SoinFormProps> = ({ soin, onSave, onCancel }) => {
     zoneId: soin?.zoneId || '',
     duree: soin?.duree || 0,
     prix: soin?.prix || 0,
-    contreIndications: soin?.contreIndications || '',
-    conseilsPostTraitement: soin?.conseilsPostTraitement || '',
+    contreIndications: Array.isArray(soin?.contreIndications) ? soin.contreIndications : [],
+    conseilsPostTraitement: Array.isArray(soin?.conseilsPostTraitement) ? soin.conseilsPostTraitement : [],
     expectedConsumables: soin?.expectedConsumables || [],
     isActive: soin?.isActive || true,
     createdAt: soin?.createdAt || new Date().toISOString()
