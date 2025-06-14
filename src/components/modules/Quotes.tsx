@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { FileText, Plus, Search, Eye, Edit, Trash2 } from 'lucide-react';
 import { quoteService } from '../../services/quoteService';
@@ -136,7 +135,7 @@ const Quotes: React.FC = () => {
     }
   };
 
-  const handleDeleteQuote = async (quoteId: string) => {
+  const handleDeleteQuote = async (id: string) => {
     if (!confirm('Êtes-vous sûr de vouloir supprimer ce devis ?')) {
       return;
     }
