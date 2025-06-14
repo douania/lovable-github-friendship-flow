@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+
+import { useState, useEffect } from 'react';
 import { Plus, Edit2, Trash2, Search, ShoppingBag } from 'lucide-react';
 import { Soin, Forfait } from '../../types';
 import SoinForm from '../forms/SoinForm';
 import ForfaitForm from '../forms/ForfaitForm';
 import { soinService } from '../../services/soinService';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '../../hooks/use-toast';
 
 interface TreatmentCatalogProps {
   onForfaitSelect: (forfait: Forfait) => void;
@@ -18,7 +19,6 @@ export default function TreatmentCatalog({ onForfaitSelect }: TreatmentCatalogPr
   const [selectedSoin, setSelectedSoin] = useState<Soin | null>(null);
   const [selectedForfait, setSelectedForfait] = useState<Forfait | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filter, setFilter] = useState('all');
   const { toast } = useToast();
 
   useEffect(() => {
@@ -27,7 +27,7 @@ export default function TreatmentCatalog({ onForfaitSelect }: TreatmentCatalogPr
 
   const loadData = async () => {
     try {
-      const soinsData = await soinService.getAll();
+      const soinsData = await soinService.getAllSoins();
       const forfaitsData = await soinService.getAllForfaits();
       setSoins(soinsData);
       setForfaits(forfaitsData);
@@ -45,14 +45,14 @@ export default function TreatmentCatalog({ onForfaitSelect }: TreatmentCatalogPr
     try {
       if (selectedSoin) {
         // Update existing soin
-        await soinService.update(selectedSoin.id, soinData);
+        await soinService.updateSoin(selectedSoin.id, soinData);
         toast({
           title: "Soin mis à jour !",
           description: "Le soin a été mis à jour avec succès.",
         })
       } else {
         // Create new soin
-        await soinService.create(soinData);
+        await soinService.createSoin(soinData);
         toast({
           title: "Soin créé !",
           description: "Le soin a été créé avec succès.",
@@ -73,7 +73,7 @@ export default function TreatmentCatalog({ onForfaitSelect }: TreatmentCatalogPr
 
   const handleDeleteSoin = async (id: string) => {
     try {
-      await soinService.delete(id);
+      await soinService.deleteSoin(id);
       loadData();
       toast({
         title: "Soin supprimé !",
@@ -205,19 +205,7 @@ export default function TreatmentCatalog({ onForfaitSelect }: TreatmentCatalogPr
             />
             <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
           </div>
-          {/* <select
-            className="px-4 py-2 border rounded-md"
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-          >
-            <option value="all">Tous</option>
-            <option value="active">Actifs</option>
-            <option value="inactive">Inactifs</option>
-          </select> */}
         </div>
-        {/* <button className="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-2 px-4 rounded flex items-center">
-          <Filter className="mr-2" size={16} /> Filtrer
-        </button> */}
       </div>
       
       <h2 className="text-xl font-semibold text-gray-700 mb-4">Soins</h2>
@@ -251,7 +239,7 @@ export default function TreatmentCatalog({ onForfaitSelect }: TreatmentCatalogPr
               <h3 className="text-lg font-semibold text-gray-800 mb-2">{forfait.nom}</h3>
               <p className="text-gray-600 text-sm">{forfait.description}</p>
               <div className="mt-4 flex justify-between items-center">
-                <span className="text-pink-500 font-bold">{forfait.prix_reduit} €</span>
+                <span className="text-pink-500 font-bold">{forfait.prixReduit} €</span>
                 <div className="space-x-2">
                   <button
                     onClick={() => onForfaitSelect(forfait)}
