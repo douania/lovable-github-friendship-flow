@@ -23,6 +23,8 @@ function App() {
   const { user, loading, isAuthenticated } = useAuth();
   const [activeModule, setActiveModule] = useState('dashboard');
   const [preselectedForfait, setPreselectedForfait] = useState<Forfait | null>(null);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarVisible, setSidebarVisible] = useState(false);
 
   // Show loading while checking authentication
   if (loading) {
@@ -52,6 +54,14 @@ function App() {
 
   const clearPreselectedForfait = () => {
     setPreselectedForfait(null);
+  };
+
+  const handleToggleSidebar = () => {
+    if (window.innerWidth < 768) {
+      setSidebarVisible(!sidebarVisible);
+    } else {
+      setSidebarCollapsed(!sidebarCollapsed);
+    }
   };
 
   const renderModule = () => {
@@ -89,7 +99,7 @@ function App() {
     } catch (error) {
       console.error('Error rendering module:', error);
       return (
-        <div className="p-8">
+        <div className="p-4 md:p-8">
           <div className="bg-red-50 border border-red-200 rounded-lg p-4">
             <h3 className="text-red-800 font-medium">Erreur de chargement</h3>
             <p className="text-red-600 text-sm mt-1">
@@ -102,12 +112,39 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#FDF6F3' }}>
-      <Header user={user} />
-      <div className="flex">
-        <Sidebar activeModule={activeModule} onModuleChange={setActiveModule} />
+    <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#FDF6F3' }}>
+      <Header user={user} onToggleSidebar={handleToggleSidebar} />
+      <div className="flex flex-1 relative">
+        {/* Sidebar overlay for mobile */}
+        {sidebarVisible && (
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
+            onClick={() => setSidebarVisible(false)}
+          />
+        )}
+        
+        {/* Sidebar */}
+        <div className={`
+          ${sidebarVisible ? 'translate-x-0' : '-translate-x-full'}
+          md:translate-x-0 transition-transform duration-300 ease-in-out z-50
+          fixed md:static h-full
+        `}>
+          <Sidebar 
+            activeModule={activeModule} 
+            onModuleChange={(module) => {
+              setActiveModule(module);
+              setSidebarVisible(false); // Close mobile sidebar when selecting
+            }}
+            isCollapsed={sidebarCollapsed}
+            onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
+          />
+        </div>
+
+        {/* Main content */}
         <main className="flex-1 overflow-y-auto h-screen">
-          {renderModule()}
+          <div className="min-h-full">
+            {renderModule()}
+          </div>
         </main>
       </div>
     </div>
