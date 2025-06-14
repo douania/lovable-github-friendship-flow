@@ -14,6 +14,9 @@ import Analytics from './components/modules/Analytics';
 import Inventory from './components/modules/Inventory';
 import ForfaitManagement from './components/modules/ForfaitManagement';
 import PricingAndConsumables from './components/modules/PricingAndConsumables';
+import Calendar from './components/modules/Calendar';
+import Consultations from './components/modules/Consultations';
+import Quotes from './components/modules/Quotes';
 import { Forfait } from './types';
 
 function App() {
@@ -51,10 +54,16 @@ function App() {
     switch (activeModule) {
       case 'dashboard':
         return <Dashboard />;
+      case 'calendar':
+        return <Calendar />;
       case 'patients':
         return <Patients />;
+      case 'consultations':
+        return <Consultations />;
       case 'treatments':
         return <TreatmentCatalog onForfaitSelect={handleForfaitSelection} />;
+      case 'quotes':
+        return <Quotes />;
       case 'pricelist':
         return <PriceList />;
       case 'pricing-consumables':

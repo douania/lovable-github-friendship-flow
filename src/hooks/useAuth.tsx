@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
+import { userService } from '../services/userService';
 
 interface UserWithRole extends User {
   role?: string;
@@ -17,9 +18,11 @@ export const useAuth = () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user) {
+          // Récupérer le rôle de l'utilisateur
+          const role = await userService.getCurrentUserRole();
           setUser({
             ...session.user,
-            role: 'praticien' // Rôle par défaut pour éviter les erreurs
+            role: role
           });
         } else {
           setUser(null);
@@ -38,10 +41,19 @@ export const useAuth = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event: any, session: any) => {
         if (session?.user) {
-          setUser({
-            ...session.user,
-            role: 'praticien'
-          });
+          try {
+            const role = await userService.getCurrentUserRole();
+            setUser({
+              ...session.user,
+              role: role
+            });
+          } catch (error) {
+            console.error('Erreur lors de la récupération du rôle:', error);
+            setUser({
+              ...session.user,
+              role: 'praticien'
+            });
+          }
         } else {
           setUser(null);
         }
@@ -64,6 +76,7 @@ export const useAuth = () => {
     user,
     loading,
     signOut,
-    isAuthenticated: !!user
+    isAuthenticated: !!user,
+    isAdmin: user?.role === 'admin'
   };
 };

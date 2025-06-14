@@ -99,6 +99,118 @@ export type Database = {
           },
         ]
       }
+      availability_slots: {
+        Row: {
+          created_at: string | null
+          day_of_week: number
+          duration_minutes: number
+          end_time: string
+          id: string
+          is_available: boolean | null
+          practitioner_id: string
+          start_time: string
+        }
+        Insert: {
+          created_at?: string | null
+          day_of_week: number
+          duration_minutes?: number
+          end_time: string
+          id?: string
+          is_available?: boolean | null
+          practitioner_id: string
+          start_time: string
+        }
+        Update: {
+          created_at?: string | null
+          day_of_week?: number
+          duration_minutes?: number
+          end_time?: string
+          id?: string
+          is_available?: boolean | null
+          practitioner_id?: string
+          start_time?: string
+        }
+        Relationships: []
+      }
+      consultations: {
+        Row: {
+          appointment_id: string | null
+          consent_signed: boolean | null
+          consultation_date: string
+          created_at: string | null
+          id: string
+          next_appointment_recommended: string | null
+          notes_post_treatment: string | null
+          notes_pre_treatment: string | null
+          patient_id: string
+          photos_after: string[] | null
+          photos_before: string[] | null
+          practitioner_id: string | null
+          satisfaction_rating: number | null
+          side_effects: string | null
+          soin_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          appointment_id?: string | null
+          consent_signed?: boolean | null
+          consultation_date?: string
+          created_at?: string | null
+          id?: string
+          next_appointment_recommended?: string | null
+          notes_post_treatment?: string | null
+          notes_pre_treatment?: string | null
+          patient_id: string
+          photos_after?: string[] | null
+          photos_before?: string[] | null
+          practitioner_id?: string | null
+          satisfaction_rating?: number | null
+          side_effects?: string | null
+          soin_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          appointment_id?: string | null
+          consent_signed?: boolean | null
+          consultation_date?: string
+          created_at?: string | null
+          id?: string
+          next_appointment_recommended?: string | null
+          notes_post_treatment?: string | null
+          notes_pre_treatment?: string | null
+          patient_id?: string
+          photos_after?: string[] | null
+          photos_before?: string[] | null
+          practitioner_id?: string | null
+          satisfaction_rating?: number | null
+          side_effects?: string | null
+          soin_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consultations_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consultations_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consultations_soin_id_fkey"
+            columns: ["soin_id"]
+            isOneToOne: false
+            referencedRelation: "soins"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       consumption_reports: {
         Row: {
           actual_quantity: number
@@ -305,6 +417,66 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          appointment_id: string | null
+          created_at: string | null
+          id: string
+          message: string
+          metadata: Json | null
+          method: string
+          patient_id: string | null
+          scheduled_for: string
+          sent_at: string | null
+          status: string
+          title: string
+          type: string
+        }
+        Insert: {
+          appointment_id?: string | null
+          created_at?: string | null
+          id?: string
+          message: string
+          metadata?: Json | null
+          method: string
+          patient_id?: string | null
+          scheduled_for: string
+          sent_at?: string | null
+          status?: string
+          title: string
+          type: string
+        }
+        Update: {
+          appointment_id?: string | null
+          created_at?: string | null
+          id?: string
+          message?: string
+          metadata?: Json | null
+          method?: string
+          patient_id?: string | null
+          scheduled_for?: string
+          sent_at?: string | null
+          status?: string
+          title?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       patients: {
         Row: {
           contraindications: string[] | null
@@ -385,6 +557,95 @@ export type Database = {
           unit_price?: number
         }
         Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          first_name: string | null
+          id: string
+          last_name: string | null
+          phone: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
+          first_name?: string | null
+          id: string
+          last_name?: string | null
+          phone?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string | null
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          phone?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      quotes: {
+        Row: {
+          created_at: string | null
+          discount_amount: number | null
+          id: string
+          notes: string | null
+          patient_id: string
+          practitioner_id: string | null
+          quote_number: string
+          status: string
+          subtotal: number
+          tax_amount: number | null
+          total_amount: number
+          treatment_items: Json
+          updated_at: string | null
+          valid_until: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          discount_amount?: number | null
+          id?: string
+          notes?: string | null
+          patient_id: string
+          practitioner_id?: string | null
+          quote_number: string
+          status?: string
+          subtotal?: number
+          tax_amount?: number | null
+          total_amount?: number
+          treatment_items?: Json
+          updated_at?: string | null
+          valid_until?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          discount_amount?: number | null
+          id?: string
+          notes?: string | null
+          patient_id?: string
+          practitioner_id?: string | null
+          quote_number?: string
+          status?: string
+          subtotal?: number
+          tax_amount?: number | null
+          total_amount?: number
+          treatment_items?: Json
+          updated_at?: string | null
+          valid_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quotes_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       soins: {
         Row: {
