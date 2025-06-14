@@ -19,21 +19,21 @@ export const productService = {
         quantity: product.quantity,
         minQuantity: product.min_quantity,
         unitPrice: product.unit_price,
-        sellingPrice: product.selling_price,
-        unit: product.unit,
+        sellingPrice: product.selling_price || undefined,
+        unit: product.unit || undefined,
         supplier: product.supplier || '',
         expiryDate: product.expiry_date || undefined,
         lastRestocked: product.last_restocked,
         // Nouveaux champs avancés
-        usageType: product.usage_type,
-        baseUnitsPerSession: product.base_units_per_session,
-        unitVariations: product.unit_variations,
-        storageConditions: product.storage_conditions,
-        batchNumber: product.batch_number,
-        isPrescriptionRequired: product.is_prescription_required,
-        administrationMethod: product.administration_method,
-        concentration: product.concentration,
-        volumePerUnit: product.volume_per_unit
+        usageType: product.usage_type || undefined,
+        baseUnitsPerSession: product.base_units_per_session || undefined,
+        unitVariations: product.unit_variations || undefined,
+        storageConditions: product.storage_conditions || undefined,
+        batchNumber: product.batch_number || undefined,
+        isPrescriptionRequired: product.is_prescription_required || undefined,
+        administrationMethod: product.administration_method || undefined,
+        concentration: product.concentration || undefined,
+        volumePerUnit: product.volume_per_unit || undefined
       })) || [];
     } catch (error) {
       console.error('Error fetching products:', error);
@@ -62,21 +62,21 @@ export const productService = {
         quantity: data.quantity,
         minQuantity: data.min_quantity,
         unitPrice: data.unit_price,
-        sellingPrice: data.selling_price,
-        unit: data.unit,
+        sellingPrice: data.selling_price || undefined,
+        unit: data.unit || undefined,
         supplier: data.supplier || '',
         expiryDate: data.expiry_date || undefined,
         lastRestocked: data.last_restocked,
         // Nouveaux champs avancés
-        usageType: data.usage_type,
-        baseUnitsPerSession: data.base_units_per_session,
-        unitVariations: data.unit_variations,
-        storageConditions: data.storage_conditions,
-        batchNumber: data.batch_number,
-        isPrescriptionRequired: data.is_prescription_required,
-        administrationMethod: data.administration_method,
-        concentration: data.concentration,
-        volumePerUnit: data.volume_per_unit
+        usageType: data.usage_type || undefined,
+        baseUnitsPerSession: data.base_units_per_session || undefined,
+        unitVariations: data.unit_variations || undefined,
+        storageConditions: data.storage_conditions || undefined,
+        batchNumber: data.batch_number || undefined,
+        isPrescriptionRequired: data.is_prescription_required || undefined,
+        administrationMethod: data.administration_method || undefined,
+        concentration: data.concentration || undefined,
+        volumePerUnit: data.volume_per_unit || undefined
       } : null;
     } catch (error) {
       console.error('Error fetching product by ID:', error);
@@ -122,21 +122,21 @@ export const productService = {
         quantity: data.quantity,
         minQuantity: data.min_quantity,
         unitPrice: data.unit_price,
-        sellingPrice: data.selling_price,
-        unit: data.unit,
+        sellingPrice: data.selling_price || undefined,
+        unit: data.unit || undefined,
         supplier: data.supplier || '',
         expiryDate: data.expiry_date || undefined,
         lastRestocked: data.last_restocked,
         // Nouveaux champs avancés
-        usageType: data.usage_type,
-        baseUnitsPerSession: data.base_units_per_session,
-        unitVariations: data.unit_variations,
-        storageConditions: data.storage_conditions,
-        batchNumber: data.batch_number,
-        isPrescriptionRequired: data.is_prescription_required,
-        administrationMethod: data.administration_method,
-        concentration: data.concentration,
-        volumePerUnit: data.volume_per_unit
+        usageType: data.usage_type || undefined,
+        baseUnitsPerSession: data.base_units_per_session || undefined,
+        unitVariations: data.unit_variations || undefined,
+        storageConditions: data.storage_conditions || undefined,
+        batchNumber: data.batch_number || undefined,
+        isPrescriptionRequired: data.is_prescription_required || undefined,
+        administrationMethod: data.administration_method || undefined,
+        concentration: data.concentration || undefined,
+        volumePerUnit: data.volume_per_unit || undefined
       };
     } catch (error) {
       console.error('Error creating product:', error);
@@ -183,21 +183,21 @@ export const productService = {
         quantity: data.quantity,
         minQuantity: data.min_quantity,
         unitPrice: data.unit_price,
-        sellingPrice: data.selling_price,
-        unit: data.unit,
+        sellingPrice: data.selling_price || undefined,
+        unit: data.unit || undefined,
         supplier: data.supplier || '',
         expiryDate: data.expiry_date || undefined,
         lastRestocked: data.last_restocked,
         // Nouveaux champs avancés
-        usageType: data.usage_type,
-        baseUnitsPerSession: data.base_units_per_session,
-        unitVariations: data.unit_variations,
-        storageConditions: data.storage_conditions,
-        batchNumber: data.batch_number,
-        isPrescriptionRequired: data.is_prescription_required,
-        administrationMethod: data.administration_method,
-        concentration: data.concentration,
-        volumePerUnit: data.volume_per_unit
+        usageType: data.usage_type || undefined,
+        baseUnitsPerSession: data.base_units_per_session || undefined,
+        unitVariations: data.unit_variations || undefined,
+        storageConditions: data.storage_conditions || undefined,
+        batchNumber: data.batch_number || undefined,
+        isPrescriptionRequired: data.is_prescription_required || undefined,
+        administrationMethod: data.administration_method || undefined,
+        concentration: data.concentration || undefined,
+        volumePerUnit: data.volume_per_unit || undefined
       };
     } catch (error) {
       console.error('Error updating product:', error);
@@ -275,21 +275,21 @@ export const productService = {
         quantity: product.quantity,
         minQuantity: product.min_quantity,
         unitPrice: product.unit_price,
-        sellingPrice: product.selling_price,
-        unit: product.unit,
+        sellingPrice: product.selling_price || undefined,
+        unit: product.unit || undefined,
         supplier: product.supplier || '',
         expiryDate: product.expiry_date || undefined,
         lastRestocked: product.last_restocked,
         // Nouveaux champs avancés
-        usageType: product.usage_type,
-        baseUnitsPerSession: product.base_units_per_session,
-        unitVariations: product.unit_variations,
-        storageConditions: product.storage_conditions,
-        batchNumber: product.batch_number,
-        isPrescriptionRequired: product.is_prescription_required,
-        administrationMethod: product.administration_method,
-        concentration: product.concentration,
-        volumePerUnit: product.volume_per_unit
+        usageType: product.usage_type || undefined,
+        baseUnitsPerSession: product.base_units_per_session || undefined,
+        unitVariations: product.unit_variations || undefined,
+        storageConditions: product.storage_conditions || undefined,
+        batchNumber: product.batch_number || undefined,
+        isPrescriptionRequired: product.is_prescription_required || undefined,
+        administrationMethod: product.administration_method || undefined,
+        concentration: product.concentration || undefined,
+        volumePerUnit: product.volume_per_unit || undefined
       })) || [];
     } catch (error) {
       console.error('Error fetching products below minimum quantity:', error);
