@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
 import { Soin, Product } from '../../types';
 import { productService } from '../../services/productService';
-import { X, Plus } from 'lucide-react';
+import { X, Plus, Package } from 'lucide-react';
 
 interface SoinFormProps {
   soin?: Soin;
