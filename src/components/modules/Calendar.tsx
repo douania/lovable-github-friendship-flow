@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
-import { Calendar as CalendarIcon, Clock, User, Plus } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, User } from 'lucide-react';
 import { appointmentService } from '../../services/appointmentService';
 import { patientService } from '../../services/patientService';
 import { availabilityService } from '../../services/availabilityService';

@@ -1,9 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
 import { FileText, Plus, Search, Eye, Edit, Trash2 } from 'lucide-react';
 import { quoteService } from '../../services/quoteService';
 import { patientService } from '../../services/patientService';
-import { soinService } from '../../services/soinService';
 import { Quote } from '../../types/consultation';
 
 const Quotes: React.FC = () => {
