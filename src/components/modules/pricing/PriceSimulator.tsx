@@ -129,7 +129,7 @@ const PriceSimulator: React.FC<PriceSimulatorProps> = ({
             <div className="flex justify-between">
               <span className="text-sm text-gray-600">Pourcentage:</span>
               <span className={`font-bold ${getMarginColor(currentMargin.percentage)}`}>
-                {current.percentage}%
+                {currentMargin.percentage}%
               </span>
             </div>
           </div>

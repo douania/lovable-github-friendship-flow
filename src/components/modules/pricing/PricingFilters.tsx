@@ -129,7 +129,7 @@ const PricingFilters: React.FC<PricingFiltersProps> = ({ items, onFilterChange }
           <option value="all">Toutes rentabilités</option>
           <option value="high">Très rentable (≥30%)</option>
           <option value="medium">Modérément rentable (15-30%)</option>
-          <option value="low">Peu rentable (<15%)</option>
+          <option value="low">Peu rentable (&lt;15%)</option>
         </select>
 
         {/* Sort */}

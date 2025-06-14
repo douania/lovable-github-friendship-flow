@@ -64,7 +64,7 @@ const ProfitabilityOverview: React.FC<ProfitabilityOverviewProps> = ({
         <div>
           <h3 className="text-lg font-semibold text-red-800 mb-1">Faible rentabilité</h3>
           <p className="text-sm text-red-600">
-            {low} service(s) avec marge < 15%
+            {low} service(s) avec marge &lt; 15%
           </p>
         </div>
       </div>
