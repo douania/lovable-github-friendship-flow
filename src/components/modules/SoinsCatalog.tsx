@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Plus, Edit2, Trash2, Search, Filter, Grid, List, Clock, Euro } from 'lucide-react';
 import { Soin } from '../../types';
@@ -19,6 +18,7 @@ export default function SoinsCatalog() {
   const [sortBy, setSortBy] = useState<SortBy>('name');
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000]);
   const [showFilters, setShowFilters] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -31,14 +31,20 @@ export default function SoinsCatalog() {
 
   const loadSoins = async () => {
     try {
+      setIsLoading(true);
+      console.log('Loading soins...');
       const data = await soinService.getAllSoins();
+      console.log('Loaded soins:', data);
       setSoins(data);
     } catch (error: any) {
+      console.error('Error loading soins:', error);
       toast({
         title: "Erreur !",
         description: "Impossible de charger les soins.",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -127,8 +133,26 @@ export default function SoinsCatalog() {
     setIsSoinFormOpen(true);
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Chargement des soins...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
+      {/* Debug info */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-sm">
+          <p><strong>Debug:</strong> {soins.length} soins chargés, {filteredSoins.length} après filtrage</p>
+        </div>
+      )}
+
       {/* Header with actions */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
@@ -316,13 +340,26 @@ export default function SoinsCatalog() {
         ))}
       </div>
 
-      {filteredSoins.length === 0 && (
+      {filteredSoins.length === 0 && !isLoading && (
         <div className="text-center py-12">
           <div className="text-gray-400 mb-4">
             <Search size={48} className="mx-auto" />
           </div>
           <h3 className="text-lg font-medium text-gray-600 mb-2">Aucun soin trouvé</h3>
-          <p className="text-gray-500">Essayez de modifier vos critères de recherche</p>
+          <p className="text-gray-500">
+            {soins.length === 0 ? 
+              "Aucun soin n'est disponible dans la base de données" :
+              "Essayez de modifier vos critères de recherche"
+            }
+          </p>
+          {soins.length === 0 && (
+            <button
+              onClick={openSoinForm}
+              className="mt-4 bg-pink-500 hover:bg-pink-600 text-white font-medium py-2 px-4 rounded-lg"
+            >
+              Créer le premier soin
+            </button>
+          )}
         </div>
       )}
 

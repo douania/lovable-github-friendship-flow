@@ -1,10 +1,10 @@
-
 import { supabase } from '../integrations/supabase/client';
 import { Soin, Appareil, Zone, Forfait } from '../types';
 
 export const soinService = {
   async getAll(): Promise<Soin[]> {
     try {
+      console.log('Fetching soins...');
       const { data, error } = await supabase
         .from('soins')
         .select(`
@@ -15,9 +15,14 @@ export const soinService = {
         .eq('is_active', true)
         .order('nom');
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching soins:', error);
+        throw error;
+      }
       
-      return data?.map(soin => ({
+      console.log('Raw data from supabase:', data);
+      
+      const mappedData = data?.map(soin => ({
         id: soin.id,
         appareilId: soin.appareil_id,
         zoneId: soin.zone_id,
@@ -47,8 +52,11 @@ export const soinService = {
           createdAt: soin.zones.created_at || ''
         } : undefined
       })) || [];
+      
+      console.log('Mapped soins data:', mappedData);
+      return mappedData;
     } catch (error) {
-      console.error('Error fetching soins:', error);
+      console.error('Error in getAll soins:', error);
       throw error;
     }
   },
@@ -228,15 +236,21 @@ export const soinService = {
   // Forfait methods
   async getAllForfaits(): Promise<Forfait[]> {
     try {
+      console.log('Fetching forfaits...');
       const { data, error } = await supabase
         .from('forfaits')
         .select('*')
         .eq('is_active', true)
         .order('nom');
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching forfaits:', error);
+        throw error;
+      }
       
-      return data?.map(forfait => ({
+      console.log('Raw forfaits data from supabase:', data);
+      
+      const mappedData = data?.map(forfait => ({
         id: forfait.id,
         nom: forfait.nom,
         description: forfait.description || '',
@@ -249,8 +263,11 @@ export const soinService = {
         ordre: forfait.ordre || 0,
         createdAt: forfait.created_at || ''
       })) || [];
+      
+      console.log('Mapped forfaits data:', mappedData);
+      return mappedData;
     } catch (error) {
-      console.error('Error fetching forfaits:', error);
+      console.error('Error in getAllForfaits:', error);
       throw error;
     }
   },

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Plus, Edit2, Trash2, Search, ShoppingBag, Tag, Calendar, TrendingUp } from 'lucide-react';
 import { Forfait } from '../../types';
@@ -16,6 +15,7 @@ export default function ForfaitsCatalog({ onForfaitSelect }: ForfaitsCatalogProp
   const [isForfaitFormOpen, setIsForfaitFormOpen] = useState(false);
   const [selectedForfait, setSelectedForfait] = useState<Forfait | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -28,14 +28,20 @@ export default function ForfaitsCatalog({ onForfaitSelect }: ForfaitsCatalogProp
 
   const loadForfaits = async () => {
     try {
+      setIsLoading(true);
+      console.log('Loading forfaits...');
       const data = await soinService.getAllForfaits();
+      console.log('Loaded forfaits:', data);
       setForfaits(data);
     } catch (error: any) {
+      console.error('Error loading forfaits:', error);
       toast({
         title: "Erreur !",
         description: "Impossible de charger les forfaits.",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -116,8 +122,26 @@ export default function ForfaitsCatalog({ onForfaitSelect }: ForfaitsCatalogProp
     return { savings: 0, percentage: 0 };
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Chargement des forfaits...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
+      {/* Debug info */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-sm">
+          <p><strong>Debug:</strong> {forfaits.length} forfaits chargés, {filteredForfaits.length} après filtrage</p>
+        </div>
+      )}
+
       {/* Header with search and actions */}
       <div className="flex items-center justify-between">
         <div className="relative">
@@ -259,13 +283,26 @@ export default function ForfaitsCatalog({ onForfaitSelect }: ForfaitsCatalogProp
         })}
       </div>
 
-      {filteredForfaits.length === 0 && (
+      {filteredForfaits.length === 0 && !isLoading && (
         <div className="text-center py-12">
           <div className="text-gray-400 mb-4">
             <Search size={48} className="mx-auto" />
           </div>
           <h3 className="text-lg font-medium text-gray-600 mb-2">Aucun forfait trouvé</h3>
-          <p className="text-gray-500">Essayez de modifier votre recherche</p>
+          <p className="text-gray-500">
+            {forfaits.length === 0 ? 
+              "Aucun forfait n'est disponible dans la base de données" :
+              "Essayez de modifier votre recherche"
+            }
+          </p>
+          {forfaits.length === 0 && (
+            <button
+              onClick={openForfaitForm}
+              className="mt-4 bg-gradient-to-r from-pink-500 to-orange-500 hover:from-pink-600 hover:to-orange-600 text-white font-medium py-2 px-4 rounded-lg"
+            >
+              Créer le premier forfait
+            </button>
+          )}
         </div>
       )}
 
