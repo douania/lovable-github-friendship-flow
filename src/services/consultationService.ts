@@ -1,5 +1,5 @@
 
-import { supabase } from '../lib/supabase';
+import { supabase } from '../integrations/supabase/client';
 import { Consultation } from '../types/consultation';
 
 // Fonction de conversion des données de la base vers le type Consultation

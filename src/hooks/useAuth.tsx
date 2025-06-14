@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { User } from '@supabase/supabase-js';
-import { supabase } from '../lib/supabase';
+import { supabase } from '../integrations/supabase/client';
 import { userService } from '../services/userService';
 
 interface UserWithRole extends User {
