@@ -24,7 +24,7 @@ function App() {
   const [activeModule, setActiveModule] = useState('dashboard');
   const [preselectedForfait, setPreselectedForfait] = useState<Forfait | null>(null);
 
-  // Afficher un loader pendant la vérification de l'authentification
+  // Show loading while checking authentication
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#FDF6F3' }}>
@@ -36,9 +36,13 @@ function App() {
     );
   }
 
-  // Afficher la page de connexion si l'utilisateur n'est pas authentifié
+  // Show login page if user is not authenticated
   if (!isAuthenticated) {
-    return <Auth onAuthSuccess={() => {}} />;
+    return (
+      <div className="min-h-screen" style={{ backgroundColor: '#FDF6F3' }}>
+        <Auth onAuthSuccess={() => {}} />
+      </div>
+    );
   }
 
   const handleForfaitSelection = (forfait: Forfait) => {
@@ -51,35 +55,49 @@ function App() {
   };
 
   const renderModule = () => {
-    switch (activeModule) {
-      case 'dashboard':
-        return <Dashboard />;
-      case 'calendar':
-        return <Calendar />;
-      case 'patients':
-        return <Patients />;
-      case 'consultations':
-        return <Consultations />;
-      case 'treatments':
-        return <TreatmentCatalog onForfaitSelect={handleForfaitSelection} />;
-      case 'quotes':
-        return <Quotes />;
-      case 'pricelist':
-        return <PriceList />;
-      case 'pricing-consumables':
-        return <PricingAndConsumables />;
-      case 'appointments':
-        return <Appointments />;
-      case 'invoices':
-        return <Invoices preselectedForfait={preselectedForfait} onClearPreselected={clearPreselectedForfait} />;
-      case 'analytics':
-        return <Analytics />;
-      case 'inventory':
-        return <Inventory />;
-      case 'forfaits':
-        return <ForfaitManagement />;
-      default:
-        return <Dashboard />;
+    try {
+      switch (activeModule) {
+        case 'dashboard':
+          return <Dashboard />;
+        case 'calendar':
+          return <Calendar />;
+        case 'patients':
+          return <Patients />;
+        case 'consultations':
+          return <Consultations />;
+        case 'treatments':
+          return <TreatmentCatalog onForfaitSelect={handleForfaitSelection} />;
+        case 'quotes':
+          return <Quotes />;
+        case 'pricelist':
+          return <PriceList />;
+        case 'pricing-consumables':
+          return <PricingAndConsumables />;
+        case 'appointments':
+          return <Appointments />;
+        case 'invoices':
+          return <Invoices preselectedForfait={preselectedForfait} onClearPreselected={clearPreselectedForfait} />;
+        case 'analytics':
+          return <Analytics />;
+        case 'inventory':
+          return <Inventory />;
+        case 'forfaits':
+          return <ForfaitManagement />;
+        default:
+          return <Dashboard />;
+      }
+    } catch (error) {
+      console.error('Error rendering module:', error);
+      return (
+        <div className="p-8">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <h3 className="text-red-800 font-medium">Erreur de chargement</h3>
+            <p className="text-red-600 text-sm mt-1">
+              Une erreur est survenue lors du chargement du module. Veuillez rafraîchir la page.
+            </p>
+          </div>
+        </div>
+      );
     }
   };
 

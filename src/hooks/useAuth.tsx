@@ -2,7 +2,6 @@
 import { useState, useEffect } from 'react';
 import { User } from '@supabase/supabase-js';
 import { supabase } from '../integrations/supabase/client';
-import { userService } from '../services/userService';
 
 interface UserWithRole extends User {
   role?: string;
@@ -13,29 +12,21 @@ export const useAuth = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Récupérer la session actuelle
+    // Get current session
     const getSession = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user) {
-          try {
-            const role = await userService.getCurrentUserRole();
-            setUser({
-              ...session.user,
-              role: role
-            });
-          } catch (roleError) {
-            console.error('Erreur lors de la récupération du rôle:', roleError);
-            setUser({
-              ...session.user,
-              role: 'praticien'
-            });
-          }
+          // For now, set a default role since we don't have user service
+          setUser({
+            ...session.user,
+            role: 'praticien'
+          });
         } else {
           setUser(null);
         }
       } catch (error) {
-        console.error('Erreur lors de la récupération de la session:', error);
+        console.error('Error getting session:', error);
         setUser(null);
       } finally {
         setLoading(false);
@@ -44,23 +35,14 @@ export const useAuth = () => {
 
     getSession();
 
-    // Écouter les changements d'authentification
+    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_, session) => {
         if (session?.user) {
-          try {
-            const role = await userService.getCurrentUserRole();
-            setUser({
-              ...session.user,
-              role: role
-            });
-          } catch (error) {
-            console.error('Erreur lors de la récupération du rôle:', error);
-            setUser({
-              ...session.user,
-              role: 'praticien'
-            });
-          }
+          setUser({
+            ...session.user,
+            role: 'praticien'
+          });
         } else {
           setUser(null);
         }
@@ -75,7 +57,7 @@ export const useAuth = () => {
     try {
       await supabase.auth.signOut();
     } catch (error) {
-      console.error('Erreur lors de la déconnexion:', error);
+      console.error('Error signing out:', error);
     }
   };
 
