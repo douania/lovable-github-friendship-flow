@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Quote, QuoteItem } from '../../types/consultation';
+import { Quote } from '../../types/consultation';
 import { Patient, Soin } from '../../types';
 
 interface PrintableQuoteProps {
@@ -41,7 +41,6 @@ const PrintableQuote: React.FC<PrintableQuoteProps> = ({ quote, patient, soins }
             <p className="font-medium text-gray-900">{patient.firstName} {patient.lastName}</p>
             <p className="text-gray-600">{patient.email}</p>
             <p className="text-gray-600">{patient.phone}</p>
-            {patient.address && <p className="text-gray-600">{patient.address}</p>}
           </div>
         </div>
         <div>
