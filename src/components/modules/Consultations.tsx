@@ -5,6 +5,9 @@ import { consultationService } from '../../services/consultationService';
 import { patientService } from '../../services/patientService';
 import { soinService } from '../../services/soinService';
 import { Consultation } from '../../types/consultation';
+import ConsultationForm from '../forms/ConsultationForm';
+import ConsultationDetails from '../forms/ConsultationDetails';
+import { toast } from 'sonner';
 
 interface EnrichedConsultation extends Consultation {
   patientName?: string;
@@ -16,6 +19,9 @@ const Consultations: React.FC = () => {
   const [filteredConsultations, setFilteredConsultations] = useState<EnrichedConsultation[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [showDetails, setShowDetails] = useState<EnrichedConsultation | null>(null);
+  const [editingConsultation, setEditingConsultation] = useState<EnrichedConsultation | null>(null);
 
   useEffect(() => {
     loadConsultations();
@@ -57,6 +63,7 @@ const Consultations: React.FC = () => {
       setConsultations(enrichedConsultations);
     } catch (error) {
       console.error('Erreur lors du chargement des consultations:', error);
+      toast.error('Erreur lors du chargement des consultations');
     } finally {
       setLoading(false);
     }
@@ -73,6 +80,35 @@ const Consultations: React.FC = () => {
     }
 
     setFilteredConsultations(filtered);
+  };
+
+  const handleSaveConsultation = async (consultationData: Omit<Consultation, 'id' | 'createdAt' | 'updatedAt'>) => {
+    try {
+      if (editingConsultation) {
+        await consultationService.updateConsultation(editingConsultation.id, consultationData);
+        toast.success('Consultation modifiée avec succès');
+      } else {
+        await consultationService.createConsultation(consultationData);
+        toast.success('Consultation créée avec succès');
+      }
+      
+      setShowForm(false);
+      setEditingConsultation(null);
+      loadConsultations();
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde:', error);
+      toast.error('Erreur lors de la sauvegarde de la consultation');
+    }
+  };
+
+  const handleEditConsultation = (consultation: EnrichedConsultation) => {
+    setEditingConsultation(consultation);
+    setShowForm(true);
+    setShowDetails(null);
+  };
+
+  const handleViewDetails = (consultation: EnrichedConsultation) => {
+    setShowDetails(consultation);
   };
 
   if (loading) {
@@ -92,7 +128,10 @@ const Consultations: React.FC = () => {
           <Stethoscope className="w-6 h-6 text-pink-500" />
           Consultations & Dossiers Médicaux
         </h1>
-        <button className="bg-pink-500 text-white px-4 py-2 rounded-lg hover:bg-pink-600 transition-colors flex items-center gap-2">
+        <button 
+          onClick={() => setShowForm(true)}
+          className="bg-pink-500 text-white px-4 py-2 rounded-lg hover:bg-pink-600 transition-colors flex items-center gap-2"
+        >
           <Plus className="w-4 h-4" />
           Nouvelle consultation
         </button>
@@ -213,10 +252,18 @@ const Consultations: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex items-center justify-end gap-2">
-                        <button className="text-pink-600 hover:text-pink-900 p-1">
+                        <button 
+                          onClick={() => handleViewDetails(consultation)}
+                          className="text-pink-600 hover:text-pink-900 p-1"
+                          title="Voir les détails"
+                        >
                           <Eye className="w-4 h-4" />
                         </button>
-                        <button className="text-blue-600 hover:text-blue-900 p-1">
+                        <button 
+                          onClick={() => handleEditConsultation(consultation)}
+                          className="text-blue-600 hover:text-blue-900 p-1"
+                          title="Modifier"
+                        >
                           <Edit className="w-4 h-4" />
                         </button>
                       </div>
@@ -228,6 +275,27 @@ const Consultations: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Formulaire de consultation */}
+      {showForm && (
+        <ConsultationForm
+          consultation={editingConsultation || undefined}
+          onSave={handleSaveConsultation}
+          onCancel={() => {
+            setShowForm(false);
+            setEditingConsultation(null);
+          }}
+        />
+      )}
+
+      {/* Détails de la consultation */}
+      {showDetails && (
+        <ConsultationDetails
+          consultation={showDetails}
+          onClose={() => setShowDetails(null)}
+          onEdit={() => handleEditConsultation(showDetails)}
+        />
+      )}
     </div>
   );
 };
