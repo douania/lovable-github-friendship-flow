@@ -16,7 +16,7 @@ const SoinForm: React.FC<SoinFormProps> = ({ soin, onSave, onCancel }) => {
     appareilId: soin?.appareilId || '',
     zoneId: soin?.zoneId || '',
     duree: soin?.duree || 0,
-    prix: soin?.prix || 0,
+    prix: soin?.prix || 0, // Keep prix in formData but don't show in form
     contreIndications: Array.isArray(soin?.contreIndications) ? soin.contreIndications : [],
     conseilsPostTraitement: Array.isArray(soin?.conseilsPostTraitement) ? soin.conseilsPostTraitement : [],
     expectedConsumables: soin?.expectedConsumables || [],
@@ -193,21 +193,18 @@ const SoinForm: React.FC<SoinFormProps> = ({ soin, onSave, onCancel }) => {
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Prix (FCFA) *
-            </label>
-            <input
-              type="number"
-              name="prix"
-              value={formData.prix}
-              onChange={handleInputChange}
-              step="1"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-              required
-              min="0"
-              placeholder="25000"
-            />
+          {/* Note explicative pour les prix */}
+          <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+            <div className="flex items-start space-x-2">
+              <div className="text-blue-600 mt-0.5">💡</div>
+              <div>
+                <p className="text-sm text-blue-800 font-medium">Information sur les prix</p>
+                <p className="text-sm text-blue-700 mt-1">
+                  Les prix des soins se configurent dans le module "Tarifs & Consommables" 
+                  où vous pourrez ajuster les tarifs en fonction des coûts réels des consommables.
+                </p>
+              </div>
+            </div>
           </div>
 
           {/* Consommables attendus */}
