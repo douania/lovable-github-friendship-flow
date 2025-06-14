@@ -1,17 +1,6 @@
-
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = 'https://jhxxhwvljsyxdjsnctrg.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpoeHhod3ZsanN5eGRqc25jdHJnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkyMTA4OTQsImV4cCI6MjA2NDc4Njg5NH0.BECLwXoIRVjDHkMHQNItOnSy0HuSn_nY57u_8JzXkAI';
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: false,
-    storage: typeof window !== 'undefined' ? window.localStorage : undefined
-  }
-});
+// Re-export from the main client to maintain compatibility
+export { supabase } from '../integrations/supabase/client';
+export type { Database } from '../integrations/supabase/types';
 
 // Database types
 export interface Database {
