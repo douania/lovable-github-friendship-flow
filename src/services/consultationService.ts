@@ -29,7 +29,7 @@ export const consultationService = {
       nextAppointmentRecommended: consultation.next_appointment_recommended || undefined,
       consentSigned: consultation.consent_signed || false,
       satisfactionRating: consultation.satisfaction_rating || undefined,
-      createdAt: consultation.created_at,
+      createdAt: consultation.created_at || '',
       updatedAt: consultation.updated_at || ''
     })) || [];
   },
@@ -61,7 +61,7 @@ export const consultationService = {
       nextAppointmentRecommended: consultation.next_appointment_recommended || undefined,
       consentSigned: consultation.consent_signed || false,
       satisfactionRating: consultation.satisfaction_rating || undefined,
-      createdAt: consultation.created_at,
+      createdAt: consultation.created_at || '',
       updatedAt: consultation.updated_at || ''
     })) || [];
   },
@@ -109,7 +109,7 @@ export const consultationService = {
       nextAppointmentRecommended: data.next_appointment_recommended || undefined,
       consentSigned: data.consent_signed || false,
       satisfactionRating: data.satisfaction_rating || undefined,
-      createdAt: data.created_at,
+      createdAt: data.created_at || '',
       updatedAt: data.updated_at || ''
     };
   },
@@ -160,7 +160,7 @@ export const consultationService = {
       nextAppointmentRecommended: data.next_appointment_recommended || undefined,
       consentSigned: data.consent_signed || false,
       satisfactionRating: data.satisfaction_rating || undefined,
-      createdAt: data.created_at,
+      createdAt: data.created_at || '',
       updatedAt: data.updated_at || ''
     };
   }

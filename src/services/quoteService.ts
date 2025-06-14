@@ -1,5 +1,5 @@
 import { supabase } from '../integrations/supabase/client';
-import { Quote, QuoteItem } from '../types/consultation';
+import { Quote } from '../types/consultation';
 
 export const quoteService = {
   async getAllQuotes(): Promise<Quote[]> {
@@ -33,7 +33,7 @@ export const quoteService = {
       status: quote.status as Quote['status'],
       validUntil: quote.valid_until || undefined,
       notes: quote.notes || '',
-      createdAt: quote.created_at,
+      createdAt: quote.created_at || '',
       updatedAt: quote.updated_at || ''
     })) || [];
   },
@@ -84,7 +84,7 @@ export const quoteService = {
       status: data.status as Quote['status'],
       validUntil: data.valid_until || undefined,
       notes: data.notes || '',
-      createdAt: data.created_at,
+      createdAt: data.created_at || '',
       updatedAt: data.updated_at || ''
     };
   },
@@ -138,7 +138,7 @@ export const quoteService = {
       status: data.status as Quote['status'],
       validUntil: data.valid_until || undefined,
       notes: data.notes || '',
-      createdAt: data.created_at,
+      createdAt: data.created_at || '',
       updatedAt: data.updated_at || ''
     };
   },
