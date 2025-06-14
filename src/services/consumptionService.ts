@@ -312,7 +312,7 @@ export const consumptionService = {
   },
 
   // Récupérer les tendances de consommation
-  async getConsumptionTrends(period: string = '30d'): Promise<any[]> {
+  async getConsumptionTrends(): Promise<any[]> {
     try {
       const { data, error } = await supabase
         .from('consumption_reports')

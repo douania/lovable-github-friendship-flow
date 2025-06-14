@@ -15,7 +15,7 @@ interface InvoiceWithPatient extends Invoice {
   patient?: Patient;
 }
 
-const Invoices: React.FC<InvoicesProps> = ({ preselectedForfait, onClearPreselected }) => {
+const Invoices: React.FC<InvoicesProps> = () => {
   const [invoices, setInvoices] = useState<InvoiceWithPatient[]>([]);
   const [patients, setPatients] = useState<Patient[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);

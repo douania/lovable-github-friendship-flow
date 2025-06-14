@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { DollarSign, Clock, Star, Filter, Search, Download, Printer as Print } from 'lucide-react';
+import { DollarSign, Clock, Star, Search, Download, Printer as Print } from 'lucide-react';
 import { soinService } from '../../services/soinService';
 import { appareilService } from '../../services/appareilService';
 import { forfaitService } from '../../services/forfaitService';

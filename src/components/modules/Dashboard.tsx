@@ -68,10 +68,10 @@ const Dashboard: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat, index) => {
+        {stats.map((stat, statIndex) => {
           const Icon = stat.icon;
           return (
-            <div key={index} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+            <div key={statIndex} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600 mb-1">{stat.title}</p>
@@ -93,8 +93,8 @@ const Dashboard: React.FC = () => {
             <Clock className="w-5 h-5 text-gray-400" />
           </div>
           <div className="space-y-3">
-            {recentAppointments.map((apt, index) => (
-              <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+            {recentAppointments.map((apt, aptIndex) => (
+              <div key={aptIndex} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
                 <div className="flex items-center space-x-3">
                   <div className="w-2 h-2 bg-pink-400 rounded-full"></div>
                   <div>
@@ -121,7 +121,7 @@ const Dashboard: React.FC = () => {
             <Star className="w-5 h-5 text-gray-400" />
           </div>
           <div className="space-y-3">
-            {mockTreatments.slice(0, 4).map((treatment, index) => (
+            {mockTreatments.slice(0, 4).map((treatment) => (
               <div key={treatment.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
                 <div>
                   <p className="font-medium text-gray-800">{treatment.name}</p>
