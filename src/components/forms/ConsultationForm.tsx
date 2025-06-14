@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { X, Save, Calendar, User, Stethoscope } from 'lucide-react';
 import { Consultation } from '../../types/consultation';
@@ -70,13 +71,20 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
       return;
     }
 
-    // Clean data before sending
-    const cleanedData = {
-      ...formData,
-      // Convert empty strings to undefined for optional UUID fields
+    // Clean data before sending - ensure proper types
+    const cleanedData: Omit<Consultation, 'id' | 'createdAt' | 'updatedAt'> = {
+      patientId: formData.patientId,
       appointmentId: formData.appointmentId || undefined,
-      practitionerId: formData.practitionerId || undefined,
+      soinId: formData.soinId,
+      practitionerId: formData.practitionerId || '',
+      consultationDate: formData.consultationDate,
+      notesPreTreatment: formData.notesPreTreatment,
+      notesPostTreatment: formData.notesPostTreatment,
+      photosBefore: formData.photosBefore,
+      photosAfter: formData.photosAfter,
+      sideEffects: formData.sideEffects,
       nextAppointmentRecommended: formData.nextAppointmentRecommended || undefined,
+      consentSigned: formData.consentSigned,
       satisfactionRating: formData.satisfactionRating || undefined
     };
 
