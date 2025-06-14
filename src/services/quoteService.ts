@@ -25,7 +25,7 @@ const mapQuoteToDbQuote = (quote: Omit<Quote, 'id' | 'createdAt' | 'updatedAt'>)
   quote_number: quote.quoteNumber,
   patient_id: quote.patientId,
   practitioner_id: quote.practitionerId,
-  treatment_items: quote.treatmentItems,
+  treatment_items: quote.treatmentItems as any, // Cast vers any pour compatibilité Json
   subtotal: quote.subtotal,
   discount_amount: quote.discountAmount,
   tax_amount: quote.taxAmount,
@@ -84,7 +84,7 @@ export const quoteService = {
       
       const { data, error } = await supabase
         .from('quotes')
-        .insert([dbQuote])
+        .insert(dbQuote) // Insérer un objet unique, pas un tableau
         .select()
         .single();
 

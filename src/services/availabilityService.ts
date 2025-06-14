@@ -1,3 +1,4 @@
+
 import { supabase } from '../integrations/supabase/client';
 
 export interface AvailabilitySlot {
@@ -102,7 +103,7 @@ export const availabilityService = {
         startTime: data.start_time,
         endTime: data.end_time,
         durationMinutes: data.duration_minutes,
-        isAvailable: data.is_available
+        isAvailable: data.is_available ?? true // Gérer le cas où is_available est null
       };
     } catch (error) {
       console.error('Erreur dans createAvailabilitySlot:', error);
@@ -132,7 +133,7 @@ export const availabilityService = {
         startTime: slot.start_time,
         endTime: slot.end_time,
         durationMinutes: slot.duration_minutes,
-        isAvailable: slot.is_available
+        isAvailable: slot.is_available ?? true // Gérer le cas où is_available est null
       })) || [];
     } catch (error) {
       console.error('Erreur dans getPractitionerAvailability:', error);
