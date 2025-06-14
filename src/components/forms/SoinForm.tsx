@@ -1,459 +1,228 @@
 import React, { useState, useEffect } from 'react';
+import { Plus, AlertTriangle } from 'lucide-react';
 import { Soin, Appareil, Zone } from '../../types';
-import { X, Save, Plus, Minus } from 'lucide-react';
-import { appareilService } from '../../services/appareilService';
-import { soinService } from '../../services/soinService';
-import { productService } from '../../services/productService';
+import { supabase } from '../../lib/supabase';
 
 interface SoinFormProps {
   soin?: Soin;
-  appareilId?: string;
-  zoneId?: string;
-  onSave: (soin: Omit<Soin, 'id'>) => void;
+  onSave: (soinData: Omit<Soin, 'id'>) => void;
   onCancel: () => void;
 }
 
-const SoinForm: React.FC<SoinFormProps> = ({ soin, appareilId, zoneId, onSave, onCancel }) => {
-  const [formData, setFormData] = useState({
-    appareilId: soin?.appareilId || appareilId || '',
-    zoneId: soin?.zoneId || zoneId || '',
-    nom: soin?.nom || '',
-    description: soin?.description || '',
-    duree: soin?.duree || 30,
-    prix: soin?.prix || 0,
-    contreIndications: soin?.contreIndications || [],
-    conseilsPostTraitement: soin?.conseilsPostTraitement || [],
-    isActive: soin?.isActive ?? true
-  });
-
+export default function SoinForm({ soin, onSave, onCancel }: SoinFormProps) {
   const [appareils, setAppareils] = useState<Appareil[]>([]);
   const [zones, setZones] = useState<Zone[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [newContraindication, setNewContraindication] = useState('');
-  const [newConseil, setNewConseil] = useState('');
-  const [allProducts, setAllProducts] = useState<any[]>([]);
-  const [selectedExpectedConsumables, setSelectedExpectedConsumables] = useState<Array<{ productId: string; quantity: number; }>>([]);
-  const [loadingProducts, setLoadingProducts] = useState(true);
+  const [products, setProducts] = useState<any[]>([]);
+
+  const [showConsumablesModal, setShowConsumablesModal] = useState(false);
+  const [consumableQuantities, setConsumableQuantities] = useState<{ [productId: string]: number }>({});
+  const [formErrors, setFormErrors] = useState<string[]>([]);
+
+  const toggleConsumablesModal = () => {
+    setShowConsumablesModal(!showConsumablesModal);
+  };
+
+  const handleConsumableQuantityChange = (productId: string, quantity: number) => {
+    setConsumableQuantities({
+      ...consumableQuantities,
+      [productId]: quantity,
+    });
+  };
+
+  const validateForm = () => {
+    const errors: string[] = [];
+    if (!formData.nom) {
+      errors.push('Le nom du soin est obligatoire.');
+    }
+    if (!formData.prix) {
+      errors.push('Le prix du soin est obligatoire.');
+    }
+    if (!formData.appareil_id) {
+      errors.push('L\'appareil est obligatoire.');
+    }
+    if (!formData.zone_id) {
+      errors.push('La zone est obligatoire.');
+    }
+    if (!formData.duree) {
+      errors.push('La durée est obligatoire.');
+    }
+    setFormErrors(errors);
+    return errors.length === 0;
+  };
+
+  const [formData, setFormData] = useState({
+    nom: soin?.nom || '',
+    description: soin?.description || '',
+    appareil_id: soin?.appareil_id || '',
+    zone_id: soin?.zone_id || '',
+    duree: soin?.duree || 60,
+    prix: soin?.prix || 0,
+    contre_indications: soin?.contre_indications || [],
+    conseils_post_traitement: soin?.conseils_post_traitement || [],
+    expected_consumables: soin?.expected_consumables || {},
+    is_active: soin?.is_active ?? true
+  });
 
   useEffect(() => {
-    loadAppareils();
-    loadProducts();
+    loadData();
   }, []);
 
-  useEffect(() => {
-    if (soin && soin.expectedConsumables) {
-      setSelectedExpectedConsumables(soin.expectedConsumables);
-    }
-  }, [soin]);
-  useEffect(() => {
-    if (formData.appareilId) {
-      loadZones(formData.appareilId);
-    }
-  }, [formData.appareilId]);
-
-  const loadAppareils = async () => {
+  const loadData = async () => {
     try {
-      setLoading(true);
-      const data = await appareilService.getActive();
-      setAppareils(data);
+      const [appareilsResult, zonesResult, productsResult] = await Promise.all([
+        supabase.from('appareils').select('*').eq('is_active', true),
+        supabase.from('zones').select('*'),
+        supabase.from('products').select('*')
+      ]);
+
+      if (appareilsResult.data) setAppareils(appareilsResult.data);
+      if (zonesResult.data) setZones(zonesResult.data);
+      if (productsResult.data) setProducts(productsResult.data);
     } catch (error) {
-      console.error('Erreur lors du chargement des appareils:', error);
-    } finally {
-      setLoading(false);
+      console.error('Error loading data:', error);
     }
-  };
-
-  const loadProducts = async () => {
-    try {
-      setLoadingProducts(true);
-      const data = await productService.getAll();
-      setAllProducts(data);
-    } catch (error) {
-      console.error('Erreur lors du chargement des produits:', error);
-    } finally {
-      setLoadingProducts(false);
-    }
-  };
-
-  const loadZones = async (appareilId: string) => {
-    try {
-      const data = await soinService.getZonesByAppareil(appareilId);
-      setZones(data);
-    } catch (error) {
-      console.error('Erreur lors du chargement des zones:', error);
-    }
-  };
-
-  const addExpectedConsumable = (productId: string, quantity: number) => {
-    const existingIndex = selectedExpectedConsumables.findIndex(item => item.productId === productId);
-    if (existingIndex >= 0) {
-      updateExpectedConsumableQuantity(productId, selectedExpectedConsumables[existingIndex].quantity + quantity);
-    } else {
-      setSelectedExpectedConsumables(prev => [...prev, { productId, quantity }]);
-    }
-  };
-
-  const updateExpectedConsumableQuantity = (productId: string, newQuantity: number) => {
-    if (newQuantity <= 0) {
-      removeExpectedConsumable(productId);
-    } else {
-      setSelectedExpectedConsumables(prev =>
-        prev.map(item =>
-          item.productId === productId ? { ...item, quantity: newQuantity } : item
-        )
-      );
-    }
-  };
-
-  const removeExpectedConsumable = (productId: string) => {
-    setSelectedExpectedConsumables(prev => prev.filter(item => item.productId !== productId));
-  };
-
-  const getProductName = (productId: string) => {
-    const product = allProducts.find(p => p.id === productId);
-    return product ? product.name : 'Produit inconnu';
-  };
-
-  const getProductUnit = (productId: string) => {
-    const product = allProducts.find(p => p.id === productId);
-    return product ? (product.unit || 'unité') : 'unité';
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave({
-      ...formData,
-      expectedConsumables: selectedExpectedConsumables,
-      createdAt: soin?.createdAt || new Date().toISOString()
-    });
-  };
-
-  const addContraindication = () => {
-    if (newContraindication.trim()) {
-      setFormData(prev => ({
-        ...prev,
-        contreIndications: [...prev.contreIndications, newContraindication.trim()]
-      }));
-      setNewContraindication('');
-    }
-  };
-
-  const removeContraindication = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      contreIndications: prev.contreIndications.filter((_, i) => i !== index)
-    }));
-  };
-
-  const addConseil = () => {
-    if (newConseil.trim()) {
-      setFormData(prev => ({
-        ...prev,
-        conseilsPostTraitement: [...prev.conseilsPostTraitement, newConseil.trim()]
-      }));
-      setNewConseil('');
-    }
-  };
-
-  const removeConseil = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      conseilsPostTraitement: prev.conseilsPostTraitement.filter((_, i) => i !== index)
-    }));
+    onSave(formData);
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="p-6 border-b border-gray-100">
-          <div className="flex justify-between items-center">
-            <h2 className="text-xl font-bold text-gray-800">
-              {soin ? 'Modifier le soin' : 'Nouveau soin'}
-            </h2>
-            <button onClick={onCancel} className="text-gray-500 hover:text-gray-700">
-              <X className="w-6 h-6" />
-            </button>
-          </div>
-        </div>
-
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+        <h2 className="text-xl font-bold mb-4">
+          {soin ? 'Modifier le soin' : 'Nouveau soin'}
+        </h2>
+        
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Basic information */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Appareil *</label>
-              <select
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Nom du soin *
+              </label>
+              <input
+                type="text"
+                value={formData.nom}
+                onChange={(e) => setFormData({ ...formData, nom: e.target.value })}
+                className="w-full border border-gray-300 rounded-md px-3 py-2"
                 required
-                value={formData.appareilId}
-                onChange={(e) => setFormData(prev => ({ ...prev, appareilId: e.target.value, zoneId: '' }))}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent bg-white"
-                disabled={!!appareilId} // Disable if pre-filled
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Prix (€) *
+              </label>
+              <input
+                type="number"
+                value={formData.prix}
+                onChange={(e) => setFormData({ ...formData, prix: parseFloat(e.target.value) || 0 })}
+                className="w-full border border-gray-300 rounded-md px-3 py-2"
+                required
+                min="0"
+                step="0.01"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Description
+            </label>
+            <textarea
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              className="w-full border border-gray-300 rounded-md px-3 py-2"
+              rows={3}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Appareil *
+              </label>
+              <select
+                value={formData.appareil_id}
+                onChange={(e) => setFormData({ ...formData, appareil_id: e.target.value })}
+                className="w-full border border-gray-300 rounded-md px-3 py-2"
+                required
               >
                 <option value="">Sélectionner un appareil</option>
-                {appareils.map(appareil => (
+                {appareils.map((appareil) => (
                   <option key={appareil.id} value={appareil.id}>
                     {appareil.nom}
                   </option>
                 ))}
               </select>
             </div>
+
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Zone *</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Zone *
+              </label>
               <select
+                value={formData.zone_id}
+                onChange={(e) => setFormData({ ...formData, zone_id: e.target.value })}
+                className="w-full border border-gray-300 rounded-md px-3 py-2"
                 required
-                value={formData.zoneId}
-                onChange={(e) => setFormData(prev => ({ ...prev, zoneId: e.target.value }))}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent bg-white"
-                disabled={!formData.appareilId || !!zoneId} // Disable if no appareil selected or pre-filled
               >
                 <option value="">Sélectionner une zone</option>
-                {zones.map(zone => (
+                {zones.map((zone) => (
                   <option key={zone.id} value={zone.id}>
                     {zone.nom}
                   </option>
                 ))}
               </select>
             </div>
-          </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Nom du soin *</label>
-            <input
-              type="text"
-              required
-              value={formData.nom}
-              onChange={(e) => setFormData(prev => ({ ...prev, nom: e.target.value }))}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-              placeholder="Ex: Emface Zone front"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
-            <textarea
-              value={formData.description}
-              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              rows={3}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-              placeholder="Décrivez le soin..."
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Durée (minutes) *</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Durée (minutes) *
+              </label>
               <input
                 type="number"
+                value={formData.duree}
+                onChange={(e) => setFormData({ ...formData, duree: parseInt(e.target.value) || 0 })}
+                className="w-full border border-gray-300 rounded-md px-3 py-2"
                 required
                 min="1"
-                value={formData.duree}
-                onChange={(e) => setFormData(prev => ({ ...prev, duree: parseInt(e.target.value) || 30 }))}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Prix (FCFA) *</label>
-              <input
-                type="number"
-                required
-                min="0"
-                value={formData.prix}
-                onChange={(e) => setFormData(prev => ({ ...prev, prix: parseInt(e.target.value) || 0 }))}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent"
               />
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Contre-indications</label>
-            <div className="flex space-x-2 mb-3">
-              <input
-                type="text"
-                value={newContraindication}
-                onChange={(e) => setNewContraindication(e.target.value)}
-                placeholder="Ajouter une contre-indication"
-                className="flex-1 px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addContraindication())}
-              />
-              <button
-                type="button"
-                onClick={addContraindication}
-                className="px-4 py-2 bg-pink-100 text-pink-700 rounded-lg hover:bg-pink-200 transition-colors"
-              >
-                <Plus className="w-4 h-4" />
-              </button>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {formData.contreIndications.map((ci, index) => (
-                <span
-                  key={index}
-                  className="px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm flex items-center space-x-1"
-                >
-                  <span>{ci}</span>
-                  <button
-                    type="button"
-                    onClick={() => removeContraindication(index)}
-                    className="text-red-600 hover:text-red-800"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </span>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Conseils post-traitement</label>
-            <div className="flex space-x-2 mb-3">
-              <input
-                type="text"
-                value={newConseil}
-                onChange={(e) => setNewConseil(e.target.value)}
-                placeholder="Ajouter un conseil post-traitement"
-                className="flex-1 px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addConseil())}
-              />
-              <button
-                type="button"
-                onClick={addConseil}
-                className="px-4 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors"
-              >
-                <Plus className="w-4 h-4" />
-              </button>
-            </div>
-            <div className="space-y-2">
-              {formData.conseilsPostTraitement.map((conseil, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between p-3 bg-green-50 rounded-lg"
-                >
-                  <span className="text-green-800">{conseil}</span>
-                  <button
-                    type="button"
-                    onClick={() => removeConseil(index)}
-                    className="text-red-600 hover:text-red-800"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Section Consommables Attendus */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Consommables attendus par séance</label>
-            
-            {/* Ajouter un consommable */}
-            <div className="mb-4">
-              <div className="flex space-x-2">
-                <select
-                  className="flex-1 px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent bg-white text-sm"
-                  onChange={(e) => {
-                    if (e.target.value) {
-                      addExpectedConsumable(e.target.value, 1);
-                      e.target.value = '';
-                    }
-                  }}
-                >
-                  <option value="">Ajouter un consommable...</option>
-                  {loadingProducts ? (
-                    <option disabled>Chargement...</option>
-                  ) : (
-                    allProducts.map(product => (
-                      <option key={product.id} value={product.id}>
-                        {product.name} ({product.unit || 'unité'}) - Stock: {product.quantity}
-                      </option>
-                    ))
-                  )}
-                </select>
-              </div>
-            </div>
-
-            {/* Liste des consommables sélectionnés */}
-            <div className="space-y-2">
-              {selectedExpectedConsumables.length === 0 ? (
-                <p className="text-sm text-gray-500 text-center py-3 border border-gray-200 rounded-lg">
-                  Aucun consommable prévu
-                </p>
-              ) : (
-                selectedExpectedConsumables.map(item => (
-                  <div key={item.productId} className="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                    <div className="flex-1">
-                      <p className="font-medium text-gray-800">{getProductName(item.productId)}</p>
-                      <p className="text-sm text-gray-600">Unité: {getProductUnit(item.productId)}</p>
-                      {(() => {
-                        const product = allProducts.find(p => p.id === item.productId);
-                        const isLowStock = product && product.quantity < item.quantity;
-                        return isLowStock && (
-                          <div className="flex items-center space-x-1 text-orange-600 mt-1">
-                            <AlertTriangle className="w-3 h-3" />
-                            <span className="text-xs">Stock insuffisant ({product.quantity} disponible)</span>
-                          </div>
-                        );
-                      })()}
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <button
-                        type="button"
-                        onClick={() => updateExpectedConsumableQuantity(item.productId, item.quantity - 1)}
-                        className="w-6 h-6 flex items-center justify-center bg-blue-200 text-blue-700 rounded hover:bg-blue-300"
-                      >
-                        -
-                      </button>
-                      <span className="w-8 text-center font-medium">{item.quantity}</span>
-                      <button
-                        type="button"
-                        onClick={() => updateExpectedConsumableQuantity(item.productId, item.quantity + 1)}
-                        className="w-6 h-6 flex items-center justify-center bg-blue-200 text-blue-700 rounded hover:bg-blue-300"
-                      >
-                        +
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => removeExpectedConsumable(item.productId)}
-                        className="w-6 h-6 flex items-center justify-center bg-red-200 text-red-700 rounded hover:bg-red-300 ml-2"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center">
             <input
               type="checkbox"
-              id="isActive"
-              checked={formData.isActive}
-              onChange={(e) => setFormData(prev => ({ ...prev, isActive: e.target.checked }))}
-              className="w-4 h-4 text-pink-600 border-gray-300 rounded focus:ring-pink-500"
+              id="is_active"
+              checked={formData.is_active}
+              onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
+              className="mr-2"
             />
-            <label htmlFor="isActive" className="text-sm font-medium text-gray-700">
-              Soin actif (visible dans le catalogue)
+            <label htmlFor="is_active" className="text-sm font-medium text-gray-700">
+              Soin actif
             </label>
           </div>
 
-          <div className="flex justify-end space-x-4 pt-6 border-t border-gray-100">
+          <div className="flex justify-end space-x-3 pt-4">
             <button
               type="button"
               onClick={onCancel}
-              className="px-6 py-3 text-gray-600 hover:text-gray-800 transition-colors"
+              className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50"
             >
               Annuler
             </button>
             <button
               type="submit"
-              className="flex items-center space-x-2 bg-gradient-to-r from-pink-500 to-orange-500 text-white px-6 py-3 rounded-xl hover:shadow-lg transition-all"
+              className="px-4 py-2 bg-pink-500 text-white rounded-md hover:bg-pink-600"
             >
-              <Save className="w-5 h-5" />
-              <span>Enregistrer</span>
+              {soin ? 'Modifier' : 'Créer'}
             </button>
           </div>
         </form>
       </div>
     </div>
   );
-};
-
-export default SoinForm;
+}

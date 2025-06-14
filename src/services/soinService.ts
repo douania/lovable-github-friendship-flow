@@ -60,13 +60,13 @@ const mapDbZoneToZone = (dbZone: any): Zone => ({
 // Fonction pour convertir les données de la DB vers le type Forfait
 const mapDbForfaitToForfait = (dbForfait: any): Forfait => ({
   id: dbForfait.id,
-  soinId: dbForfait.soin_id,
+  soin_id: dbForfait.soin_id,
   nbSeances: dbForfait.nb_seances,
   prixTotal: dbForfait.prix_total,
   prixUnitaire: dbForfait.prix_unitaire,
   remarque: dbForfait.remarque,
   isActive: dbForfait.is_active,
-  createdAt: dbForfait.created_at
+  created_at: dbForfait.created_at
 });
 
 export const soinService = {
@@ -286,5 +286,31 @@ export const soinService = {
       console.error('Erreur dans delete soin:', error);
       throw error;
     }
+  },
+
+  async createForfait(forfaitData: Omit<Forfait, 'id' | 'created_at'>): Promise<Forfait> {
+    const { data, error } = await supabase
+      .from('forfaits')
+      .insert([{
+        ...forfaitData,
+        soin_ids: forfaitData.soin_ids || []
+      }])
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
+  async getGroupedSoins() {
+    const soins = await this.getAll();
+    const zones = await supabase.from('zones').select('*');
+    
+    if (zones.error) throw zones.error;
+    
+    return zones.data?.map((zone: any) => ({
+      ...zone,
+      soins: soins.filter((soin: any) => soin.zone_id === zone.id)
+    })).filter((zone: any) => zone.soins.length > 0) || [];
   }
 };
