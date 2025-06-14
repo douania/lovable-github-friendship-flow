@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { User } from '@supabase/supabase-js';
 import { supabase } from '../integrations/supabase/client';
+import { userService } from '../services/userService';
 
 interface UserWithRole extends User {
   role?: string;
@@ -11,16 +12,26 @@ export const useAuth = () => {
   const [user, setUser] = useState<UserWithRole | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const fetchUserRole = async (userId: string) => {
+    try {
+      const role = await userService.getCurrentUserRole();
+      return role;
+    } catch (error) {
+      console.error('Error fetching user role:', error);
+      return 'praticien';
+    }
+  };
+
   useEffect(() => {
     // Get current session
     const getSession = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user) {
-          // For now, set a default role since we don't have user service
+          const role = await fetchUserRole(session.user.id);
           setUser({
             ...session.user,
-            role: 'praticien'
+            role
           });
         } else {
           setUser(null);
@@ -39,9 +50,10 @@ export const useAuth = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_, session) => {
         if (session?.user) {
+          const role = await fetchUserRole(session.user.id);
           setUser({
             ...session.user,
-            role: 'praticien'
+            role
           });
         } else {
           setUser(null);
