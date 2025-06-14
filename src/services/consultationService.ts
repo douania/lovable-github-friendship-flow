@@ -1,4 +1,3 @@
-
 import { supabase } from '../integrations/supabase/client';
 import { Consultation } from '../types/consultation';
 
@@ -67,23 +66,28 @@ export const consultationService = {
   },
 
   async createConsultation(consultationData: Omit<Consultation, 'id' | 'createdAt' | 'updatedAt'>): Promise<Consultation | null> {
+    // Clean and validate data before sending to database
+    const cleanData = {
+      patient_id: consultationData.patientId,
+      appointment_id: consultationData.appointmentId || null,
+      soin_id: consultationData.soinId || null,
+      practitioner_id: consultationData.practitionerId || null,
+      consultation_date: consultationData.consultationDate,
+      notes_pre_treatment: consultationData.notesPreTreatment || '',
+      notes_post_treatment: consultationData.notesPostTreatment || '',
+      photos_before: consultationData.photosBefore || [],
+      photos_after: consultationData.photosAfter || [],
+      side_effects: consultationData.sideEffects || '',
+      next_appointment_recommended: consultationData.nextAppointmentRecommended || null,
+      consent_signed: consultationData.consentSigned || false,
+      satisfaction_rating: consultationData.satisfactionRating || null
+    };
+
+    console.log('Données à envoyer:', cleanData);
+
     const { data, error } = await supabase
       .from('consultations')
-      .insert({
-        patient_id: consultationData.patientId,
-        appointment_id: consultationData.appointmentId || null,
-        soin_id: consultationData.soinId,
-        practitioner_id: consultationData.practitionerId,
-        consultation_date: consultationData.consultationDate,
-        notes_pre_treatment: consultationData.notesPreTreatment,
-        notes_post_treatment: consultationData.notesPostTreatment,
-        photos_before: consultationData.photosBefore,
-        photos_after: consultationData.photosAfter,
-        side_effects: consultationData.sideEffects,
-        next_appointment_recommended: consultationData.nextAppointmentRecommended || null,
-        consent_signed: consultationData.consentSigned,
-        satisfaction_rating: consultationData.satisfactionRating || null
-      })
+      .insert(cleanData)
       .select()
       .single();
 

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { X, Save, Calendar, User, Stethoscope } from 'lucide-react';
 import { Consultation } from '../../types/consultation';
@@ -59,7 +58,30 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(formData);
+    
+    // Validation
+    if (!formData.patientId) {
+      alert('Veuillez sélectionner un patient');
+      return;
+    }
+    
+    if (!formData.soinId) {
+      alert('Veuillez sélectionner un soin');
+      return;
+    }
+
+    // Clean data before sending
+    const cleanedData = {
+      ...formData,
+      // Convert empty strings to undefined for optional UUID fields
+      appointmentId: formData.appointmentId || undefined,
+      practitionerId: formData.practitionerId || undefined,
+      nextAppointmentRecommended: formData.nextAppointmentRecommended || undefined,
+      satisfactionRating: formData.satisfactionRating || undefined
+    };
+
+    console.log('Données nettoyées:', cleanedData);
+    onSave(cleanedData);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
