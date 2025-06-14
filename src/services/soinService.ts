@@ -1,121 +1,176 @@
 
 import { supabase } from '../lib/supabase';
-import { Soin, Forfait, Zone } from '../types';
+import { Soin, Forfait, Appareil, Zone } from '../types';
+
+// Fonction pour convertir les données de la DB vers le type Soin
+const mapDbSoinToSoin = (dbSoin: any, appareil?: Appareil, zone?: Zone): Soin => ({
+  id: dbSoin.id,
+  nom: dbSoin.nom,
+  description: dbSoin.description || '',
+  appareilId: dbSoin.appareil_id,
+  zoneId: dbSoin.zone_id,
+  duree: dbSoin.duree,
+  prix: dbSoin.prix,
+  contreIndications: dbSoin.contre_indications || [],
+  conseilsPostTraitement: dbSoin.conseils_post_traitement || [],
+  expectedConsumables: dbSoin.expected_consumables || [],
+  isActive: dbSoin.is_active,
+  appareil: appareil,
+  zone: zone
+});
+
+// Fonction pour convertir le type Soin vers les données de la DB
+const mapSoinToDbSoin = (soin: Omit<Soin, 'id'>) => ({
+  nom: soin.nom,
+  description: soin.description,
+  appareil_id: soin.appareilId,
+  zone_id: soin.zoneId,
+  duree: soin.duree,
+  prix: soin.prix,
+  contre_indications: soin.contreIndications,
+  conseils_post_traitement: soin.conseilsPostTraitement,
+  expected_consumables: soin.expectedConsumables,
+  is_active: soin.isActive
+});
+
+// Fonction pour convertir les données de la DB vers le type Forfait
+const mapDbForfaitToForfait = (dbForfait: any): Forfait => ({
+  id: dbForfait.id,
+  nom: dbForfait.nom,
+  description: dbForfait.description || '',
+  soinIds: dbForfait.soin_ids || [],
+  prixTotal: dbForfait.prix_total,
+  prixReduit: dbForfait.prix_reduit,
+  nbSeances: dbForfait.nb_seances,
+  validiteMois: dbForfait.validite_mois,
+  isActive: dbForfait.is_active,
+  ordre: dbForfait.ordre,
+  createdAt: dbForfait.created_at
+});
+
+// Fonction pour convertir le type Forfait vers les données de la DB
+const mapForfaitToDbForfait = (forfait: Omit<Forfait, 'id' | 'created_at'>) => ({
+  nom: forfait.nom,
+  description: forfait.description,
+  soin_ids: forfait.soinIds,
+  prix_total: forfait.prixTotal,
+  prix_reduit: forfait.prixReduit,
+  nb_seances: forfait.nbSeances,
+  validite_mois: forfait.validiteMois,
+  is_active: forfait.isActive,
+  ordre: forfait.ordre
+});
 
 export const soinService = {
-  // Zone methods
-  async getZonesByAppareil(appareilId: string): Promise<Zone[]> {
-    try {
-      const { data, error } = await supabase
-        .from('zones')
-        .select('*')
-        .eq('appareil_id', appareilId);
-
-      if (error) throw error;
-      return data || [];
-    } catch (error) {
-      console.error('Error fetching zones:', error);
-      throw error;
-    }
-  },
-
-  async getByAppareilAndZone(appareilId: string, zoneId: string): Promise<Soin | null> {
-    try {
-      const { data, error } = await supabase
-        .from('soins')
-        .select('*')
-        .eq('appareil_id', appareilId)
-        .eq('zone_id', zoneId)
-        .single();
-
-      if (error && error.code !== 'PGRST116') throw error;
-      return data || null;
-    } catch (error) {
-      console.error('Error fetching soin by appareil and zone:', error);
-      throw error;
-    }
-  },
-
-  // Soin CRUD methods - Updated method names to match usage
+  // Récupérer tous les soins avec leurs appareils et zones
   async getAllSoins(): Promise<Soin[]> {
     try {
       const { data, error } = await supabase
         .from('soins')
-        .select('*')
-        .order('nom');
+        .select(`
+          *,
+          appareils(*),
+          zones(*)
+        `)
+        .eq('is_active', true)
+        .order('nom', { ascending: true });
 
-      if (error) throw error;
-      return data || [];
+      if (error) {
+        console.error('Erreur lors de la récupération des soins:', error);
+        throw error;
+      }
+
+      return data?.map(soin => mapDbSoinToSoin(soin, soin.appareils, soin.zones)) || [];
     } catch (error) {
-      console.error('Error fetching soins:', error);
+      console.error('Erreur dans getAllSoins:', error);
       throw error;
     }
   },
 
-  // Alias for compatibility
-  async getAll(): Promise<Soin[]> {
-    return this.getAllSoins();
-  },
-
-  async getAllActive(): Promise<Soin[]> {
+  // Récupérer un soin par ID
+  async getSoinById(id: string): Promise<Soin | null> {
     try {
       const { data, error } = await supabase
         .from('soins')
-        .select('*')
-        .eq('is_active', true)
-        .order('nom');
+        .select(`
+          *,
+          appareils(*),
+          zones(*)
+        `)
+        .eq('id', id)
+        .single();
 
-      if (error) throw error;
-      return data || [];
+      if (error) {
+        if (error.code === 'PGRST116') {
+          return null;
+        }
+        console.error('Erreur lors de la récupération du soin:', error);
+        throw error;
+      }
+
+      return data ? mapDbSoinToSoin(data, data.appareils, data.zones) : null;
     } catch (error) {
-      console.error('Error fetching active soins:', error);
+      console.error('Erreur dans getSoinById:', error);
       throw error;
     }
   },
 
+  // Créer un nouveau soin
   async createSoin(soinData: Omit<Soin, 'id'>): Promise<Soin> {
     try {
+      const dbSoin = mapSoinToDbSoin(soinData);
+      
       const { data, error } = await supabase
         .from('soins')
-        .insert([soinData])
-        .select()
+        .insert([dbSoin])
+        .select(`
+          *,
+          appareils(*),
+          zones(*)
+        `)
         .single();
 
-      if (error) throw error;
-      return data;
+      if (error) {
+        console.error('Erreur lors de la création du soin:', error);
+        throw error;
+      }
+
+      return mapDbSoinToSoin(data, data.appareils, data.zones);
     } catch (error) {
-      console.error('Error creating soin:', error);
+      console.error('Erreur dans createSoin:', error);
       throw error;
     }
   },
 
-  // Alias for compatibility
-  async create(soinData: Omit<Soin, 'id'>): Promise<Soin> {
-    return this.createSoin(soinData);
-  },
-
+  // Mettre à jour un soin
   async updateSoin(id: string, soinData: Omit<Soin, 'id'>): Promise<Soin> {
     try {
+      const dbSoin = mapSoinToDbSoin(soinData);
+      
       const { data, error } = await supabase
         .from('soins')
-        .update(soinData)
+        .update(dbSoin)
         .eq('id', id)
-        .select()
+        .select(`
+          *,
+          appareils(*),
+          zones(*)
+        `)
         .single();
 
-      if (error) throw error;
-      return data;
+      if (error) {
+        console.error('Erreur lors de la mise à jour du soin:', error);
+        throw error;
+      }
+
+      return mapDbSoinToSoin(data, data.appareils, data.zones);
     } catch (error) {
-      console.error('Error updating soin:', error);
+      console.error('Erreur dans updateSoin:', error);
       throw error;
     }
   },
 
-  // Alias for compatibility
-  async update(id: string, soinData: Omit<Soin, 'id'>): Promise<Soin> {
-    return this.updateSoin(id, soinData);
-  },
-
+  // Supprimer un soin
   async deleteSoin(id: string): Promise<void> {
     try {
       const { error } = await supabase
@@ -123,73 +178,85 @@ export const soinService = {
         .delete()
         .eq('id', id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erreur lors de la suppression du soin:', error);
+        throw error;
+      }
     } catch (error) {
-      console.error('Error deleting soin:', error);
+      console.error('Erreur dans deleteSoin:', error);
       throw error;
     }
   },
 
-  // Alias for compatibility
-  async delete(id: string): Promise<void> {
-    return this.deleteSoin(id);
-  },
-
-  // Forfait CRUD methods
+  // Récupérer tous les forfaits
   async getAllForfaits(): Promise<Forfait[]> {
     try {
       const { data, error } = await supabase
         .from('forfaits')
-        .select(`
-          *,
-          soins:soinIds (*)
-        `)
-        .order('nom');
+        .select('*')
+        .eq('is_active', true)
+        .order('ordre', { ascending: true });
 
-      if (error) throw error;
-      return data || [];
+      if (error) {
+        console.error('Erreur lors de la récupération des forfaits:', error);
+        throw error;
+      }
+
+      return data?.map(mapDbForfaitToForfait) || [];
     } catch (error) {
-      console.error('Error fetching forfaits:', error);
+      console.error('Erreur dans getAllForfaits:', error);
       throw error;
     }
   },
 
+  // Créer un nouveau forfait
   async createForfait(forfaitData: Omit<Forfait, 'id' | 'created_at'>): Promise<Forfait> {
     try {
+      const dbForfait = mapForfaitToDbForfait(forfaitData);
+      
       const { data, error } = await supabase
         .from('forfaits')
-        .insert([{
-          ...forfaitData,
-          created_at: new Date().toISOString()
-        }])
+        .insert([dbForfait])
         .select()
         .single();
 
-      if (error) throw error;
-      return data;
+      if (error) {
+        console.error('Erreur lors de la création du forfait:', error);
+        throw error;
+      }
+
+      return mapDbForfaitToForfait(data);
     } catch (error) {
-      console.error('Error creating forfait:', error);
+      console.error('Erreur dans createForfait:', error);
       throw error;
     }
   },
 
+  // Mettre à jour un forfait
   async updateForfait(id: string, forfaitData: Omit<Forfait, 'id' | 'created_at'>): Promise<Forfait> {
     try {
+      const dbForfait = mapForfaitToDbForfait(forfaitData);
+      
       const { data, error } = await supabase
         .from('forfaits')
-        .update(forfaitData)
+        .update(dbForfait)
         .eq('id', id)
         .select()
         .single();
 
-      if (error) throw error;
-      return data;
+      if (error) {
+        console.error('Erreur lors de la mise à jour du forfait:', error);
+        throw error;
+      }
+
+      return mapDbForfaitToForfait(data);
     } catch (error) {
-      console.error('Error updating forfait:', error);
+      console.error('Erreur dans updateForfait:', error);
       throw error;
     }
   },
 
+  // Supprimer un forfait
   async deleteForfait(id: string): Promise<void> {
     try {
       const { error } = await supabase
@@ -197,29 +264,12 @@ export const soinService = {
         .delete()
         .eq('id', id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erreur lors de la suppression du forfait:', error);
+        throw error;
+      }
     } catch (error) {
-      console.error('Error deleting forfait:', error);
-      throw error;
-    }
-  },
-
-  // Additional utility methods
-  async getGroupedSoins(): Promise<{ [key: string]: Soin[] }> {
-    try {
-      const soins = await this.getAllSoins();
-      const grouped = soins.reduce((acc: { [key: string]: Soin[] }, soin) => {
-        const key = soin.appareilId || 'autres';
-        if (!acc[key]) {
-          acc[key] = [];
-        }
-        acc[key].push(soin);
-        return acc;
-      }, {});
-
-      return grouped;
-    } catch (error) {
-      console.error('Error grouping soins:', error);
+      console.error('Erreur dans deleteForfait:', error);
       throw error;
     }
   }
