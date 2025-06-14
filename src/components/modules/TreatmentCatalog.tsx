@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, Search, Filter, Eye, ShoppingBag } from 'lucide-react';
+import { Plus, Edit2, Trash2, Search, ShoppingBag } from 'lucide-react';
 import { Soin, Forfait } from '../../types';
 import SoinForm from '../forms/SoinForm';
 import ForfaitForm from '../forms/ForfaitForm';
 import { soinService } from '../../services/soinService';
-import { useToast } from '../../hooks/useToast';
+import { useToast } from '@/hooks/use-toast';
 
 interface TreatmentCatalogProps {
   onForfaitSelect: (forfait: Forfait) => void;
