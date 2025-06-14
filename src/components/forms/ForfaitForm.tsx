@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Forfait, Soin, Product } from '../../types';
 import { X, Save, Plus, Minus, Calculator } from 'lucide-react';
 import { soinService } from '../../services/soinService';
-import { forfaitService } from '../../services/forfaitService';
 import { productService } from '../../services/productService';
 
 interface ForfaitFormProps {

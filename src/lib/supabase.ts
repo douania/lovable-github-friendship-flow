@@ -1,3 +1,4 @@
+
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
@@ -80,91 +81,112 @@ export interface Database {
           id: string;
           nom: string;
           description: string;
+          is_active: boolean;
+          ordre: number;
           created_at: string;
         };
         Insert: {
           id?: string;
           nom: string;
           description?: string;
+          is_active?: boolean;
+          ordre?: number;
           created_at?: string;
         };
         Update: {
           id?: string;
           nom?: string;
           description?: string;
+          is_active?: boolean;
+          ordre?: number;
           created_at?: string;
         };
       };
       soins: {
         Row: {
           id: string;
-          appareil_id: string;
-          zone_id: string;
           nom: string;
           description: string;
+          appareil_id: string | null;
+          zone_id: string | null;
           duree: number;
           prix: number;
           contre_indications: string[];
           conseils_post_traitement: string[];
+          expected_consumables: any;
           is_active: boolean;
+          ordre: number;
           created_at: string;
         };
         Insert: {
           id?: string;
-          appareil_id: string;
-          zone_id: string;
           nom: string;
           description?: string;
+          appareil_id?: string | null;
+          zone_id?: string | null;
           duree?: number;
           prix?: number;
           contre_indications?: string[];
           conseils_post_traitement?: string[];
+          expected_consumables?: any;
           is_active?: boolean;
+          ordre?: number;
           created_at?: string;
         };
         Update: {
           id?: string;
-          appareil_id?: string;
-          zone_id?: string;
           nom?: string;
           description?: string;
+          appareil_id?: string | null;
+          zone_id?: string | null;
           duree?: number;
           prix?: number;
           contre_indications?: string[];
           conseils_post_traitement?: string[];
+          expected_consumables?: any;
           is_active?: boolean;
+          ordre?: number;
           created_at?: string;
         };
       };
       forfaits: {
         Row: {
           id: string;
-          soin_id: string;
-          nb_seances: number;
+          nom: string;
+          description: string;
+          soin_ids: string[];
           prix_total: number;
-          prix_unitaire: number;
-          remarque: string;
+          prix_reduit: number;
+          nb_seances: number;
+          validite_mois: number;
           is_active: boolean;
+          ordre: number;
           created_at: string;
         };
         Insert: {
           id?: string;
-          soin_id: string;
-          nb_seances: number;
-          prix_total: number;
-          prix_unitaire: number;
-          remarque?: string;
+          nom: string;
+          description?: string;
+          soin_ids?: string[];
+          prix_total?: number;
+          prix_reduit?: number;
+          nb_seances?: number;
+          validite_mois?: number;
           is_active?: boolean;
+          ordre?: number;
           created_at?: string;
         };
         Update: {
           id?: string;
-          soin_id?: string;
-          nb_seances?: number;
+          nom?: string;
+          description?: string;
+          soin_ids?: string[];
           prix_total?: number;
-          prix_unitaire?: number;
-          remarque?: string;
+          prix_reduit?: number;
+          nb_seances?: number;
+          validite_mois?: number;
           is_active?: boolean;
+          ordre?: number;
           created_at?: string;
         };
       };
@@ -349,149 +371,6 @@ export interface Database {
           supplier?: string | null;
           expiry_date?: string | null;
           last_restocked?: string;
-          created_at?: string;
-        };
-      };
-      appareils: {
-        Row: {
-          id: string;
-          nom: string;
-          description: string;
-          image_url: string;
-          is_active: boolean;
-          ordre: number;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          nom: string;
-          description?: string;
-          image_url?: string;
-          is_active?: boolean;
-          ordre?: number;
-          created_at?: string;
-        };
-        Update: {
-          id?: string;
-          nom?: string;
-          description?: string;
-          image_url?: string;
-          is_active?: boolean;
-          ordre?: number;
-          created_at?: string;
-        };
-      };
-      zones: {
-        Row: {
-          id: string;
-          nom: string;
-          description: string;
-          is_active: boolean;
-          ordre: number;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          nom: string;
-          description?: string;
-          is_active?: boolean;
-          ordre?: number;
-          created_at?: string;
-        };
-        Update: {
-          id?: string;
-          nom?: string;
-          description?: string;
-          is_active?: boolean;
-          ordre?: number;
-          created_at?: string;
-        };
-      };
-      soins: {
-        Row: {
-          id: string;
-          nom: string;
-          description: string;
-          appareil_id: string | null;
-          zone_id: string | null;
-          duree: number;
-          prix: number;
-          contre_indications: string[];
-          conseils_post_traitement: string[];
-          expected_consumables: any;
-          is_active: boolean;
-          ordre: number;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          nom: string;
-          description?: string;
-          appareil_id?: string | null;
-          zone_id?: string | null;
-          duree?: number;
-          prix?: number;
-          contre_indications?: string[];
-          conseils_post_traitement?: string[];
-          expected_consumables?: any;
-          is_active?: boolean;
-          ordre?: number;
-          created_at?: string;
-        };
-        Update: {
-          id?: string;
-          nom?: string;
-          description?: string;
-          appareil_id?: string | null;
-          zone_id?: string | null;
-          duree?: number;
-          prix?: number;
-          contre_indications?: string[];
-          conseils_post_traitement?: string[];
-          expected_consumables?: any;
-          is_active?: boolean;
-          ordre?: number;
-          created_at?: string;
-        };
-      };
-      forfaits: {
-        Row: {
-          id: string;
-          nom: string;
-          description: string;
-          soin_ids: string[];
-          prix_total: number;
-          prix_reduit: number;
-          nb_seances: number;
-          validite_mois: number;
-          is_active: boolean;
-          ordre: number;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          nom: string;
-          description?: string;
-          soin_ids?: string[];
-          prix_total?: number;
-          prix_reduit?: number;
-          nb_seances?: number;
-          validite_mois?: number;
-          is_active?: boolean;
-          ordre?: number;
-          created_at?: string;
-        };
-        Update: {
-          id?: string;
-          nom?: string;
-          description?: string;
-          soin_ids?: string[];
-          prix_total?: number;
-          prix_reduit?: number;
-          nb_seances?: number;
-          validite_mois?: number;
-          is_active?: boolean;
-          ordre?: number;
           created_at?: string;
         };
       };

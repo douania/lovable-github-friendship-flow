@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
@@ -33,7 +34,7 @@ export const useAuth = () => {
 
     // Écouter les changements d'authentification
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      async (_event: any, session: any) => {
         if (session?.user) {
           const userWithRole = await getUserWithRole(session.user);
           setUser(userWithRole);

@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Invoice, Soin, Forfait } from '../../types';
-import { X, Save, DollarSign, CreditCard } from 'lucide-react';
+import { X, Save, DollarSign } from 'lucide-react';
 import { soinService } from '../../services/soinService';
 
 interface InvoiceFormProps {
   invoice?: Invoice;
   patients: any[];
-  treatments: any[];
   onSave: (invoice: Omit<Invoice, 'id'>) => void;
   onCancel: () => void;
   preselectedPatient?: string;
@@ -16,7 +15,6 @@ interface InvoiceFormProps {
 const InvoiceForm: React.FC<InvoiceFormProps> = ({ 
   invoice, 
   patients,
-  treatments,
   onSave, 
   onCancel,
   preselectedPatient,
@@ -127,16 +125,6 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({
       const soin = availableSoins.find(s => s.id === soinId);
       return sum + (soin?.prix || 0);
     }, 0);
-  };
-
-  const getSoinName = (soinId: string) => {
-    const soin = availableSoins.find(s => s.id === soinId);
-    return soin ? soin.nom : 'Soin inconnu';
-  };
-
-  const getSoinPrice = (soinId: string) => {
-    const soin = availableSoins.find(s => s.id === soinId);
-    return soin ? soin.prix : 0;
   };
 
   const clearForfait = () => {
