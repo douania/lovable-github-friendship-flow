@@ -1,438 +1,613 @@
-
 import React, { useState, useEffect } from 'react';
-import { Calculator, Package, DollarSign, TrendingUp, Settings, Save } from 'lucide-react';
+import { 
+  Search, 
+  Edit, 
+  Plus, 
+  Download, 
+  AlertTriangle, 
+  DollarSign, 
+  Package, 
+  Calculator,
+  TrendingUp,
+  TrendingDown
+} from 'lucide-react';
+import { useAuth } from '../../hooks/useAuth';
 import { soinService } from '../../services/soinService';
 import { forfaitService } from '../../services/forfaitService';
 import { productService } from '../../services/productService';
+import { Soin, Forfait, Product } from '../../types';
+import SoinForm from '../forms/SoinForm';
+import ForfaitForm from '../forms/ForfaitForm';
 
-interface ConsumableItem {
-  productId: string;
-  productName: string;
-  quantity: number;
-  unitPrice: number;
-  totalCost: number;
-}
-
-interface ServiceItem {
+interface PricingItem {
   id: string;
   type: 'soin' | 'forfait';
   name: string;
   description: string;
-  currentPrice: number;
-  consumables: ConsumableItem[];
-  totalConsumableCost: number;
-  suggestedPrice: number;
+  consumables: Array<{ productId: string; quantity: number; name: string; unitPrice: number; }>;
+  consumablesCost: number;
+  sellingPrice: number;
   margin: number;
   marginPercentage: number;
+  comment?: string;
+  lastModifiedAt?: string;
+  lastModifiedBy?: string;
+  isActive: boolean;
+  data: Soin | Forfait;
 }
 
 const PricingAndConsumables: React.FC = () => {
-  const [services, setServices] = useState<ServiceItem[]>([]);
-  const [selectedService, setSelectedService] = useState<ServiceItem | null>(null);
-  const [products, setProducts] = useState<any[]>([]);
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
+  
+  const [pricingItems, setPricingItems] = useState<PricingItem[]>([]);
+  const [filteredItems, setFilteredItems] = useState<PricingItem[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [typeFilter, setTypeFilter] = useState<'all' | 'soin' | 'forfait'>('all');
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  const [showSoinForm, setShowSoinForm] = useState(false);
+  const [showForfaitForm, setShowForfaitForm] = useState(false);
+  const [editingSoin, setEditingSoin] = useState<Soin | null>(null);
+  const [editingForfait, setEditingForfait] = useState<Forfait | null>(null);
+  
+  const [soins, setSoins] = useState<Soin[]>([]);
+  const [forfaits, setForfaits] = useState<Forfait[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
 
   useEffect(() => {
-    loadData();
+    loadAllData();
   }, []);
 
-  const loadData = async () => {
+  useEffect(() => {
+    filterItems();
+  }, [pricingItems, searchTerm, typeFilter]);
+
+  const loadAllData = async () => {
     try {
+      setLoading(true);
+      setError(null);
+      
       const [soinsData, forfaitsData, productsData] = await Promise.all([
-        soinService.getAll(),
+        soinService.getAllActive(),
         forfaitService.getAll(),
         productService.getAll()
       ]);
-
+      
+      setSoins(soinsData);
+      setForfaits(forfaitsData);
       setProducts(productsData);
-
-      // Convertir les soins et forfaits en ServiceItem
-      const serviceItems: ServiceItem[] = [
-        ...soinsData.map(soin => ({
-          id: soin.id,
-          type: 'soin' as const,
-          name: soin.nom,
-          description: soin.description,
-          currentPrice: soin.prix,
-          consumables: [],
-          totalConsumableCost: 0,
-          suggestedPrice: soin.prix,
-          margin: soin.prix,
-          marginPercentage: 100
-        })),
-        ...forfaitsData.map(forfait => ({
-          id: forfait.id,
-          type: 'forfait' as const,
-          name: forfait.nom,
-          description: forfait.description,
-          currentPrice: forfait.prixReduit,
-          consumables: [],
-          totalConsumableCost: 0,
-          suggestedPrice: forfait.prixReduit,
-          margin: forfait.prixReduit,
-          marginPercentage: 100
-        }))
-      ];
-
-      setServices(serviceItems);
-    } catch (error) {
-      console.error('Erreur lors du chargement des données:', error);
+      
+      // Transform data into unified pricing items
+      const items = transformToPricingItems(soinsData, forfaitsData, productsData);
+      setPricingItems(items);
+      
+    } catch (err) {
+      console.error('Erreur lors du chargement des données:', err);
+      setError('Erreur lors du chargement des données.');
     } finally {
       setLoading(false);
     }
   };
 
-  const calculatePricing = (service: ServiceItem, consumables: ConsumableItem[], newPrice?: number) => {
-    const totalCost = consumables.reduce((sum, item) => sum + item.totalCost, 0);
-    const price = newPrice || service.currentPrice;
-    const margin = price - totalCost;
-    const marginPercentage = price > 0 ? Math.round((margin / price) * 100) : 0;
-
-    return {
-      totalConsumableCost: totalCost,
-      margin,
-      marginPercentage,
-      suggestedPrice: Math.ceil(totalCost * 1.3) // 30% de marge suggérée
-    };
-  };
-
-  const updateServicePrice = async (serviceId: string, newPrice: number) => {
-    try {
-      const service = services.find(s => s.id === serviceId);
-      if (!service) return;
-
-      if (service.type === 'soin') {
-        // Mise à jour du prix du soin
-        await soinService.update(serviceId, {
-          appareilId: '',
-          zoneId: '',
-          nom: service.name,
-          description: service.description,
-          duree: 60,
-          prix: newPrice,
-          contreIndications: [],
-          conseilsPostTraitement: [],
-          isActive: true,
-          createdAt: ''
-        });
-      } else {
-        // Mise à jour du prix du forfait
-        const forfait = await forfaitService.getById(serviceId);
-        if (forfait) {
-          await forfaitService.update(serviceId, {
-            ...forfait,
-            prixReduit: newPrice
+  const transformToPricingItems = (
+    soins: Soin[], 
+    forfaits: Forfait[], 
+    products: Product[]
+  ): PricingItem[] => {
+    const items: PricingItem[] = [];
+    
+    // Transform soins
+    soins.forEach(soin => {
+      const consumables = (soin.expectedConsumables || []).map(consumable => {
+        const product = products.find(p => p.id === consumable.productId);
+        return {
+          productId: consumable.productId,
+          quantity: consumable.quantity,
+          name: product?.name || 'Produit inconnu',
+          unitPrice: product?.unitPrice || 0
+        };
+      });
+      
+      const consumablesCost = consumables.reduce((sum, c) => sum + (c.quantity * c.unitPrice), 0);
+      const margin = soin.prix - consumablesCost;
+      const marginPercentage = soin.prix > 0 ? Math.round((margin / soin.prix) * 100) : 0;
+      
+      items.push({
+        id: soin.id,
+        type: 'soin',
+        name: soin.nom,
+        description: soin.description,
+        consumables,
+        consumablesCost,
+        sellingPrice: soin.prix,
+        margin,
+        marginPercentage,
+        isActive: soin.isActive,
+        data: soin
+      });
+    });
+    
+    // Transform forfaits
+    forfaits.forEach(forfait => {
+      const consumables: Array<{ productId: string; quantity: number; name: string; unitPrice: number; }> = [];
+      
+      // Calculate consumables from included soins
+      forfait.soinIds.forEach(soinId => {
+        const soin = soins.find(s => s.id === soinId);
+        if (soin && soin.expectedConsumables) {
+          soin.expectedConsumables.forEach(consumable => {
+            const existingIndex = consumables.findIndex(c => c.productId === consumable.productId);
+            const product = products.find(p => p.id === consumable.productId);
+            
+            if (existingIndex >= 0) {
+              consumables[existingIndex].quantity += consumable.quantity;
+            } else {
+              consumables.push({
+                productId: consumable.productId,
+                quantity: consumable.quantity,
+                name: product?.name || 'Produit inconnu',
+                unitPrice: product?.unitPrice || 0
+              });
+            }
           });
         }
-      }
+      });
+      
+      const consumablesCost = consumables.reduce((sum, c) => sum + (c.quantity * c.unitPrice), 0);
+      const margin = forfait.prixReduit - consumablesCost;
+      const marginPercentage = forfait.prixReduit > 0 ? Math.round((margin / forfait.prixReduit) * 100) : 0;
+      
+      items.push({
+        id: forfait.id,
+        type: 'forfait',
+        name: forfait.nom,
+        description: forfait.description,
+        consumables,
+        consumablesCost,
+        sellingPrice: forfait.prixReduit,
+        margin,
+        marginPercentage,
+        isActive: forfait.isActive,
+        data: forfait
+      });
+    });
+    
+    return items;
+  };
 
-      // Mettre à jour l'état local
-      setServices(prev => prev.map(s => 
-        s.id === serviceId ? { ...s, currentPrice: newPrice } : s
-      ));
-
-      console.log(`Prix mis à jour pour ${service.name}: ${newPrice} FCFA`);
-    } catch (error) {
-      console.error('Erreur lors de la mise à jour du prix:', error);
+  const filterItems = () => {
+    let filtered = pricingItems;
+    
+    if (searchTerm) {
+      filtered = filtered.filter(item =>
+        item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.description.toLowerCase().includes(searchTerm.toLowerCase())
+      );
     }
+    
+    if (typeFilter !== 'all') {
+      filtered = filtered.filter(item => item.type === typeFilter);
+    }
+    
+    setFilteredItems(filtered);
+  };
+
+  const handleEditSoin = (soin: Soin) => {
+    if (!isAdmin) return;
+    setEditingSoin(soin);
+    setShowSoinForm(true);
+  };
+
+  const handleEditForfait = (forfait: Forfait) => {
+    if (!isAdmin) return;
+    setEditingForfait(forfait);
+    setShowForfaitForm(true);
+  };
+
+  const handleSaveSoin = async (soinData: Omit<Soin, 'id'>) => {
+    try {
+      setError(null);
+      
+      if (editingSoin) {
+        await soinService.update(editingSoin.id, soinData);
+      } else {
+        await soinService.create(soinData);
+      }
+      
+      // Reload all data to ensure synchronization
+      await loadAllData();
+      
+      setShowSoinForm(false);
+      setEditingSoin(null);
+    } catch (err) {
+      console.error('Erreur lors de la sauvegarde du soin:', err);
+      setError('Erreur lors de la sauvegarde du soin.');
+    }
+  };
+
+  const handleSaveForfait = async (forfaitData: Omit<Forfait, 'id'>) => {
+    try {
+      setError(null);
+      
+      if (editingForfait) {
+        await forfaitService.update(editingForfait.id, forfaitData);
+      } else {
+        await forfaitService.create(forfaitData);
+      }
+      
+      // Reload all data to ensure synchronization
+      await loadAllData();
+      
+      setShowForfaitForm(false);
+      setEditingForfait(null);
+    } catch (err) {
+      console.error('Erreur lors de la sauvegarde du forfait:', err);
+      setError('Erreur lors de la sauvegarde du forfait.');
+    }
+  };
+
+  const exportToCSV = () => {
+    const headers = [
+      'Type',
+      'Nom',
+      'Description',
+      'Consommables',
+      'Coût consommables (FCFA)',
+      'Prix vente (FCFA)',
+      'Marge (FCFA)',
+      'Marge (%)',
+      'Statut'
+    ];
+    
+    const rows = filteredItems.map(item => [
+      item.type === 'soin' ? 'Soin' : 'Forfait',
+      item.name,
+      item.description,
+      item.consumables.map(c => `${c.name} (${c.quantity})`).join('; '),
+      item.consumablesCost.toString(),
+      item.sellingPrice.toString(),
+      item.margin.toString(),
+      item.marginPercentage.toString(),
+      item.isActive ? 'Actif' : 'Inactif'
+    ]);
+    
+    const csvContent = [headers, ...rows]
+      .map(row => row.map(cell => `"${cell}"`).join(','))
+      .join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `tarifs-consommables-${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+  };
+
+  const getStockAlert = (consumables: Array<{ productId: string; quantity: number; }>) => {
+    const lowStockItems = consumables.filter(consumable => {
+      const product = products.find(p => p.id === consumable.productId);
+      return product && product.quantity < consumable.quantity;
+    });
+    
+    return lowStockItems.length > 0 ? lowStockItems : null;
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-lg text-gray-600">Chargement...</div>
+      <div className="p-6">
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Chargement des données...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* En-tête */}
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-        <div className="flex items-center space-x-3 mb-4">
-          <Settings className="w-6 h-6 text-blue-600" />
-          <h1 className="text-2xl font-bold text-gray-800">Configuration des Tarifs</h1>
+    <div className="p-6 space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800">Tarifs & Consommables</h1>
+          <p className="text-gray-600">
+            Gestion centralisée des tarifs et consommables
+            {!isAdmin && (
+              <span className="text-orange-600 ml-2">(Lecture seule)</span>
+            )}
+          </p>
         </div>
-        <p className="text-gray-600">
-          Configurez les prix de vos soins et forfaits en analysant les coûts des consommables pour optimiser votre rentabilité.
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Liste des services */}
-        <div className="lg:col-span-2 space-y-4">
-          <h2 className="text-xl font-semibold text-gray-800">Services disponibles</h2>
+        
+        <div className="flex space-x-3">
+          <button
+            onClick={exportToCSV}
+            className="flex items-center space-x-2 bg-green-100 text-green-700 px-4 py-2 rounded-lg hover:bg-green-200 transition-colors"
+          >
+            <Download className="w-4 h-4" />
+            <span>Exporter CSV</span>
+          </button>
           
-          {services.map(service => {
-            const pricing = calculatePricing(service, service.consumables);
-            
-            return (
-              <div
-                key={service.id}
-                className={`bg-white p-6 rounded-xl border-2 cursor-pointer transition-all ${
-                  selectedService?.id === service.id
-                    ? 'border-blue-500 shadow-md'
-                    : 'border-gray-200 hover:border-gray-300'
-                }`}
-                onClick={() => setSelectedService(service)}
+          {isAdmin && (
+            <>
+              <button
+                onClick={() => setShowSoinForm(true)}
+                className="flex items-center space-x-2 bg-blue-100 text-blue-700 px-4 py-2 rounded-lg hover:bg-blue-200 transition-colors"
               >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-2 mb-2">
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                        service.type === 'soin'
-                          ? 'bg-blue-100 text-blue-700'
-                          : 'bg-purple-100 text-purple-700'
-                      }`}>
-                        {service.type === 'soin' ? 'Soin' : 'Forfait'}
-                      </span>
-                    </div>
-                    <h3 className="text-lg font-semibold text-gray-800 mb-1">
-                      {service.name}
-                    </h3>
-                    <p className="text-sm text-gray-600 mb-3">
-                      {service.description}
-                    </p>
-                  </div>
-                  
-                  <div className="text-right">
-                    <div className="text-xl font-bold text-gray-800">
-                      {service.currentPrice.toLocaleString()} FCFA
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      Prix actuel
-                    </div>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-3 gap-4 mt-4 pt-4 border-t border-gray-100">
-                  <div className="text-center">
-                    <div className="flex items-center justify-center space-x-1 text-sm text-gray-600 mb-1">
-                      <Package className="w-4 h-4" />
-                      <span>Coût</span>
-                    </div>
-                    <div className="font-semibold text-gray-800">
-                      {pricing.totalConsumableCost.toLocaleString()} FCFA
-                    </div>
-                  </div>
-                  
-                  <div className="text-center">
-                    <div className="flex items-center justify-center space-x-1 text-sm text-gray-600 mb-1">
-                      <DollarSign className="w-4 h-4" />
-                      <span>Marge</span>
-                    </div>
-                    <div className="font-semibold text-gray-800">
-                      {pricing.margin.toLocaleString()} FCFA
-                    </div>
-                  </div>
-                  
-                  <div className="text-center">
-                    <div className="flex items-center justify-center space-x-1 text-sm text-gray-600 mb-1">
-                      <TrendingUp className="w-4 h-4" />
-                      <span>%</span>
-                    </div>
-                    <div className={`font-semibold ${
-                      pricing.marginPercentage >= 30 ? 'text-green-600' :
-                      pricing.marginPercentage >= 15 ? 'text-orange-600' : 'text-red-600'
-                    }`}>
-                      {pricing.marginPercentage}%
-                    </div>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Panneau de configuration */}
-        <div className="space-y-6">
-          {selectedService ? (
-            <ServiceConfigPanel
-              service={selectedService}
-              products={products}
-              onPriceUpdate={updateServicePrice}
-            />
-          ) : (
-            <div className="bg-white p-6 rounded-xl border border-gray-200">
-              <div className="text-center py-8">
-                <Calculator className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-600 mb-2">
-                  Configuration des prix
-                </h3>
-                <p className="text-gray-500 text-sm">
-                  Sélectionnez un service pour configurer son prix et analyser sa rentabilité
-                </p>
-              </div>
-            </div>
+                <Plus className="w-4 h-4" />
+                <span>Nouveau Soin</span>
+              </button>
+              
+              <button
+                onClick={() => setShowForfaitForm(true)}
+                className="flex items-center space-x-2 bg-purple-100 text-purple-700 px-4 py-2 rounded-lg hover:bg-purple-200 transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Nouveau Forfait</span>
+              </button>
+            </>
           )}
         </div>
       </div>
-    </div>
-  );
-};
 
-// Composant pour la configuration d'un service
-const ServiceConfigPanel: React.FC<{
-  service: ServiceItem;
-  products: any[];
-  onPriceUpdate: (serviceId: string, newPrice: number) => void;
-}> = ({ service, products, onPriceUpdate }) => {
-  const [consumables, setConsumables] = useState<ConsumableItem[]>([]);
-  const [newPrice, setNewPrice] = useState(service.currentPrice);
-
-  const addConsumable = () => {
-    setConsumables([...consumables, {
-      productId: '',
-      productName: '',
-      quantity: 1,
-      unitPrice: 0,
-      totalCost: 0
-    }]);
-  };
-
-  const updateConsumable = (index: number, field: keyof ConsumableItem, value: any) => {
-    const updated = [...consumables];
-    updated[index] = { ...updated[index], [field]: value };
-    
-    if (field === 'productId') {
-      const product = products.find(p => p.id === value);
-      if (product) {
-        updated[index].productName = product.name;
-        updated[index].unitPrice = product.unitPrice;
-        updated[index].totalCost = updated[index].quantity * product.unitPrice;
-      }
-    } else if (field === 'quantity') {
-      updated[index].totalCost = value * updated[index].unitPrice;
-    }
-    
-    setConsumables(updated);
-  };
-
-  const removeConsumable = (index: number) => {
-    setConsumables(consumables.filter((_, i) => i !== index));
-  };
-
-  const totalCost = consumables.reduce((sum, item) => sum + item.totalCost, 0);
-  const margin = newPrice - totalCost;
-  const marginPercentage = newPrice > 0 ? Math.round((margin / newPrice) * 100) : 0;
-  const suggestedPrice = Math.ceil(totalCost * 1.3);
-
-  return (
-    <div className="bg-white p-6 rounded-xl border border-gray-200 sticky top-6">
-      <h3 className="text-lg font-semibold text-gray-800 mb-4">
-        Configuration: {service.name}
-      </h3>
-
-      {/* Prix actuel */}
-      <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Prix de vente (FCFA)
-        </label>
-        <input
-          type="number"
-          value={newPrice}
-          onChange={(e) => setNewPrice(Number(e.target.value))}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        />
-      </div>
-
-      {/* Consommables */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-3">
-          <h4 className="text-md font-medium text-gray-700">Consommables</h4>
-          <button
-            onClick={addConsumable}
-            className="px-3 py-1 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700"
+      {/* Error Display */}
+      {error && (
+        <div className="p-4 bg-red-50 border border-red-200 rounded-xl">
+          <p className="text-red-800 text-sm">{error}</p>
+          <button 
+            onClick={() => setError(null)}
+            className="text-red-600 hover:text-red-800 text-sm underline mt-1"
           >
-            Ajouter
+            Fermer
           </button>
         </div>
+      )}
 
-        <div className="space-y-3">
-          {consumables.map((item, index) => (
-            <div key={index} className="flex items-center space-x-2">
-              <select
-                value={item.productId}
-                onChange={(e) => updateConsumable(index, 'productId', e.target.value)}
-                className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
-              >
-                <option value="">Sélectionner un produit</option>
-                {products.map(product => (
-                  <option key={product.id} value={product.id}>
-                    {product.name}
-                  </option>
-                ))}
-              </select>
-              <input
-                type="number"
-                value={item.quantity}
-                onChange={(e) => updateConsumable(index, 'quantity', Number(e.target.value))}
-                className="w-16 px-2 py-1 border border-gray-300 rounded text-sm"
-                min="1"
-              />
-              <span className="text-sm text-gray-600 w-20">
-                {item.totalCost.toLocaleString()} FCFA
-              </span>
-              <button
-                onClick={() => removeConsumable(index)}
-                className="text-red-600 hover:text-red-800"
-              >
-                ×
-              </button>
-            </div>
-          ))}
+      {/* Filters */}
+      <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <input
+              type="text"
+              placeholder="Rechercher un soin ou forfait..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+            />
+          </div>
+          
+          <select
+            value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value as 'all' | 'soin' | 'forfait')}
+            className="px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent bg-white"
+          >
+            <option value="all">Tous les types</option>
+            <option value="soin">Soins uniquement</option>
+            <option value="forfait">Forfaits uniquement</option>
+          </select>
+          
+          <div className="text-sm text-gray-600 bg-gray-50 px-4 py-3 rounded-xl border border-gray-200">
+            {filteredItems.length} élément(s)
+          </div>
         </div>
       </div>
 
-      {/* Analyse de rentabilité */}
-      <div className="space-y-3 mb-6">
-        <div className="flex justify-between">
-          <span className="text-sm text-gray-600">Coût total:</span>
-          <span className="font-semibold">{totalCost.toLocaleString()} FCFA</span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-sm text-gray-600">Marge:</span>
-          <span className={`font-semibold ${margin >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-            {margin.toLocaleString()} FCFA
-          </span>
-        </div>
-        <div className="flex justify-between">
-          <span className="text-sm text-gray-600">Pourcentage:</span>
-          <span className={`font-semibold ${
-            marginPercentage >= 30 ? 'text-green-600' :
-            marginPercentage >= 15 ? 'text-orange-600' : 'text-red-600'
-          }`}>
-            {marginPercentage}%
-          </span>
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-2xl border border-blue-100">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-blue-600 font-medium">Total soins</p>
+              <p className="text-2xl font-bold text-blue-700">{soins.length}</p>
+            </div>
+            <Package className="w-8 h-8 text-blue-600" />
+          </div>
         </div>
         
-        {totalCost > 0 && (
-          <div className="pt-3 border-t border-gray-200">
-            <div className="flex justify-between">
-              <span className="text-sm text-gray-600">Prix suggéré (30%):</span>
-              <span className="font-semibold text-blue-600">
-                {suggestedPrice.toLocaleString()} FCFA
-              </span>
+        <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-6 rounded-2xl border border-purple-100">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-purple-600 font-medium">Total forfaits</p>
+              <p className="text-2xl font-bold text-purple-700">{forfaits.length}</p>
             </div>
-            <button
-              onClick={() => setNewPrice(suggestedPrice)}
-              className="w-full mt-2 px-3 py-1 bg-blue-100 text-blue-700 text-sm rounded-lg hover:bg-blue-200"
-            >
-              Utiliser le prix suggéré
-            </button>
+            <DollarSign className="w-8 h-8 text-purple-600" />
+          </div>
+        </div>
+        
+        <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-6 rounded-2xl border border-green-100">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-green-600 font-medium">Marge moyenne</p>
+              <p className="text-2xl font-bold text-green-700">
+                {filteredItems.length > 0 
+                  ? Math.round(filteredItems.reduce((sum, item) => sum + item.marginPercentage, 0) / filteredItems.length)
+                  : 0}%
+              </p>
+            </div>
+            <TrendingUp className="w-8 h-8 text-green-600" />
+          </div>
+        </div>
+        
+        <div className="bg-gradient-to-r from-orange-50 to-red-50 p-6 rounded-2xl border border-orange-100">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-orange-600 font-medium">Alertes stock</p>
+              <p className="text-2xl font-bold text-orange-700">
+                {filteredItems.filter(item => getStockAlert(item.consumables)).length}
+              </p>
+            </div>
+            <AlertTriangle className="w-8 h-8 text-orange-600" />
+          </div>
+        </div>
+      </div>
+
+      {/* Main Table */}
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50 border-b border-gray-200">
+              <tr>
+                <th className="text-left py-4 px-6 font-medium text-gray-700">Type</th>
+                <th className="text-left py-4 px-6 font-medium text-gray-700">Nom</th>
+                <th className="text-left py-4 px-6 font-medium text-gray-700">Consommables</th>
+                <th className="text-right py-4 px-6 font-medium text-gray-700">Coût consommables</th>
+                <th className="text-right py-4 px-6 font-medium text-gray-700">Prix vente</th>
+                <th className="text-right py-4 px-6 font-medium text-gray-700">Marge</th>
+                <th className="text-center py-4 px-6 font-medium text-gray-700">Statut</th>
+                {isAdmin && (
+                  <th className="text-center py-4 px-6 font-medium text-gray-700">Actions</th>
+                )}
+              </tr>
+            </thead>
+            <tbody>
+              {filteredItems.map((item) => {
+                const stockAlert = getStockAlert(item.consumables);
+                
+                return (
+                  <tr key={item.id} className="border-b border-gray-100 hover:bg-gray-50">
+                    <td className="py-4 px-6">
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                        item.type === 'soin' 
+                          ? 'bg-blue-100 text-blue-700' 
+                          : 'bg-purple-100 text-purple-700'
+                      }`}>
+                        {item.type === 'soin' ? 'Soin' : 'Forfait'}
+                      </span>
+                    </td>
+                    
+                    <td className="py-4 px-6">
+                      <div>
+                        <p className="font-medium text-gray-800">{item.name}</p>
+                        <p className="text-sm text-gray-600 truncate max-w-xs">{item.description}</p>
+                      </div>
+                    </td>
+                    
+                    <td className="py-4 px-6">
+                      <div className="space-y-1">
+                        {item.consumables.length === 0 ? (
+                          <span className="text-gray-500 text-sm">Aucun</span>
+                        ) : (
+                          item.consumables.slice(0, 3).map((consumable, index) => (
+                            <div key={index} className="text-sm">
+                              <span className="text-gray-800">{consumable.name}</span>
+                              <span className="text-gray-500 ml-1">({consumable.quantity})</span>
+                            </div>
+                          ))
+                        )}
+                        {item.consumables.length > 3 && (
+                          <span className="text-xs text-gray-500">
+                            +{item.consumables.length - 3} autres...
+                          </span>
+                        )}
+                        {stockAlert && (
+                          <div className="flex items-center space-x-1 text-orange-600">
+                            <AlertTriangle className="w-3 h-3" />
+                            <span className="text-xs">Stock insuffisant</span>
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                    
+                    <td className="py-4 px-6 text-right">
+                      <span className="font-medium text-gray-800">
+                        {item.consumablesCost.toLocaleString()} FCFA
+                      </span>
+                    </td>
+                    
+                    <td className="py-4 px-6 text-right">
+                      <span className="font-bold text-gray-800">
+                        {item.sellingPrice.toLocaleString()} FCFA
+                      </span>
+                    </td>
+                    
+                    <td className="py-4 px-6 text-right">
+                      <div>
+                        <span className={`font-medium ${
+                          item.margin > 0 ? 'text-green-600' : 'text-red-600'
+                        }`}>
+                          {item.margin.toLocaleString()} FCFA
+                        </span>
+                        <div className="flex items-center justify-end space-x-1">
+                          {item.marginPercentage > 0 ? (
+                            <TrendingUp className="w-3 h-3 text-green-500" />
+                          ) : (
+                            <TrendingDown className="w-3 h-3 text-red-500" />
+                          )}
+                          <span className={`text-sm ${
+                            item.marginPercentage > 0 ? 'text-green-600' : 'text-red-600'
+                          }`}>
+                            {item.marginPercentage}%
+                          </span>
+                        </div>
+                      </div>
+                    </td>
+                    
+                    <td className="py-4 px-6 text-center">
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        item.isActive 
+                          ? 'bg-green-100 text-green-700' 
+                          : 'bg-gray-100 text-gray-600'
+                      }`}>
+                        {item.isActive ? 'Actif' : 'Inactif'}
+                      </span>
+                    </td>
+                    
+                    {isAdmin && (
+                      <td className="py-4 px-6 text-center">
+                        <button
+                          onClick={() => {
+                            if (item.type === 'soin') {
+                              handleEditSoin(item.data as Soin);
+                            } else {
+                              handleEditForfait(item.data as Forfait);
+                            }
+                          }}
+                          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                        >
+                          <Edit className="w-4 h-4 text-gray-500" />
+                        </button>
+                      </td>
+                    )}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+        
+        {filteredItems.length === 0 && (
+          <div className="text-center py-12">
+            <Calculator className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-600 mb-2">Aucun élément trouvé</h3>
+            <p className="text-gray-500">
+              {searchTerm ? 'Aucun élément ne correspond à votre recherche' : 'Aucun soin ou forfait configuré'}
+            </p>
           </div>
         )}
       </div>
 
-      {/* Bouton de sauvegarde */}
-      <button
-        onClick={() => onPriceUpdate(service.id, newPrice)}
-        disabled={newPrice === service.currentPrice}
-        className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
-      >
-        <Save className="w-4 h-4" />
-        <span>Sauvegarder le prix</span>
-      </button>
+      {/* Forms */}
+      {showSoinForm && (
+        <SoinForm
+          soin={editingSoin || undefined}
+          onSave={handleSaveSoin}
+          onCancel={() => {
+            setShowSoinForm(false);
+            setEditingSoin(null);
+          }}
+        />
+      )}
+
+      {showForfaitForm && (
+        <ForfaitForm
+          forfait={editingForfait || undefined}
+          onSave={handleSaveForfait}
+          onCancel={() => {
+            setShowForfaitForm(false);
+            setEditingForfait(null);
+          }}
+        />
+      )}
     </div>
   );
 };
