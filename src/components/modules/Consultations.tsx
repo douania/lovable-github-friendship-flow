@@ -28,7 +28,7 @@ const Consultations: React.FC = () => {
   const loadConsultations = async () => {
     try {
       setLoading(true);
-      const consultationsData = await consultationService.getAll();
+      const consultationsData = await consultationService.getAllConsultations();
       
       // Enrichir avec les noms des patients et soins
       const enrichedConsultations = await Promise.all(
