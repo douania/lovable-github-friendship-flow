@@ -141,7 +141,7 @@ const Quotes: React.FC = () => {
     }
 
     try {
-      // TODO: Implémenter la suppression dans quoteService
+      console.log('Suppression du devis avec ID:', id);
       toast({
         title: 'Information',
         description: 'Fonction de suppression à implémenter.',
