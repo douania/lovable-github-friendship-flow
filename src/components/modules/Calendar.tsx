@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Calendar as CalendarIcon, Clock, User } from 'lucide-react';
 import { appointmentService } from '../../services/appointmentService';
@@ -39,15 +40,12 @@ const Calendar: React.FC = () => {
       const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
       const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
       
-      // Récupérer tous les rendez-vous du mois
-      // Note: Ceci nécessiterait une modification de appointmentService pour filtrer par plage de dates
       const allAppointments = await appointmentService.getAll();
       const monthAppointments = allAppointments.filter(apt => {
         const aptDate = new Date(apt.date);
         return aptDate >= startOfMonth && aptDate <= endOfMonth;
       });
 
-      // Enrichir avec les noms des patients
       const enrichedAppointments = await Promise.all(
         monthAppointments.map(async (apt) => {
           try {
@@ -57,6 +55,7 @@ const Calendar: React.FC = () => {
               patientName: patient ? `${patient.firstName} ${patient.lastName}` : 'Patient inconnu'
             };
           } catch (error) {
+            console.error('Erreur patient:', error);
             return { ...apt, patientName: 'Patient inconnu' };
           }
         })
@@ -78,6 +77,7 @@ const Calendar: React.FC = () => {
       setAvailableSlots(slots);
     } catch (error) {
       console.error('Erreur lors du chargement des créneaux:', error);
+      setAvailableSlots([]);
     }
   };
 
@@ -91,12 +91,10 @@ const Calendar: React.FC = () => {
 
     const days = [];
     
-    // Ajouter les jours vides du début
     for (let i = 0; i < startingDayOfWeek; i++) {
       days.push(null);
     }
     
-    // Ajouter tous les jours du mois
     for (let day = 1; day <= daysInMonth; day++) {
       days.push(day);
     }
@@ -105,11 +103,13 @@ const Calendar: React.FC = () => {
   };
 
   const getAppointmentsForDate = (day: number) => {
+    if (!day) return [];
     const dateString = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
     return appointments.filter(apt => apt.date === dateString);
   };
 
   const handleDateClick = (day: number) => {
+    if (!day) return;
     const dateString = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
     setSelectedDate(dateString);
   };
@@ -166,7 +166,6 @@ const Calendar: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Calendrier principal */}
         <div className="lg:col-span-2">
           <div className="bg-white rounded-lg shadow-sm border border-gray-200">
             <div className="p-4 border-b border-gray-200">
@@ -192,7 +191,6 @@ const Calendar: React.FC = () => {
             </div>
 
             <div className="p-4">
-              {/* En-têtes des jours */}
               <div className="grid grid-cols-7 gap-1 mb-2">
                 {weekDays.map(day => (
                   <div key={day} className="p-2 text-center text-sm font-medium text-gray-500">
@@ -201,7 +199,6 @@ const Calendar: React.FC = () => {
                 ))}
               </div>
 
-              {/* Grille du calendrier */}
               <div className="grid grid-cols-7 gap-1">
                 {days.map((day, index) => {
                   const dayAppointments = day ? getAppointmentsForDate(day) : [];
@@ -225,7 +222,7 @@ const Calendar: React.FC = () => {
                           <div className="space-y-1">
                             {dayAppointments.slice(0, 2).map((apt, i) => (
                               <div
-                                key={i}
+                                key={apt.id}
                                 className={`text-xs px-1 py-0.5 rounded truncate ${getStatusColor(apt.status)}`}
                                 title={`${apt.time} - ${apt.patientName}`}
                               >
@@ -248,69 +245,66 @@ const Calendar: React.FC = () => {
           </div>
         </div>
 
-        {/* Panneau latéral */}
         <div className="space-y-4">
-          {/* Créneaux disponibles */}
           {selectedDate && (
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-              <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                <Clock className="w-4 h-4 text-pink-500" />
-                Créneaux disponibles
-              </h3>
-              <div className="text-sm text-gray-600 mb-3">
-                {new Date(selectedDate).toLocaleDateString('fr-FR', { 
-                  weekday: 'long',
-                  day: 'numeric',
-                  month: 'long'
-                })}
+            <>
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-pink-500" />
+                  Créneaux disponibles
+                </h3>
+                <div className="text-sm text-gray-600 mb-3">
+                  {new Date(selectedDate).toLocaleDateString('fr-FR', { 
+                    weekday: 'long',
+                    day: 'numeric',
+                    month: 'long'
+                  })}
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  {availableSlots.length > 0 ? (
+                    availableSlots.map((slot, index) => (
+                      <button
+                        key={index}
+                        className="p-2 text-sm border border-gray-200 rounded-lg hover:bg-pink-50 hover:border-pink-200 transition-colors"
+                      >
+                        {slot}
+                      </button>
+                    ))
+                  ) : (
+                    <div className="col-span-2 text-sm text-gray-500 text-center py-4">
+                      Aucun créneau disponible
+                    </div>
+                  )}
+                </div>
               </div>
-              <div className="grid grid-cols-2 gap-2">
-                {availableSlots.length > 0 ? (
-                  availableSlots.map((slot, index) => (
-                    <button
-                      key={index}
-                      className="p-2 text-sm border border-gray-200 rounded-lg hover:bg-pink-50 hover:border-pink-200 transition-colors"
-                    >
-                      {slot}
-                    </button>
-                  ))
-                ) : (
-                  <div className="col-span-2 text-sm text-gray-500 text-center py-4">
-                    Aucun créneau disponible
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
 
-          {/* Rendez-vous du jour sélectionné */}
-          {selectedDate && (
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-              <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                <User className="w-4 h-4 text-pink-500" />
-                Rendez-vous programmés
-              </h3>
-              <div className="space-y-2">
-                {getAppointmentsForDate(parseInt(selectedDate.split('-')[2])).map((apt, index) => (
-                  <div key={index} className="p-3 border border-gray-200 rounded-lg">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="font-medium text-sm">{apt.time}</span>
-                      <span className={`text-xs px-2 py-1 rounded-full ${getStatusColor(apt.status)}`}>
-                        {apt.status}
-                      </span>
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+                <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                  <User className="w-4 h-4 text-pink-500" />
+                  Rendez-vous programmés
+                </h3>
+                <div className="space-y-2">
+                  {selectedDate && getAppointmentsForDate(parseInt(selectedDate.split('-')[2])).map((apt) => (
+                    <div key={apt.id} className="p-3 border border-gray-200 rounded-lg">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="font-medium text-sm">{apt.time}</span>
+                        <span className={`text-xs px-2 py-1 rounded-full ${getStatusColor(apt.status)}`}>
+                          {apt.status}
+                        </span>
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        {apt.patientName}
+                      </div>
                     </div>
-                    <div className="text-sm text-gray-600">
-                      {apt.patientName}
+                  ))}
+                  {selectedDate && getAppointmentsForDate(parseInt(selectedDate.split('-')[2])).length === 0 && (
+                    <div className="text-sm text-gray-500 text-center py-4">
+                      Aucun rendez-vous programmé
                     </div>
-                  </div>
-                ))}
-                {getAppointmentsForDate(parseInt(selectedDate.split('-')[2])).length === 0 && (
-                  <div className="text-sm text-gray-500 text-center py-4">
-                    Aucun rendez-vous programmé
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
-            </div>
+            </>
           )}
         </div>
       </div>

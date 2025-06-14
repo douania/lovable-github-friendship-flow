@@ -18,12 +18,19 @@ export const useAuth = () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user) {
-          // Récupérer le rôle de l'utilisateur
-          const role = await userService.getCurrentUserRole();
-          setUser({
-            ...session.user,
-            role: role
-          });
+          try {
+            const role = await userService.getCurrentUserRole();
+            setUser({
+              ...session.user,
+              role: role
+            });
+          } catch (roleError) {
+            console.error('Erreur lors de la récupération du rôle:', roleError);
+            setUser({
+              ...session.user,
+              role: 'praticien'
+            });
+          }
         } else {
           setUser(null);
         }
@@ -39,7 +46,7 @@ export const useAuth = () => {
 
     // Écouter les changements d'authentification
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event: any, session: any) => {
+      async (event, session) => {
         if (session?.user) {
           try {
             const role = await userService.getCurrentUserRole();

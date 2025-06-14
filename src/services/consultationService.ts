@@ -2,7 +2,7 @@
 import { supabase } from '../lib/supabase';
 import { Consultation } from '../types/consultation';
 
-// Fonction pour convertir les données de la DB vers le type Consultation
+// Fonction de conversion des données de la base vers le type Consultation
 const mapDbConsultationToConsultation = (dbConsultation: any): Consultation => ({
   id: dbConsultation.id,
   patientId: dbConsultation.patient_id,
@@ -22,26 +22,44 @@ const mapDbConsultationToConsultation = (dbConsultation: any): Consultation => (
   updatedAt: dbConsultation.updated_at
 });
 
-// Fonction pour convertir le type Consultation vers les données de la DB
-const mapConsultationToDbConsultation = (consultation: Omit<Consultation, 'id' | 'createdAt' | 'updatedAt'>) => ({
-  patient_id: consultation.patientId,
-  appointment_id: consultation.appointmentId,
-  soin_id: consultation.soinId,
-  practitioner_id: consultation.practitionerId,
-  consultation_date: consultation.consultationDate,
-  notes_pre_treatment: consultation.notesPreTreatment,
-  notes_post_treatment: consultation.notesPostTreatment,
-  photos_before: consultation.photosBefore,
-  photos_after: consultation.photosAfter,
-  side_effects: consultation.sideEffects,
-  next_appointment_recommended: consultation.nextAppointmentRecommended,
-  consent_signed: consultation.consentSigned,
-  satisfaction_rating: consultation.satisfactionRating
-});
-
 export const consultationService = {
-  // Récupérer toutes les consultations
-  async getAllConsultations(): Promise<Consultation[]> {
+  // Créer une nouvelle consultation
+  async create(consultation: Omit<Consultation, 'id' | 'createdAt' | 'updatedAt'>): Promise<Consultation | null> {
+    try {
+      const { data, error } = await supabase
+        .from('consultations')
+        .insert([{
+          patient_id: consultation.patientId,
+          appointment_id: consultation.appointmentId || null,
+          soin_id: consultation.soinId,
+          practitioner_id: consultation.practitionerId,
+          consultation_date: consultation.consultationDate,
+          notes_pre_treatment: consultation.notesPreTreatment,
+          notes_post_treatment: consultation.notesPostTreatment,
+          photos_before: consultation.photosBefore,
+          photos_after: consultation.photosAfter,
+          side_effects: consultation.sideEffects,
+          next_appointment_recommended: consultation.nextAppointmentRecommended,
+          consent_signed: consultation.consentSigned,
+          satisfaction_rating: consultation.satisfactionRating
+        }])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Erreur lors de la création de la consultation:', error);
+        return null;
+      }
+
+      return mapDbConsultationToConsultation(data);
+    } catch (error) {
+      console.error('Erreur dans consultationService.create:', error);
+      return null;
+    }
+  },
+
+  // Obtenir toutes les consultations
+  async getAll(): Promise<Consultation[]> {
     try {
       const { data, error } = await supabase
         .from('consultations')
@@ -50,18 +68,39 @@ export const consultationService = {
 
       if (error) {
         console.error('Erreur lors de la récupération des consultations:', error);
-        throw error;
+        return [];
       }
 
       return data?.map(mapDbConsultationToConsultation) || [];
     } catch (error) {
-      console.error('Erreur dans getAllConsultations:', error);
-      throw error;
+      console.error('Erreur dans consultationService.getAll:', error);
+      return [];
     }
   },
 
-  // Récupérer les consultations d'un patient
-  async getConsultationsByPatient(patientId: string): Promise<Consultation[]> {
+  // Obtenir une consultation par ID
+  async getById(id: string): Promise<Consultation | null> {
+    try {
+      const { data, error } = await supabase
+        .from('consultations')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error) {
+        console.error('Erreur lors de la récupération de la consultation:', error);
+        return null;
+      }
+
+      return mapDbConsultationToConsultation(data);
+    } catch (error) {
+      console.error('Erreur dans consultationService.getById:', error);
+      return null;
+    }
+  },
+
+  // Obtenir les consultations d'un patient
+  async getByPatientId(patientId: string): Promise<Consultation[]> {
     try {
       const { data, error } = await supabase
         .from('consultations')
@@ -71,63 +110,51 @@ export const consultationService = {
 
       if (error) {
         console.error('Erreur lors de la récupération des consultations du patient:', error);
-        throw error;
+        return [];
       }
 
       return data?.map(mapDbConsultationToConsultation) || [];
     } catch (error) {
-      console.error('Erreur dans getConsultationsByPatient:', error);
-      throw error;
-    }
-  },
-
-  // Créer une nouvelle consultation
-  async createConsultation(consultationData: Omit<Consultation, 'id' | 'createdAt' | 'updatedAt'>): Promise<Consultation> {
-    try {
-      const dbConsultation = mapConsultationToDbConsultation(consultationData);
-      
-      const { data, error } = await supabase
-        .from('consultations')
-        .insert([dbConsultation])
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Erreur lors de la création de la consultation:', error);
-        throw error;
-      }
-
-      return mapDbConsultationToConsultation(data);
-    } catch (error) {
-      console.error('Erreur dans createConsultation:', error);
-      throw error;
+      console.error('Erreur dans consultationService.getByPatientId:', error);
+      return [];
     }
   },
 
   // Mettre à jour une consultation
-  async updateConsultation(id: string, consultationData: Partial<Omit<Consultation, 'id' | 'createdAt' | 'updatedAt'>>): Promise<Consultation> {
+  async update(id: string, updates: Partial<Consultation>): Promise<Consultation | null> {
     try {
+      const updateData: any = {};
+      
+      if (updates.notesPreTreatment !== undefined) updateData.notes_pre_treatment = updates.notesPreTreatment;
+      if (updates.notesPostTreatment !== undefined) updateData.notes_post_treatment = updates.notesPostTreatment;
+      if (updates.photosBefore !== undefined) updateData.photos_before = updates.photosBefore;
+      if (updates.photosAfter !== undefined) updateData.photos_after = updates.photosAfter;
+      if (updates.sideEffects !== undefined) updateData.side_effects = updates.sideEffects;
+      if (updates.nextAppointmentRecommended !== undefined) updateData.next_appointment_recommended = updates.nextAppointmentRecommended;
+      if (updates.consentSigned !== undefined) updateData.consent_signed = updates.consentSigned;
+      if (updates.satisfactionRating !== undefined) updateData.satisfaction_rating = updates.satisfactionRating;
+
       const { data, error } = await supabase
         .from('consultations')
-        .update(consultationData)
+        .update(updateData)
         .eq('id', id)
         .select()
         .single();
 
       if (error) {
         console.error('Erreur lors de la mise à jour de la consultation:', error);
-        throw error;
+        return null;
       }
 
       return mapDbConsultationToConsultation(data);
     } catch (error) {
-      console.error('Erreur dans updateConsultation:', error);
-      throw error;
+      console.error('Erreur dans consultationService.update:', error);
+      return null;
     }
   },
 
   // Supprimer une consultation
-  async deleteConsultation(id: string): Promise<void> {
+  async delete(id: string): Promise<boolean> {
     try {
       const { error } = await supabase
         .from('consultations')
@@ -136,11 +163,13 @@ export const consultationService = {
 
       if (error) {
         console.error('Erreur lors de la suppression de la consultation:', error);
-        throw error;
+        return false;
       }
+
+      return true;
     } catch (error) {
-      console.error('Erreur dans deleteConsultation:', error);
-      throw error;
+      console.error('Erreur dans consultationService.delete:', error);
+      return false;
     }
   }
 };
