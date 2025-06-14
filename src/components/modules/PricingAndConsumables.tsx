@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Search, 
-  Filter, 
   Edit, 
   Plus, 
   Download, 
@@ -9,12 +8,8 @@ import {
   DollarSign, 
   Package, 
   Calculator,
-  Clock,
   TrendingUp,
-  TrendingDown,
-  Eye,
-  Save,
-  X
+  TrendingDown
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { soinService } from '../../services/soinService';
