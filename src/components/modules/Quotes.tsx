@@ -1,24 +1,32 @@
 import React, { useState, useEffect } from 'react';
-import { FileText, Plus, Search, Eye, Edit, Trash2 } from 'lucide-react';
+import { FileText, Plus, Search, Eye, Edit, Trash2, Printer } from 'lucide-react';
 import { quoteService } from '../../services/quoteService';
 import { patientService } from '../../services/patientService';
+import { soinService } from '../../services/soinService';
 import { Quote } from '../../types/consultation';
+import { Patient, Soin } from '../../types';
 import QuoteForm from '../forms/QuoteForm';
+import PrintableQuote from '../forms/PrintableQuote';
 import { useToast } from '../../hooks/use-toast';
 
 const Quotes: React.FC = () => {
   const { toast } = useToast();
   const [quotes, setQuotes] = useState<Quote[]>([]);
+  const [patients, setPatients] = useState<Patient[]>([]);
+  const [soins, setSoins] = useState<Soin[]>([]);
   const [filteredQuotes, setFilteredQuotes] = useState<Quote[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingQuote, setEditingQuote] = useState<Quote | null>(null);
+  const [printingQuote, setPrintingQuote] = useState<Quote | null>(null);
   const [quoteNumber, setQuoteNumber] = useState('');
 
   useEffect(() => {
     loadQuotes();
+    loadPatients();
+    loadSoins();
   }, []);
 
   useEffect(() => {
@@ -29,23 +37,7 @@ const Quotes: React.FC = () => {
     try {
       setLoading(true);
       const quotesData = await quoteService.getAllQuotes();
-      
-      // Enrichir avec les noms des patients
-      const enrichedQuotes = await Promise.all(
-        quotesData.map(async (quote) => {
-          try {
-            const patient = await patientService.getById(quote.patientId);
-            return {
-              ...quote,
-              patientName: patient ? `${patient.firstName} ${patient.lastName}` : 'Patient inconnu'
-            };
-          } catch (error) {
-            return { ...quote, patientName: 'Patient inconnu' };
-          }
-        })
-      );
-
-      setQuotes(enrichedQuotes as any);
+      setQuotes(quotesData);
     } catch (error) {
       console.error('Erreur lors du chargement des devis:', error);
       toast({
@@ -58,14 +50,34 @@ const Quotes: React.FC = () => {
     }
   };
 
+  const loadPatients = async () => {
+    try {
+      const patientsData = await patientService.getAllPatients();
+      setPatients(patientsData);
+    } catch (error) {
+      console.error('Erreur lors du chargement des patients:', error);
+    }
+  };
+
+  const loadSoins = async () => {
+    try {
+      const soinsData = await soinService.getAllActive();
+      setSoins(soinsData);
+    } catch (error) {
+      console.error('Erreur lors du chargement des soins:', error);
+    }
+  };
+
   const filterQuotes = () => {
     let filtered = [...quotes];
 
     if (searchTerm) {
-      filtered = filtered.filter(quote => 
-        quote.quoteNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (quote as any).patientName?.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+      filtered = filtered.filter(quote => {
+        const patient = patients.find(p => p.id === quote.patientId);
+        const patientName = patient ? `${patient.firstName} ${patient.lastName}` : '';
+        return quote.quoteNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+               patientName.toLowerCase().includes(searchTerm.toLowerCase());
+      });
     }
 
     if (statusFilter !== 'all') {
@@ -97,6 +109,11 @@ const Quotes: React.FC = () => {
     }
   };
 
+  const getPatientName = (patientId: string) => {
+    const patient = patients.find(p => p.id === patientId);
+    return patient ? `${patient.firstName} ${patient.lastName}` : 'Patient inconnu';
+  };
+
   const handleCreateQuote = async () => {
     try {
       const generatedQuoteNumber = await quoteService.generateQuoteNumber();
@@ -119,6 +136,14 @@ const Quotes: React.FC = () => {
     setShowForm(true);
   };
 
+  const handlePrintQuote = (quote: Quote) => {
+    setPrintingQuote(quote);
+    // Attendre un peu pour que le composant se rende avant d'imprimer
+    setTimeout(() => {
+      window.print();
+    }, 100);
+  };
+
   const handleSaveQuote = async (quoteData: Omit<Quote, 'id' | 'createdAt' | 'updatedAt'>) => {
     try {
       if (editingQuote) {
@@ -131,7 +156,7 @@ const Quotes: React.FC = () => {
       setEditingQuote(null);
       await loadQuotes();
     } catch (error) {
-      throw error; // Re-throw pour que le QuoteForm puisse gérer l'erreur
+      throw error;
     }
   };
 
@@ -166,8 +191,26 @@ const Quotes: React.FC = () => {
     );
   }
 
+  // Mode impression
+  if (printingQuote) {
+    const patient = patients.find(p => p.id === printingQuote.patientId);
+    if (patient) {
+      return (
+        <div className="print:block hidden">
+          <PrintableQuote quote={printingQuote} patient={patient} soins={soins} />
+          <button
+            onClick={() => setPrintingQuote(null)}
+            className="fixed top-4 right-4 bg-white border border-gray-300 px-4 py-2 rounded-lg shadow-lg print:hidden"
+          >
+            Fermer l'aperçu
+          </button>
+        </div>
+      );
+    }
+  }
+
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6 print:hidden">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
           <FileText className="w-6 h-6 text-pink-500" />
@@ -260,7 +303,7 @@ const Quotes: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">
-                        {(quote as any).patientName}
+                        {getPatientName(quote.patientId)}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -291,6 +334,13 @@ const Quotes: React.FC = () => {
                           <Edit className="w-4 h-4" />
                         </button>
                         <button 
+                          onClick={() => handlePrintQuote(quote)}
+                          className="text-green-600 hover:text-green-900 p-1"
+                          title="Imprimer le devis"
+                        >
+                          <Printer className="w-4 h-4" />
+                        </button>
+                        <button 
                           onClick={() => handleDeleteQuote(quote.id)}
                           className="text-red-600 hover:text-red-900 p-1"
                         >
@@ -317,6 +367,17 @@ const Quotes: React.FC = () => {
             setEditingQuote(null);
           }}
         />
+      )}
+
+      {/* Version imprimable cachée */}
+      {printingQuote && (
+        <div className="hidden print:block">
+          <PrintableQuote 
+            quote={printingQuote} 
+            patient={patients.find(p => p.id === printingQuote.patientId)!} 
+            soins={soins} 
+          />
+        </div>
       )}
     </div>
   );
