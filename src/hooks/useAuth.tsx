@@ -12,7 +12,7 @@ export const useAuth = () => {
   const [user, setUser] = useState<UserWithRole | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchUserRole = async (userId: string) => {
+  const fetchUserRole = async () => {
     try {
       const role = await userService.getCurrentUserRole();
       return role;
@@ -28,7 +28,7 @@ export const useAuth = () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user) {
-          const role = await fetchUserRole(session.user.id);
+          const role = await fetchUserRole();
           setUser({
             ...session.user,
             role
@@ -50,7 +50,7 @@ export const useAuth = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_, session) => {
         if (session?.user) {
-          const role = await fetchUserRole(session.user.id);
+          const role = await fetchUserRole();
           setUser({
             ...session.user,
             role
