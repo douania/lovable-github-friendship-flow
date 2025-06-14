@@ -2,7 +2,7 @@
 import { supabase } from '../integrations/supabase/client';
 import { Consultation } from '../types/consultation';
 
-// Fonction de conversion des données de la base vers le type Consultation
+// Fonction pour convertir les données de la DB vers le type Consultation
 const mapDbConsultationToConsultation = (dbConsultation: any): Consultation => ({
   id: dbConsultation.id,
   patientId: dbConsultation.patient_id,
@@ -22,154 +22,103 @@ const mapDbConsultationToConsultation = (dbConsultation: any): Consultation => (
   updatedAt: dbConsultation.updated_at
 });
 
+// Fonction pour convertir le type Consultation vers les données de la DB
+const mapConsultationToDbConsultation = (consultation: Omit<Consultation, 'id' | 'createdAt' | 'updatedAt'>) => ({
+  patient_id: consultation.patientId,
+  appointment_id: consultation.appointmentId,
+  soin_id: consultation.soinId,
+  practitioner_id: consultation.practitionerId,
+  consultation_date: consultation.consultationDate,
+  notes_pre_treatment: consultation.notesPreTreatment,
+  notes_post_treatment: consultation.notesPostTreatment,
+  photos_before: consultation.photosBefore,
+  photos_after: consultation.photosAfter,
+  side_effects: consultation.sideEffects,
+  next_appointment_recommended: consultation.nextAppointmentRecommended,
+  consent_signed: consultation.consentSigned,
+  satisfaction_rating: consultation.satisfactionRating
+});
+
 export const consultationService = {
+  // Récupérer toutes les consultations
+  async getAllConsultations(): Promise<Consultation[]> {
+    const { data, error } = await supabase
+      .from('consultations')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Erreur lors de la récupération des consultations:', error);
+      throw error;
+    }
+
+    return data?.map(mapDbConsultationToConsultation) || [];
+  },
+
+  // Récupérer les consultations d'un patient
+  async getConsultationsByPatient(patientId: string): Promise<Consultation[]> {
+    const { data, error } = await supabase
+      .from('consultations')
+      .select('*')
+      .eq('patient_id', patientId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Erreur lors de la récupération des consultations du patient:', error);
+      throw error;
+    }
+
+    return data?.map(mapDbConsultationToConsultation) || [];
+  },
+
   // Créer une nouvelle consultation
-  async create(consultation: Omit<Consultation, 'id' | 'createdAt' | 'updatedAt'>): Promise<Consultation | null> {
-    try {
-      const { data, error } = await supabase
-        .from('consultations')
-        .insert([{
-          patient_id: consultation.patientId,
-          appointment_id: consultation.appointmentId || null,
-          soin_id: consultation.soinId,
-          practitioner_id: consultation.practitionerId,
-          consultation_date: consultation.consultationDate,
-          notes_pre_treatment: consultation.notesPreTreatment,
-          notes_post_treatment: consultation.notesPostTreatment,
-          photos_before: consultation.photosBefore,
-          photos_after: consultation.photosAfter,
-          side_effects: consultation.sideEffects,
-          next_appointment_recommended: consultation.nextAppointmentRecommended,
-          consent_signed: consultation.consentSigned,
-          satisfaction_rating: consultation.satisfactionRating
-        }])
-        .select()
-        .single();
+  async createConsultation(consultationData: Omit<Consultation, 'id' | 'createdAt' | 'updatedAt'>): Promise<Consultation> {
+    const dbConsultation = mapConsultationToDbConsultation(consultationData);
+    
+    const { data, error } = await supabase
+      .from('consultations')
+      .insert(dbConsultation)
+      .select()
+      .single();
 
-      if (error) {
-        console.error('Erreur lors de la création de la consultation:', error);
-        return null;
-      }
-
-      return mapDbConsultationToConsultation(data);
-    } catch (error) {
-      console.error('Erreur dans consultationService.create:', error);
-      return null;
+    if (error) {
+      console.error('Erreur lors de la création de la consultation:', error);
+      throw error;
     }
-  },
 
-  // Obtenir toutes les consultations
-  async getAll(): Promise<Consultation[]> {
-    try {
-      const { data, error } = await supabase
-        .from('consultations')
-        .select('*')
-        .order('consultation_date', { ascending: false });
-
-      if (error) {
-        console.error('Erreur lors de la récupération des consultations:', error);
-        return [];
-      }
-
-      return data?.map(mapDbConsultationToConsultation) || [];
-    } catch (error) {
-      console.error('Erreur dans consultationService.getAll:', error);
-      return [];
-    }
-  },
-
-  // Obtenir une consultation par ID
-  async getById(id: string): Promise<Consultation | null> {
-    try {
-      const { data, error } = await supabase
-        .from('consultations')
-        .select('*')
-        .eq('id', id)
-        .single();
-
-      if (error) {
-        console.error('Erreur lors de la récupération de la consultation:', error);
-        return null;
-      }
-
-      return mapDbConsultationToConsultation(data);
-    } catch (error) {
-      console.error('Erreur dans consultationService.getById:', error);
-      return null;
-    }
-  },
-
-  // Obtenir les consultations d'un patient
-  async getByPatientId(patientId: string): Promise<Consultation[]> {
-    try {
-      const { data, error } = await supabase
-        .from('consultations')
-        .select('*')
-        .eq('patient_id', patientId)
-        .order('consultation_date', { ascending: false });
-
-      if (error) {
-        console.error('Erreur lors de la récupération des consultations du patient:', error);
-        return [];
-      }
-
-      return data?.map(mapDbConsultationToConsultation) || [];
-    } catch (error) {
-      console.error('Erreur dans consultationService.getByPatientId:', error);
-      return [];
-    }
+    return mapDbConsultationToConsultation(data);
   },
 
   // Mettre à jour une consultation
-  async update(id: string, updates: Partial<Consultation>): Promise<Consultation | null> {
-    try {
-      const updateData: any = {};
-      
-      if (updates.notesPreTreatment !== undefined) updateData.notes_pre_treatment = updates.notesPreTreatment;
-      if (updates.notesPostTreatment !== undefined) updateData.notes_post_treatment = updates.notesPostTreatment;
-      if (updates.photosBefore !== undefined) updateData.photos_before = updates.photosBefore;
-      if (updates.photosAfter !== undefined) updateData.photos_after = updates.photosAfter;
-      if (updates.sideEffects !== undefined) updateData.side_effects = updates.sideEffects;
-      if (updates.nextAppointmentRecommended !== undefined) updateData.next_appointment_recommended = updates.nextAppointmentRecommended;
-      if (updates.consentSigned !== undefined) updateData.consent_signed = updates.consentSigned;
-      if (updates.satisfactionRating !== undefined) updateData.satisfaction_rating = updates.satisfactionRating;
+  async updateConsultation(id: string, consultationData: Partial<Omit<Consultation, 'id' | 'createdAt' | 'updatedAt'>>): Promise<Consultation> {
+    const dbConsultation: any = {};
+    
+    if (consultationData.patientId !== undefined) dbConsultation.patient_id = consultationData.patientId;
+    if (consultationData.appointmentId !== undefined) dbConsultation.appointment_id = consultationData.appointmentId;
+    if (consultationData.soinId !== undefined) dbConsultation.soin_id = consultationData.soinId;
+    if (consultationData.practitionerId !== undefined) dbConsultation.practitioner_id = consultationData.practitionerId;
+    if (consultationData.consultationDate !== undefined) dbConsultation.consultation_date = consultationData.consultationDate;
+    if (consultationData.notesPreTreatment !== undefined) dbConsultation.notes_pre_treatment = consultationData.notesPreTreatment;
+    if (consultationData.notesPostTreatment !== undefined) dbConsultation.notes_post_treatment = consultationData.notesPostTreatment;
+    if (consultationData.photosBefore !== undefined) dbConsultation.photos_before = consultationData.photosBefore;
+    if (consultationData.photosAfter !== undefined) dbConsultation.photos_after = consultationData.photosAfter;
+    if (consultationData.sideEffects !== undefined) dbConsultation.side_effects = consultationData.sideEffects;
+    if (consultationData.nextAppointmentRecommended !== undefined) dbConsultation.next_appointment_recommended = consultationData.nextAppointmentRecommended;
+    if (consultationData.consentSigned !== undefined) dbConsultation.consent_signed = consultationData.consentSigned;
+    if (consultationData.satisfactionRating !== undefined) dbConsultation.satisfaction_rating = consultationData.satisfactionRating;
+    
+    const { data, error } = await supabase
+      .from('consultations')
+      .update(dbConsultation)
+      .eq('id', id)
+      .select()
+      .single();
 
-      const { data, error } = await supabase
-        .from('consultations')
-        .update(updateData)
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Erreur lors de la mise à jour de la consultation:', error);
-        return null;
-      }
-
-      return mapDbConsultationToConsultation(data);
-    } catch (error) {
-      console.error('Erreur dans consultationService.update:', error);
-      return null;
+    if (error) {
+      console.error('Erreur lors de la mise à jour de la consultation:', error);
+      throw error;
     }
-  },
 
-  // Supprimer une consultation
-  async delete(id: string): Promise<boolean> {
-    try {
-      const { error } = await supabase
-        .from('consultations')
-        .delete()
-        .eq('id', id);
-
-      if (error) {
-        console.error('Erreur lors de la suppression de la consultation:', error);
-        return false;
-      }
-
-      return true;
-    } catch (error) {
-      console.error('Erreur dans consultationService.delete:', error);
-      return false;
-    }
+    return mapDbConsultationToConsultation(data);
   }
 };
