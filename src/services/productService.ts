@@ -21,8 +21,7 @@ export const productService = {
         unitPrice: product.unit_price,
         supplier: product.supplier || '',
         expiryDate: product.expiry_date || undefined,
-        lastRestocked: product.last_restocked,
-        createdAt: product.created_at || ''
+        lastRestocked: product.last_restocked
       })) || [];
     } catch (error) {
       console.error('Error fetching products:', error);
@@ -53,8 +52,7 @@ export const productService = {
         unitPrice: data.unit_price,
         supplier: data.supplier || '',
         expiryDate: data.expiry_date || undefined,
-        lastRestocked: data.last_restocked,
-        createdAt: data.created_at || ''
+        lastRestocked: data.last_restocked
       } : null;
     } catch (error) {
       console.error('Error fetching product by ID:', error);
@@ -90,8 +88,7 @@ export const productService = {
         unitPrice: data.unit_price,
         supplier: data.supplier || '',
         expiryDate: data.expiry_date || undefined,
-        lastRestocked: data.last_restocked,
-        createdAt: data.created_at || ''
+        lastRestocked: data.last_restocked
       };
     } catch (error) {
       console.error('Error creating product:', error);
@@ -128,8 +125,7 @@ export const productService = {
         unitPrice: data.unit_price,
         supplier: data.supplier || '',
         expiryDate: data.expiry_date || undefined,
-        lastRestocked: data.last_restocked,
-        createdAt: data.created_at || ''
+        lastRestocked: data.last_restocked
       };
     } catch (error) {
       console.error('Error updating product:', error);
@@ -209,8 +205,7 @@ export const productService = {
         unitPrice: product.unit_price,
         supplier: product.supplier || '',
         expiryDate: product.expiry_date || undefined,
-        lastRestocked: product.last_restocked,
-        createdAt: product.created_at || ''
+        lastRestocked: product.last_restocked
       })) || [];
     } catch (error) {
       console.error('Error fetching products below minimum quantity:', error);
