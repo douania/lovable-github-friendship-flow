@@ -1,11 +1,11 @@
-import { supabase } from '../lib/supabase';
+import { supabase } from '../integrations/supabase/client';
 import { Forfait } from '../types';
 
 // Fonction pour convertir les données de la DB vers le type Forfait
 const mapDbForfaitToForfait = (dbForfait: any): Forfait => ({
   id: dbForfait.id,
   nom: dbForfait.nom,
-  description: dbForfait.description,
+  description: dbForfait.description || '',
   soinIds: dbForfait.soin_ids || [],
   prixTotal: dbForfait.prix_total,
   prixReduit: dbForfait.prix_reduit,
@@ -13,7 +13,7 @@ const mapDbForfaitToForfait = (dbForfait: any): Forfait => ({
   validiteMois: dbForfait.validite_mois,
   isActive: dbForfait.is_active,
   ordre: dbForfait.ordre,
-  createdAt: dbForfait.created_at
+  createdAt: dbForfait.created_at || ''
 });
 
 // Fonction pour convertir le type Forfait vers les données de la DB
@@ -112,28 +112,28 @@ export const forfaitService = {
             appareilId: soin.appareil_id,
             zoneId: soin.zone_id,
             nom: soin.nom,
-            description: soin.description,
+            description: soin.description || '',
             duree: soin.duree,
             prix: soin.prix,
             contreIndications: soin.contre_indications || [],
             conseilsPostTraitement: soin.conseils_post_traitement || [],
-            isActive: soin.is_active,
-            createdAt: soin.created_at,
+            isActive: soin.is_active || false,
+            createdAt: soin.created_at || '',
             appareil: soin.appareils ? {
               id: soin.appareils.id,
               nom: soin.appareils.nom,
-              description: soin.appareils.description,
-              icone: soin.appareils.icone,
-              imageUrl: soin.appareils.image_url,
-              isActive: soin.appareils.is_active,
-              ordre: soin.appareils.ordre,
-              createdAt: soin.appareils.created_at
+              description: soin.appareils.description || '',
+              icone: soin.appareils.icone || '',
+              imageUrl: soin.appareils.image_url || '',
+              isActive: soin.appareils.is_active || false,
+              ordre: soin.appareils.ordre || 0,
+              createdAt: soin.appareils.created_at || ''
             } : undefined,
             zone: soin.zones ? {
               id: soin.zones.id,
               nom: soin.zones.nom,
-              description: soin.zones.description,
-              createdAt: soin.zones.created_at
+              description: soin.zones.description || '',
+              createdAt: soin.zones.created_at || ''
             } : undefined
           })) || [];
         }

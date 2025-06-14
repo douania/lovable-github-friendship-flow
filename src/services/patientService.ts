@@ -1,5 +1,5 @@
 
-import { supabase } from '../lib/supabase';
+import { supabase } from '../integrations/supabase/client';
 import { Patient } from '../types';
 
 export const patientService = {
@@ -19,11 +19,11 @@ export const patientService = {
         email: patient.email,
         phone: patient.phone,
         dateOfBirth: patient.date_of_birth,
-        skinType: patient.skin_type,
-        medicalHistory: patient.medical_history,
-        contraindications: patient.contraindications,
-        createdAt: patient.created_at,
-        lastVisit: patient.last_visit
+        skinType: patient.skin_type || '',
+        medicalHistory: patient.medical_history || '',
+        contraindications: patient.contraindications || [],
+        createdAt: patient.created_at || '',
+        lastVisit: patient.last_visit || undefined
       })) || [];
     } catch (error) {
       console.error('Error fetching patients:', error);
@@ -54,16 +54,16 @@ export const patientService = {
         email: data.email,
         phone: data.phone,
         dateOfBirth: data.date_of_birth,
-        skinType: data.skin_type,
-        medicalHistory: data.medical_history,
-        contraindications: data.contraindications,
-        createdAt: data.created_at,
-        lastVisit: data.last_visit
+        skinType: data.skin_type || '',
+        medicalHistory: data.medical_history || '',
+        contraindications: data.contraindications || [],
+        createdAt: data.created_at || '',
+        lastVisit: data.last_visit || undefined
       };
     } catch (error) {
       console.error('Error fetching patient by ID:', error);
       throw error;
-    }
+    }  
   },
 
   async getPatientById(id: string): Promise<Patient | null> {
@@ -97,11 +97,11 @@ export const patientService = {
         email: data.email,
         phone: data.phone,
         dateOfBirth: data.date_of_birth,
-        skinType: data.skin_type,
-        medicalHistory: data.medical_history,
-        contraindications: data.contraindications,
-        createdAt: data.created_at,
-        lastVisit: data.last_visit
+        skinType: data.skin_type || '',
+        medicalHistory: data.medical_history || '',
+        contraindications: data.contraindications || [],
+        createdAt: data.created_at || '',
+        lastVisit: data.last_visit || undefined
       };
     } catch (error) {
       console.error('Error creating patient:', error);
@@ -137,11 +137,11 @@ export const patientService = {
         email: data.email,
         phone: data.phone,
         dateOfBirth: data.date_of_birth,
-        skinType: data.skin_type,
-        medicalHistory: data.medical_history,
-        contraindications: data.contraindications,
-        createdAt: data.created_at,
-        lastVisit: data.last_visit
+        skinType: data.skin_type || '',
+        medicalHistory: data.medical_history || '',
+        contraindications: data.contraindications || [],
+        createdAt: data.created_at || '',
+        lastVisit: data.last_visit || undefined
       };
     } catch (error) {
       console.error('Error updating patient:', error);
@@ -180,11 +180,11 @@ export const patientService = {
         email: patient.email,
         phone: patient.phone,
         dateOfBirth: patient.date_of_birth,
-        skinType: patient.skin_type,
-        medicalHistory: patient.medical_history,
-        contraindications: patient.contraindications,
-        createdAt: patient.created_at,
-        lastVisit: patient.last_visit
+        skinType: patient.skin_type || '',
+        medicalHistory: patient.medical_history || '',
+        contraindications: patient.contraindications || [],
+        createdAt: data.created_at || '',
+        lastVisit: patient.last_visit || undefined
       })) || [];
     } catch (error) {
       console.error('Error searching patients:', error);

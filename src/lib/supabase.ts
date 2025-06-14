@@ -1,6 +1,6 @@
+
 // Re-export from the main client to maintain compatibility
 export { supabase } from '../integrations/supabase/client';
-export type { Database } from '../integrations/supabase/types';
 
 // Database types
 export interface Database {

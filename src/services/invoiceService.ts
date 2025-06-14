@@ -1,5 +1,5 @@
 
-import { supabase } from '../lib/supabase';
+import { supabase } from '../integrations/supabase/client';
 import { Invoice } from '../types';
 
 export const invoiceService = {
@@ -11,7 +11,17 @@ export const invoiceService = {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data || [];
+      
+      return data?.map(invoice => ({
+        id: invoice.id,
+        patientId: invoice.patient_id,
+        treatmentIds: invoice.treatment_ids,
+        amount: invoice.amount,
+        status: invoice.status as Invoice['status'],
+        paymentMethod: invoice.payment_method as Invoice['paymentMethod'],
+        createdAt: invoice.created_at || '',
+        paidAt: invoice.paid_at || undefined
+      })) || [];
     } catch (error) {
       console.error('Error fetching invoices:', error);
       throw error;
@@ -31,7 +41,17 @@ export const invoiceService = {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data || [];
+      
+      return data?.map(invoice => ({
+        id: invoice.id,
+        patientId: invoice.patient_id,
+        treatmentIds: invoice.treatment_ids,
+        amount: invoice.amount,
+        status: invoice.status as Invoice['status'],
+        paymentMethod: invoice.payment_method as Invoice['paymentMethod'],
+        createdAt: invoice.created_at || '',
+        paidAt: invoice.paid_at || undefined
+      })) || [];
     } catch (error) {
       console.error('Error fetching invoices by status:', error);
       throw error;
@@ -47,7 +67,17 @@ export const invoiceService = {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data || [];
+      
+      return data?.map(invoice => ({
+        id: invoice.id,
+        patientId: invoice.patient_id,
+        treatmentIds: invoice.treatment_ids,
+        amount: invoice.amount,
+        status: invoice.status as Invoice['status'],
+        paymentMethod: invoice.payment_method as Invoice['paymentMethod'],
+        createdAt: invoice.created_at || '',
+        paidAt: invoice.paid_at || undefined
+      })) || [];
     } catch (error) {
       console.error('Error fetching invoices by patient:', error);
       throw error;
@@ -63,7 +93,18 @@ export const invoiceService = {
         .single();
 
       if (error) throw error;
-      return data || null;
+      if (!data) return null;
+      
+      return {
+        id: data.id,
+        patientId: data.patient_id,
+        treatmentIds: data.treatment_ids,
+        amount: data.amount,
+        status: data.status as Invoice['status'],
+        paymentMethod: data.payment_method as Invoice['paymentMethod'],
+        createdAt: data.created_at || '',
+        paidAt: data.paid_at || undefined
+      };
     } catch (error) {
       console.error('Error fetching invoice by ID:', error);
       throw error;
@@ -74,28 +115,29 @@ export const invoiceService = {
     try {
       const { data, error } = await supabase
         .from('invoices')
-        .insert([{
+        .insert({
           patient_id: invoiceData.patientId,
           treatment_ids: invoiceData.treatmentIds,
           amount: invoiceData.amount,
           status: invoiceData.status,
           payment_method: invoiceData.paymentMethod,
           created_at: invoiceData.createdAt,
-          paid_at: invoiceData.paidAt
-        }])
+          paid_at: invoiceData.paidAt || null
+        })
         .select()
         .single();
 
       if (error) throw error;
+      
       return {
         id: data.id,
         patientId: data.patient_id,
         treatmentIds: data.treatment_ids,
         amount: data.amount,
-        status: data.status,
-        paymentMethod: data.payment_method,
-        createdAt: data.created_at,
-        paidAt: data.paid_at
+        status: data.status as Invoice['status'],
+        paymentMethod: data.payment_method as Invoice['paymentMethod'],
+        createdAt: data.created_at || '',
+        paidAt: data.paid_at || undefined
       };
     } catch (error) {
       console.error('Error creating invoice:', error);
@@ -117,22 +159,23 @@ export const invoiceService = {
           amount: invoiceData.amount,
           status: invoiceData.status,
           payment_method: invoiceData.paymentMethod,
-          paid_at: invoiceData.paidAt
+          paid_at: invoiceData.paidAt || null
         })
         .eq('id', id)
         .select()
         .single();
 
       if (error) throw error;
+      
       return {
         id: data.id,
         patientId: data.patient_id,
         treatmentIds: data.treatment_ids,
         amount: data.amount,
-        status: data.status,
-        paymentMethod: data.payment_method,
-        createdAt: data.created_at,
-        paidAt: data.paid_at
+        status: data.status as Invoice['status'],
+        paymentMethod: data.payment_method as Invoice['paymentMethod'],
+        createdAt: data.created_at || '',
+        paidAt: data.paid_at || undefined
       };
     } catch (error) {
       console.error('Error updating invoice:', error);

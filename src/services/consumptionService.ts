@@ -1,25 +1,25 @@
-import { supabase } from '../lib/supabase';
+import { supabase } from '../integrations/supabase/client';
 import { ConsumptionReport, StockAlert, CostAnalysis } from '../types';
 
 // Fonction pour convertir les données de la DB vers le type ConsumptionReport
 const mapDbConsumptionReportToConsumptionReport = (dbReport: any): ConsumptionReport => ({
   id: dbReport.id,
-  appointmentId: dbReport.appointment_id,
-  soinId: dbReport.soin_id,
-  productId: dbReport.product_id,
+  appointmentId: dbReport.appointment_id || '',
+  soinId: dbReport.soin_id || '',
+  productId: dbReport.product_id || '',
   expectedQuantity: dbReport.expected_quantity,
   actualQuantity: dbReport.actual_quantity,
-  varianceQuantity: dbReport.variance_quantity,
-  variancePercentage: dbReport.variance_percentage,
-  costImpact: dbReport.cost_impact,
-  reportDate: dbReport.report_date,
-  createdAt: dbReport.created_at
+  varianceQuantity: dbReport.variance_quantity || 0,
+  variancePercentage: dbReport.variance_percentage || 0,
+  costImpact: dbReport.cost_impact || 0,
+  reportDate: dbReport.report_date || '',
+  createdAt: dbReport.created_at || ''
 });
 
 // Fonction pour convertir les données de la DB vers le type StockAlert
 const mapDbStockAlertToStockAlert = (dbAlert: any): StockAlert => ({
   id: dbAlert.id,
-  productId: dbAlert.product_id,
+  productId: dbAlert.product_id || '',
   alertType: dbAlert.alert_type,
   severity: dbAlert.severity,
   title: dbAlert.title,
@@ -30,13 +30,13 @@ const mapDbStockAlertToStockAlert = (dbAlert: any): StockAlert => ({
   isRead: dbAlert.is_read,
   isDismissed: dbAlert.is_dismissed,
   expiresAt: dbAlert.expires_at,
-  createdAt: dbAlert.created_at
+  createdAt: dbAlert.created_at || ''
 });
 
 // Fonction pour convertir les données de la DB vers le type CostAnalysis
 const mapDbCostAnalysisToCostAnalysis = (dbAnalysis: any): CostAnalysis => ({
   id: dbAnalysis.id,
-  soinId: dbAnalysis.soin_id,
+  soinId: dbAnalysis.soin_id || '',
   analysisPeriodStart: dbAnalysis.analysis_period_start,
   analysisPeriodEnd: dbAnalysis.analysis_period_end,
   totalSessions: dbAnalysis.total_sessions,
@@ -46,7 +46,7 @@ const mapDbCostAnalysisToCostAnalysis = (dbAnalysis: any): CostAnalysis => ({
   costVariancePercentage: dbAnalysis.cost_variance_percentage,
   profitMargin: dbAnalysis.profit_margin,
   optimizationSuggestions: dbAnalysis.optimization_suggestions || [],
-  createdAt: dbAnalysis.created_at
+  createdAt: dbAnalysis.created_at || ''
 });
 
 export const consumptionService = {
@@ -137,7 +137,15 @@ export const consumptionService = {
       const { data, error } = await supabase
         .from('consumption_reports')
         .insert([{
-          ...reportData,
+          appointment_id: reportData.appointmentId,
+          soin_id: reportData.soinId,
+          product_id: reportData.productId,
+          expected_quantity: reportData.expectedQuantity,
+          actual_quantity: reportData.actualQuantity,
+          variance_quantity: reportData.varianceQuantity,
+          variance_percentage: reportData.variancePercentage,
+          cost_impact: reportData.costImpact,
+          report_date: reportData.reportDate,
           created_at: new Date().toISOString()
         }])
         .select()
@@ -148,7 +156,7 @@ export const consumptionService = {
         throw error;
       }
 
-      return data;
+      return mapDbConsumptionReportToConsumptionReport(data);
     } catch (error) {
       console.error('Erreur dans createConsumptionReport:', error);
       throw error;
@@ -303,7 +311,7 @@ export const consumptionService = {
         totalReports,
         averageVariance,
         costImpact,
-        topOverconsumedProducts: [] // Simplified for now
+        topOverconsumedProducts: []
       };
     } catch (error) {
       console.error('Error fetching consumption stats:', error);
