@@ -1,15 +1,22 @@
+
 import React, { useState, useEffect } from 'react';
 import { FileText, Plus, Search, Eye, Edit, Trash2 } from 'lucide-react';
 import { quoteService } from '../../services/quoteService';
 import { patientService } from '../../services/patientService';
 import { Quote } from '../../types/consultation';
+import QuoteForm from '../forms/QuoteForm';
+import { useToast } from '../../hooks/use-toast';
 
 const Quotes: React.FC = () => {
+  const { toast } = useToast();
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [filteredQuotes, setFilteredQuotes] = useState<Quote[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [editingQuote, setEditingQuote] = useState<Quote | null>(null);
+  const [quoteNumber, setQuoteNumber] = useState('');
 
   useEffect(() => {
     loadQuotes();
@@ -42,6 +49,11 @@ const Quotes: React.FC = () => {
       setQuotes(enrichedQuotes as any);
     } catch (error) {
       console.error('Erreur lors du chargement des devis:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de charger les devis.',
+        variant: 'destructive'
+      });
     } finally {
       setLoading(false);
     }
@@ -88,11 +100,60 @@ const Quotes: React.FC = () => {
 
   const handleCreateQuote = async () => {
     try {
-      const quoteNumber = await quoteService.generateQuoteNumber();
-      console.log('Nouveau numéro de devis:', quoteNumber);
-      // TODO: Ouvrir le modal de création de devis
+      const generatedQuoteNumber = await quoteService.generateQuoteNumber();
+      setQuoteNumber(generatedQuoteNumber);
+      setEditingQuote(null);
+      setShowForm(true);
     } catch (error) {
       console.error('Erreur lors de la génération du numéro de devis:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de générer un numéro de devis.',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  const handleEditQuote = (quote: Quote) => {
+    setEditingQuote(quote);
+    setQuoteNumber(quote.quoteNumber);
+    setShowForm(true);
+  };
+
+  const handleSaveQuote = async (quoteData: Omit<Quote, 'id' | 'createdAt' | 'updatedAt'>) => {
+    try {
+      if (editingQuote) {
+        await quoteService.updateQuote(editingQuote.id, quoteData);
+      } else {
+        await quoteService.createQuote(quoteData);
+      }
+      
+      setShowForm(false);
+      setEditingQuote(null);
+      await loadQuotes();
+    } catch (error) {
+      throw error; // Re-throw pour que le QuoteForm puisse gérer l'erreur
+    }
+  };
+
+  const handleDeleteQuote = async (quoteId: string) => {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer ce devis ?')) {
+      return;
+    }
+
+    try {
+      // TODO: Implémenter la suppression dans quoteService
+      toast({
+        title: 'Information',
+        description: 'Fonction de suppression à implémenter.',
+      });
+    } catch (error) {
+      console.error('Erreur lors de la suppression:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de supprimer le devis.',
+        variant: 'destructive'
+      });
     }
   };
 
@@ -224,10 +285,16 @@ const Quotes: React.FC = () => {
                         <button className="text-pink-600 hover:text-pink-900 p-1">
                           <Eye className="w-4 h-4" />
                         </button>
-                        <button className="text-blue-600 hover:text-blue-900 p-1">
+                        <button 
+                          onClick={() => handleEditQuote(quote)}
+                          className="text-blue-600 hover:text-blue-900 p-1"
+                        >
                           <Edit className="w-4 h-4" />
                         </button>
-                        <button className="text-red-600 hover:text-red-900 p-1">
+                        <button 
+                          onClick={() => handleDeleteQuote(quote.id)}
+                          className="text-red-600 hover:text-red-900 p-1"
+                        >
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
@@ -239,6 +306,19 @@ const Quotes: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Formulaire de devis */}
+      {showForm && (
+        <QuoteForm
+          quote={editingQuote || undefined}
+          initialQuoteNumber={quoteNumber}
+          onSave={handleSaveQuote}
+          onCancel={() => {
+            setShowForm(false);
+            setEditingQuote(null);
+          }}
+        />
+      )}
     </div>
   );
 };
