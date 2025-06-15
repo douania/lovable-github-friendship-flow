@@ -4,27 +4,12 @@ import { useAuth } from './hooks/useAuth';
 import Auth from './components/Auth';
 import Header from './components/layout/Header';
 import Sidebar from './components/layout/Sidebar';
-import Dashboard from './components/modules/Dashboard';
-import Patients from './components/modules/Patients';
-import TreatmentCatalog from './components/modules/TreatmentCatalog';
-import PriceList from './components/modules/PriceList';
-import Appointments from './components/modules/Appointments';
-import Invoices from './components/modules/Invoices';
-import Analytics from './components/modules/Analytics';
-import Inventory from './components/modules/Inventory';
-import ForfaitManagement from './components/modules/ForfaitManagement';
-import PricingAndConsumables from './components/modules/PricingAndConsumables';
-import Calendar from './components/modules/Calendar';
-import Consultations from './components/modules/Consultations';
-import Quotes from './components/modules/Quotes';
-import { Forfait } from './types';
 
 function App() {
   console.log('=== APP STARTED ===');
   
   const { user, loading, isAuthenticated } = useAuth();
   const [activeModule, setActiveModule] = useState('dashboard');
-  const [preselectedForfait, setPreselectedForfait] = useState<Forfait | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [sidebarVisible, setSidebarVisible] = useState(false);
 
@@ -60,17 +45,6 @@ function App() {
   }
 
   console.log('SHOWING MAIN APP');
-
-  const handleForfaitSelection = (forfait: Forfait) => {
-    console.log('Forfait selected:', forfait.nom);
-    setPreselectedForfait(forfait);
-    setActiveModule('invoices');
-  };
-
-  const clearPreselectedForfait = () => {
-    console.log('Clearing preselected forfait');
-    setPreselectedForfait(null);
-  };
 
   const handleToggleSidebar = () => {
     console.log('Toggle sidebar');
