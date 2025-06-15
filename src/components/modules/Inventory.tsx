@@ -1,22 +1,42 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { Search, Plus, AlertTriangle, Package, TrendingDown, Calendar } from 'lucide-react';
 import { Product } from '../../types';
-import { useLocalStorage } from '../../hooks/useLocalStorage';
-import { mockProducts } from '../../data/mockData';
+import { productService } from '../../services/productService';
 import ProductForm from '../forms/ProductForm';
 
 const Inventory: React.FC = () => {
-  const [products, setProducts] = useLocalStorage<Product[]>('products', mockProducts);
+  const [products, setProducts] = useState<Product[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadProducts();
+  }, []);
+
+  const loadProducts = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await productService.getAll();
+      setProducts(data);
+    } catch (err) {
+      console.error('Erreur lors du chargement des produits:', err);
+      setError('Erreur lors du chargement des produits. Vérifiez votre connexion Supabase.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const categories = ['all', ...Array.from(new Set(products.map(p => p.category)))];
   
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         product.supplier?.toLowerCase().includes(searchTerm.toLowerCase());
+                         (product.supplier && product.supplier.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesCategory = categoryFilter === 'all' || product.category === categoryFilter;
     return matchesSearch && matchesCategory;
   });
@@ -24,22 +44,26 @@ const Inventory: React.FC = () => {
   const lowStockProducts = products.filter(p => p.quantity <= p.minQuantity);
   const totalValue = products.reduce((sum, p) => sum + (p.quantity * p.unitPrice), 0);
 
-  const handleSaveProduct = (productData: Omit<Product, 'id'>) => {
-    if (editingProduct) {
-      setProducts(prev => prev.map(p => 
-        p.id === editingProduct.id 
-          ? { ...productData, id: editingProduct.id }
-          : p
-      ));
-    } else {
-      const newProduct: Product = {
-        ...productData,
-        id: Date.now().toString()
-      };
-      setProducts(prev => [...prev, newProduct]);
+  const handleSaveProduct = async (productData: Omit<Product, 'id'>) => {
+    try {
+      setError(null);
+      
+      if (editingProduct) {
+        const updatedProduct = await productService.updateProduct(editingProduct.id, productData);
+        setProducts(prev => prev.map(p => 
+          p.id === editingProduct.id ? updatedProduct : p
+        ));
+      } else {
+        const newProduct = await productService.createProduct(productData);
+        setProducts(prev => [newProduct, ...prev]);
+      }
+      
+      setShowAddModal(false);
+      setEditingProduct(null);
+    } catch (err) {
+      console.error('Erreur lors de la sauvegarde du produit:', err);
+      setError('Erreur lors de la sauvegarde. Veuillez réessayer.');
     }
-    setShowAddModal(false);
-    setEditingProduct(null);
   };
 
   const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
@@ -144,10 +168,6 @@ const Inventory: React.FC = () => {
           <h1 className="text-2xl font-bold text-gray-800">Gestion des Stocks</h1>
           <p className="text-gray-600">Suivi des produits et consommables</p>
         </div>
-        <button className="flex items-center space-x-2 bg-gradient-to-r from-pink-500 to-orange-500 text-white px-6 py-3 rounded-xl hover:shadow-lg transition-all">
-          <Plus className="w-5 h-5" />
-          <span>Nouveau Produit</span>
-        </button>
         <button 
           onClick={() => setShowAddModal(true)}
           className="flex items-center space-x-2 bg-gradient-to-r from-pink-500 to-orange-500 text-white px-6 py-3 rounded-xl hover:shadow-lg transition-all"
@@ -156,6 +176,18 @@ const Inventory: React.FC = () => {
           <span>Nouveau Produit</span>
         </button>
       </div>
+
+      {error && (
+        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl">
+          <p className="text-red-800 text-sm">{error}</p>
+          <button 
+            onClick={() => setError(null)}
+            className="text-red-600 hover:text-red-800 text-sm underline mt-1"
+          >
+            Fermer
+          </button>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-2xl border border-blue-100">
@@ -242,13 +274,20 @@ const Inventory: React.FC = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredProducts.map((product) => (
-          <ProductCard key={product.id} product={product} />
-        ))}
-      </div>
+      {loading ? (
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Chargement des produits...</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredProducts.map((product) => (
+            <ProductCard key={product.id} product={product} />
+          ))}
+        </div>
+      )}
 
-      {filteredProducts.length === 0 && (
+      {!loading && filteredProducts.length === 0 && (
         <div className="text-center py-12">
           <Package className="w-12 h-12 text-gray-300 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-600 mb-2">Aucun produit trouvé</h3>
