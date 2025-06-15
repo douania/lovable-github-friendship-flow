@@ -29,9 +29,11 @@ export const notificationService = {
         scheduledFor: notification.scheduled_for || undefined,
         sentAt: notification.sent_at || undefined,
         expiresAt: notification.expires_at || undefined,
-        metadata: notification.metadata || {},
-        createdAt: notification.created_at,
-        updatedAt: notification.updated_at
+        metadata: typeof notification.metadata === 'object' && notification.metadata !== null 
+          ? notification.metadata as Record<string, any>
+          : {},
+        createdAt: notification.created_at || '',
+        updatedAt: notification.updated_at || ''
       })) || [];
     } catch (error) {
       console.error('Error fetching notifications:', error);
