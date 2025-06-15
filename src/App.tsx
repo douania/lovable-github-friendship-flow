@@ -15,6 +15,8 @@ import TreatmentCatalog from './components/modules/TreatmentCatalog';
 import Consultations from './components/modules/Consultations';
 import Invoices from './components/modules/Invoices';
 import Quotes from './components/modules/Quotes';
+import PriceList from './components/modules/PriceList';
+import PricingAndConsumables from './components/modules/PricingAndConsumables';
 
 function App() {
   console.log('=== APP STARTED ===');
@@ -92,6 +94,10 @@ function App() {
         return <Invoices />;
       case 'quotes':
         return <Quotes />;
+      case 'pricelist':
+        return <PriceList />;
+      case 'pricing-consumables':
+        return <PricingAndConsumables />;
       default:
         return (
           <div className="p-6">
