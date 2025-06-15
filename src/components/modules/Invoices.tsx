@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Invoice, Patient, Forfait } from '../../types';
 import { invoiceService } from '../../services/invoiceService';
@@ -6,16 +5,11 @@ import { patientService } from '../../services/patientService';
 import InvoiceForm from '../forms/InvoiceForm';
 import { Plus, Edit, Trash2, FileText, AlertCircle } from 'lucide-react';
 
-interface InvoicesProps {
-  preselectedForfait: Forfait | null;
-  onClearPreselected: () => void;
-}
-
 interface InvoiceWithPatient extends Invoice {
   patient?: Patient;
 }
 
-const Invoices: React.FC<InvoicesProps> = () => {
+const Invoices: React.FC = () => {
   const [invoices, setInvoices] = useState<InvoiceWithPatient[]>([]);
   const [patients, setPatients] = useState<Patient[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
