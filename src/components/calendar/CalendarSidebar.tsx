@@ -4,6 +4,9 @@ import { Clock, User } from 'lucide-react';
 
 interface Appointment {
   id: string;
+  patientId: string;
+  treatmentId: string;
+  date: string;
   time: string;
   status: string;
   patientName?: string;
@@ -20,75 +23,62 @@ const CalendarSidebar: React.FC<CalendarSidebarProps> = ({
   availableSlots,
   dayAppointments
 }) => {
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'scheduled': return 'bg-blue-100 text-blue-800';
-      case 'completed': return 'bg-green-100 text-green-800';
-      case 'cancelled': return 'bg-red-100 text-red-800';
-      case 'no-show': return 'bg-gray-100 text-gray-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
+  const formatDate = (dateString: string) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('fr-FR', { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
   };
 
-  if (!selectedDate) return null;
-
   return (
-    <div className="space-y-4">
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-        <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-          <Clock className="w-4 h-4 text-pink-500" />
-          Créneaux disponibles
+    <div className="space-y-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        <h3 className="text-lg font-semibold text-gray-800 mb-4">
+          {selectedDate ? formatDate(selectedDate) : 'Sélectionnez une date'}
         </h3>
-        <div className="text-sm text-gray-600 mb-3">
-          {new Date(selectedDate).toLocaleDateString('fr-FR', { 
-            weekday: 'long',
-            day: 'numeric',
-            month: 'long'
-          })}
-        </div>
-        <div className="grid grid-cols-2 gap-2">
-          {availableSlots.length > 0 ? (
-            availableSlots.map((slot, index) => (
-              <button
-                key={index}
-                className="p-2 text-sm border border-gray-200 rounded-lg hover:bg-pink-50 hover:border-pink-200 transition-colors"
-              >
-                {slot}
-              </button>
-            ))
-          ) : (
-            <div className="col-span-2 text-sm text-gray-500 text-center py-4">
-              Aucun créneau disponible
+        
+        {selectedDate && (
+          <div className="space-y-4">
+            <div>
+              <h4 className="text-sm font-medium text-gray-700 mb-2">Rendez-vous du jour</h4>
+              {dayAppointments.length === 0 ? (
+                <p className="text-sm text-gray-500">Aucun rendez-vous</p>
+              ) : (
+                <div className="space-y-2">
+                  {dayAppointments
+                    .sort((a, b) => a.time.localeCompare(b.time))
+                    .map((appointment) => (
+                      <div key={appointment.id} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                        <Clock className="w-4 h-4 text-gray-400" />
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-gray-800">{appointment.time}</p>
+                          <p className="text-xs text-gray-600">{appointment.patientName || 'Patient'}</p>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              )}
             </div>
-          )}
-        </div>
-      </div>
-
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-        <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-          <User className="w-4 h-4 text-pink-500" />
-          Rendez-vous programmés
-        </h3>
-        <div className="space-y-2">
-          {dayAppointments.map((apt) => (
-            <div key={apt.id} className="p-3 border border-gray-200 rounded-lg">
-              <div className="flex items-center justify-between mb-1">
-                <span className="font-medium text-sm">{apt.time}</span>
-                <span className={`text-xs px-2 py-1 rounded-full ${getStatusColor(apt.status)}`}>
-                  {apt.status}
-                </span>
+            
+            {availableSlots.length > 0 && (
+              <div>
+                <h4 className="text-sm font-medium text-gray-700 mb-2">Créneaux disponibles</h4>
+                <div className="space-y-1">
+                  {availableSlots.map((slot) => (
+                    <div key={slot} className="flex items-center space-x-2 p-2 bg-green-50 rounded text-sm">
+                      <Clock className="w-3 h-3 text-green-600" />
+                      <span className="text-green-800">{slot}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
-              <div className="text-sm text-gray-600">
-                {apt.patientName}
-              </div>
-            </div>
-          ))}
-          {dayAppointments.length === 0 && (
-            <div className="text-sm text-gray-500 text-center py-4">
-              Aucun rendez-vous programmé
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

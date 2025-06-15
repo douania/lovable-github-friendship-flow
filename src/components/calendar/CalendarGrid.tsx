@@ -1,8 +1,11 @@
 
 import React from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface Appointment {
   id: string;
+  patientId: string;
+  treatmentId: string;
   date: string;
   time: string;
   status: string;
@@ -24,128 +27,88 @@ const CalendarGrid: React.FC<CalendarGridProps> = ({
   onDateClick,
   onNavigateMonth
 }) => {
-  const getDaysInMonth = () => {
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth();
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    const daysInMonth = lastDay.getDate();
-    const startingDayOfWeek = firstDay.getDay();
+  const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
+  const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay();
+  const adjustedFirstDay = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1;
 
-    const days = [];
-    
-    for (let i = 0; i < startingDayOfWeek; i++) {
-      days.push(null);
-    }
-    
-    for (let day = 1; day <= daysInMonth; day++) {
-      days.push(day);
-    }
-    
-    return days;
-  };
+  const monthNames = [
+    'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
+    'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
+  ];
 
-  const getAppointmentsForDate = (day: number) => {
-    if (!day) return [];
+  const dayNames = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+
+  const getDayAppointments = (day: number) => {
     const dateString = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
     return appointments.filter(apt => apt.date === dateString);
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'scheduled': return 'bg-blue-100 text-blue-800';
-      case 'completed': return 'bg-green-100 text-green-800';
-      case 'cancelled': return 'bg-red-100 text-red-800';
-      case 'no-show': return 'bg-gray-100 text-gray-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
+  const isSelectedDate = (day: number) => {
+    if (!selectedDate) return false;
+    const selectedDay = parseInt(selectedDate.split('-')[2]);
+    return selectedDay === day;
   };
-
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString('fr-FR', { 
-      month: 'long', 
-      year: 'numeric' 
-    });
-  };
-
-  const days = getDaysInMonth();
-  const weekDays = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-      <div className="p-4 border-b border-gray-200">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-900">
-            {formatDate(currentDate)}
-          </h2>
-          <div className="flex gap-2">
-            <button
-              onClick={() => onNavigateMonth('prev')}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              ←
-            </button>
-            <button
-              onClick={() => onNavigateMonth('next')}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              →
-            </button>
-          </div>
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-xl font-semibold text-gray-800">
+          {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
+        </h2>
+        <div className="flex space-x-2">
+          <button
+            onClick={() => onNavigateMonth('prev')}
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            <ChevronLeft className="w-5 h-5 text-gray-600" />
+          </button>
+          <button
+            onClick={() => onNavigateMonth('next')}
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            <ChevronRight className="w-5 h-5 text-gray-600" />
+          </button>
         </div>
       </div>
 
-      <div className="p-4">
-        <div className="grid grid-cols-7 gap-1 mb-2">
-          {weekDays.map(day => (
-            <div key={day} className="p-2 text-center text-sm font-medium text-gray-500">
-              {day}
-            </div>
-          ))}
-        </div>
+      <div className="grid grid-cols-7 gap-1 mb-2">
+        {dayNames.map(day => (
+          <div key={day} className="text-center text-sm font-medium text-gray-500 p-2">
+            {day}
+          </div>
+        ))}
+      </div>
 
-        <div className="grid grid-cols-7 gap-1">
-          {days.map((day, index) => {
-            const dayAppointments = day ? getAppointmentsForDate(day) : [];
-            const isSelected = day && selectedDate === `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-            
-            return (
-              <div
-                key={index}
-                className={`
-                  min-h-[80px] p-1 border border-gray-100 cursor-pointer transition-colors
-                  ${day ? 'hover:bg-gray-50' : 'bg-gray-50'}
-                  ${isSelected ? 'bg-pink-50 border-pink-200' : ''}
-                `}
-                onClick={() => day && onDateClick(day)}
-              >
-                {day && (
-                  <>
-                    <div className="text-sm font-medium text-gray-900 mb-1">
-                      {day}
-                    </div>
-                    <div className="space-y-1">
-                      {dayAppointments.slice(0, 2).map((apt) => (
-                        <div
-                          key={apt.id}
-                          className={`text-xs px-1 py-0.5 rounded truncate ${getStatusColor(apt.status)}`}
-                          title={`${apt.time} - ${apt.patientName}`}
-                        >
-                          {apt.time} {apt.patientName}
-                        </div>
-                      ))}
-                      {dayAppointments.length > 2 && (
-                        <div className="text-xs text-gray-500">
-                          +{dayAppointments.length - 2} autres
-                        </div>
-                      )}
-                    </div>
-                  </>
-                )}
-              </div>
-            );
-          })}
-        </div>
+      <div className="grid grid-cols-7 gap-1">
+        {Array.from({ length: adjustedFirstDay }).map((_, index) => (
+          <div key={`empty-${index}`} className="h-12"></div>
+        ))}
+        
+        {Array.from({ length: daysInMonth }).map((_, index) => {
+          const day = index + 1;
+          const dayAppointments = getDayAppointments(day);
+          
+          return (
+            <button
+              key={day}
+              onClick={() => onDateClick(day)}
+              className={`h-12 p-1 rounded-lg transition-colors relative ${
+                isSelectedDate(day)
+                  ? 'bg-pink-500 text-white'
+                  : 'hover:bg-gray-100 text-gray-700'
+              }`}
+            >
+              <span className={`text-sm ${dayAppointments.length > 0 ? 'font-semibold' : ''}`}>
+                {day}
+              </span>
+              {dayAppointments.length > 0 && (
+                <div className={`absolute bottom-1 left-1/2 transform -translate-x-1/2 w-1 h-1 rounded-full ${
+                  isSelectedDate(day) ? 'bg-white' : 'bg-pink-500'
+                }`} />
+              )}
+            </button>
+          );
+        })}
       </div>
     </div>
   );
