@@ -543,6 +543,51 @@ export type Database = {
           },
         ]
       }
+      notification_preferences: {
+        Row: {
+          appointment_reminders: boolean | null
+          created_at: string | null
+          email_notifications: boolean | null
+          id: string
+          marketing_notifications: boolean | null
+          payment_alerts: boolean | null
+          push_notifications: boolean | null
+          reminder_hours_before: number | null
+          sms_notifications: boolean | null
+          stock_alerts: boolean | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          appointment_reminders?: boolean | null
+          created_at?: string | null
+          email_notifications?: boolean | null
+          id?: string
+          marketing_notifications?: boolean | null
+          payment_alerts?: boolean | null
+          push_notifications?: boolean | null
+          reminder_hours_before?: number | null
+          sms_notifications?: boolean | null
+          stock_alerts?: boolean | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          appointment_reminders?: boolean | null
+          created_at?: string | null
+          email_notifications?: boolean | null
+          id?: string
+          marketing_notifications?: boolean | null
+          payment_alerts?: boolean | null
+          push_notifications?: boolean | null
+          reminder_hours_before?: number | null
+          sms_notifications?: boolean | null
+          stock_alerts?: boolean | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           appointment_id: string | null
@@ -928,6 +973,88 @@ export type Database = {
           },
         ]
       }
+      system_notifications: {
+        Row: {
+          appointment_id: string | null
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          is_dismissed: boolean | null
+          is_read: boolean | null
+          message: string
+          metadata: Json | null
+          patient_id: string | null
+          priority: string
+          product_id: string | null
+          scheduled_for: string | null
+          sent_at: string | null
+          target_user_id: string | null
+          title: string
+          type: string
+          updated_at: string | null
+        }
+        Insert: {
+          appointment_id?: string | null
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          is_dismissed?: boolean | null
+          is_read?: boolean | null
+          message: string
+          metadata?: Json | null
+          patient_id?: string | null
+          priority?: string
+          product_id?: string | null
+          scheduled_for?: string | null
+          sent_at?: string | null
+          target_user_id?: string | null
+          title: string
+          type: string
+          updated_at?: string | null
+        }
+        Update: {
+          appointment_id?: string | null
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          is_dismissed?: boolean | null
+          is_read?: boolean | null
+          message?: string
+          metadata?: Json | null
+          patient_id?: string | null
+          priority?: string
+          product_id?: string | null
+          scheduled_for?: string | null
+          sent_at?: string | null
+          target_user_id?: string | null
+          title?: string
+          type?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "system_notifications_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "system_notifications_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "system_notifications_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       treatments: {
         Row: {
           aftercare: string[] | null
@@ -1017,6 +1144,10 @@ export type Database = {
       calculate_consumption_variance: {
         Args: { appointment_id_param: string }
         Returns: Json
+      }
+      create_appointment_reminders: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       generate_smart_alerts: {
         Args: Record<PropertyKey, never>
