@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Plus } from 'lucide-react';
 import { Appointment } from '../../types';
@@ -46,8 +45,7 @@ const Appointments: React.FC = () => {
   const {
     paginatedData: paginatedAppointments,
     pagination,
-    totalItems,
-    isFiltered
+    totalItems
   } = usePaginatedData({
     data: dateFilteredAppointments,
     searchTerm: '', // Pas de recherche textuelle pour les rendez-vous pour l'instant
