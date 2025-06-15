@@ -1,156 +1,114 @@
 
-import { useState, useEffect } from 'react';
-import { User } from '@supabase/supabase-js';
+import { useState, useEffect, createContext, useContext } from 'react';
+import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '../integrations/supabase/client';
 
-interface UserWithRole extends User {
-  role?: string;
+interface AuthContextType {
+  user: User | null;
+  session: Session | null;
+  loading: boolean;
+  isAuthenticated: boolean;
+  signIn: (email: string, password: string) => Promise<{ error: any }>;
+  signUp: (email: string, password: string) => Promise<{ error: any }>;
+  signOut: () => Promise<void>;
 }
 
-export const useAuth = () => {
-  const [user, setUser] = useState<UserWithRole | null>(null);
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
-  console.log('useAuth hook initialized');
-
-  const fetchUserRole = async (userId: string): Promise<string> => {
-    try {
-      console.log('Fetching user role for user:', userId);
-      
-      const { data, error } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', userId)
-        .maybeSingle();
-
-      if (error) {
-        console.error('Error fetching user role:', error);
-        return 'praticien';
-      }
-
-      const role = data?.role || 'praticien';
-      console.log('User role fetched:', role);
-      return role;
-    } catch (error) {
-      console.error('Error in fetchUserRole:', error);
-      return 'praticien';
-    }
-  };
+  console.log('=== AUTH PROVIDER INIT ===');
 
   useEffect(() => {
-    console.log('useAuth useEffect triggered');
+    console.log('Setting up auth state listener...');
     
-    let mounted = true;
-    
-    // Get current session
-    const getSession = async () => {
+    // Get initial session
+    const getInitialSession = async () => {
       try {
-        console.log('Getting session...');
-        const { data: { session } } = await supabase.auth.getSession();
-        console.log('Session retrieved:', session ? 'exists' : 'null');
+        console.log('Getting initial session...');
+        const { data: { session }, error } = await supabase.auth.getSession();
         
-        if (!mounted) return;
-        
-        if (session?.user) {
-          console.log('User found in session, fetching role...');
-          try {
-            const role = await fetchUserRole(session.user.id);
-            if (mounted) {
-              setUser({
-                ...session.user,
-                role
-              });
-              console.log('User set with role:', role);
-            }
-          } catch (roleError) {
-            console.error('Error fetching role, setting user without role:', roleError);
-            if (mounted) {
-              setUser({
-                ...session.user,
-                role: 'praticien'
-              });
-            }
-          }
+        if (error) {
+          console.error('Error getting initial session:', error);
         } else {
-          console.log('No user in session');
-          if (mounted) {
-            setUser(null);
-          }
+          console.log('Initial session:', session ? 'Found' : 'None');
+          setSession(session);
+          setUser(session?.user ?? null);
         }
       } catch (error) {
-        console.error('Error getting session:', error);
-        if (mounted) {
-          setUser(null);
-        }
+        console.error('Exception getting initial session:', error);
       } finally {
-        if (mounted) {
-          console.log('Setting loading to false');
-          setLoading(false);
-        }
+        setLoading(false);
       }
     };
 
-    getSession();
+    getInitialSession();
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state changed:', event, session ? 'session exists' : 'no session');
-        
-        if (!mounted) return;
-        
-        if (session?.user) {
-          try {
-            const role = await fetchUserRole(session.user.id);
-            if (mounted) {
-              setUser({
-                ...session.user,
-                role
-              });
-              console.log('Auth change: User set with role:', role);
-            }
-          } catch (roleError) {
-            console.error('Auth change: Error fetching role, setting user without role:', roleError);
-            if (mounted) {
-              setUser({
-                ...session.user,
-                role: 'praticien'
-              });
-            }
-          }
-        } else {
-          if (mounted) {
-            setUser(null);
-          }
-        }
-        
-        if (mounted) {
-          setLoading(false);
-        }
+        console.log('Auth state change:', event, session ? 'Session exists' : 'No session');
+        setSession(session);
+        setUser(session?.user ?? null);
+        setLoading(false);
       }
     );
 
     return () => {
-      mounted = false;
+      console.log('Cleaning up auth subscription');
       subscription.unsubscribe();
     };
   }, []);
 
+  const signIn = async (email: string, password: string) => {
+    console.log('Attempting sign in for:', email);
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    if (error) console.error('Sign in error:', error);
+    return { error };
+  };
+
+  const signUp = async (email: string, password: string) => {
+    console.log('Attempting sign up for:', email);
+    const redirectUrl = `${window.location.origin}/`;
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: redirectUrl
+      }
+    });
+    if (error) console.error('Sign up error:', error);
+    return { error };
+  };
+
   const signOut = async () => {
-    try {
-      await supabase.auth.signOut();
-    } catch (error) {
-      console.error('Error signing out:', error);
-    }
+    console.log('Signing out...');
+    await supabase.auth.signOut();
   };
 
-  console.log('useAuth returning:', { user: user ? 'exists' : 'null', loading, isAuthenticated: !!user });
-
-  return {
+  const value = {
     user,
+    session,
     loading,
+    isAuthenticated: !!session,
+    signIn,
+    signUp,
     signOut,
-    isAuthenticated: !!user,
-    isAdmin: user?.role === 'admin'
   };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+};
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
 };
