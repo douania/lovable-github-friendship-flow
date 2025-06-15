@@ -1,8 +1,9 @@
+
 import { supabase } from '../lib/supabase';
 import { Product } from '../types';
 
 // Helper function to validate usage type
-const isValidUsageType = (value: string | null | undefined): value is 'fixed' | 'variable' | 'zone_based' => {
+const isValidUsageType = (value: any): value is 'fixed' | 'variable' | 'zone_based' => {
   if (!value || typeof value !== 'string') return false;
   return ['fixed', 'variable', 'zone_based'].includes(value);
 };
@@ -22,39 +23,49 @@ const parseUnitVariations = (data: any): Array<{ factor: string; value: string; 
   return undefined;
 };
 
+// Helper function to map database row to Product interface
+const mapDatabaseRowToProduct = (row: any): Product => {
+  return {
+    id: row.id,
+    name: row.name || '',
+    category: row.category || '',
+    quantity: row.quantity || 0,
+    minQuantity: row.min_quantity || 0,
+    unitPrice: row.unit_price || 0,
+    sellingPrice: row.selling_price || undefined,
+    unit: row.unit || undefined,
+    supplier: row.supplier || '',
+    expiryDate: row.expiry_date || undefined,
+    lastRestocked: row.last_restocked || new Date().toISOString().split('T')[0],
+    // Advanced fields with safe type validation
+    usageType: isValidUsageType(row.usage_type) ? row.usage_type : undefined,
+    baseUnitsPerSession: row.base_units_per_session || undefined,
+    unitVariations: parseUnitVariations(row.unit_variations),
+    storageConditions: row.storage_conditions || undefined,
+    batchNumber: row.batch_number || undefined,
+    isPrescriptionRequired: row.is_prescription_required || undefined,
+    administrationMethod: row.administration_method || undefined,
+    concentration: row.concentration || undefined,
+    volumePerUnit: row.volume_per_unit || undefined
+  };
+};
+
 export const productService = {
   async getAllProducts(): Promise<Product[]> {
     try {
+      console.log('Fetching all products from Supabase...');
       const { data, error } = await supabase
         .from('products')
         .select('*')
         .order('name');
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
       
-      return data?.map(product => ({
-        id: product.id,
-        name: product.name,
-        category: product.category,
-        quantity: product.quantity,
-        minQuantity: product.min_quantity,
-        unitPrice: product.unit_price,
-        sellingPrice: product.selling_price || undefined,
-        unit: product.unit || undefined,
-        supplier: product.supplier || '',
-        expiryDate: product.expiry_date || undefined,
-        lastRestocked: product.last_restocked,
-        // Nouveaux champs avancés avec validation de type sécurisée
-        usageType: isValidUsageType(product.usage_type) ? product.usage_type : undefined,
-        baseUnitsPerSession: product.base_units_per_session || undefined,
-        unitVariations: parseUnitVariations(product.unit_variations),
-        storageConditions: product.storage_conditions || undefined,
-        batchNumber: product.batch_number || undefined,
-        isPrescriptionRequired: product.is_prescription_required || undefined,
-        administrationMethod: product.administration_method || undefined,
-        concentration: product.concentration || undefined,
-        volumePerUnit: product.volume_per_unit || undefined
-      })) || [];
+      console.log('Raw data from Supabase:', data);
+      return data?.map(mapDatabaseRowToProduct) || [];
     } catch (error) {
       console.error('Error fetching products:', error);
       throw error;
@@ -67,37 +78,20 @@ export const productService = {
 
   async getProductById(id: string): Promise<Product | null> {
     try {
+      console.log('Fetching product by ID:', id);
       const { data, error } = await supabase
         .from('products')
         .select('*')
         .eq('id', id)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
       
-      return data ? {
-        id: data.id,
-        name: data.name,
-        category: data.category,
-        quantity: data.quantity,
-        minQuantity: data.min_quantity,
-        unitPrice: data.unit_price,
-        sellingPrice: data.selling_price || undefined,
-        unit: data.unit || undefined,
-        supplier: data.supplier || '',
-        expiryDate: data.expiry_date || undefined,
-        lastRestocked: data.last_restocked,
-        // Nouveaux champs avancés avec validation de type sécurisée
-        usageType: isValidUsageType(data.usage_type) ? data.usage_type : undefined,
-        baseUnitsPerSession: data.base_units_per_session || undefined,
-        unitVariations: parseUnitVariations(data.unit_variations),
-        storageConditions: data.storage_conditions || undefined,
-        batchNumber: data.batch_number || undefined,
-        isPrescriptionRequired: data.is_prescription_required || undefined,
-        administrationMethod: data.administration_method || undefined,
-        concentration: data.concentration || undefined,
-        volumePerUnit: data.volume_per_unit || undefined
-      } : null;
+      console.log('Raw product data:', data);
+      return data ? mapDatabaseRowToProduct(data) : null;
     } catch (error) {
       console.error('Error fetching product by ID:', error);
       throw error;
@@ -106,6 +100,7 @@ export const productService = {
 
   async createProduct(productData: Omit<Product, 'id'>): Promise<Product> {
     try {
+      console.log('Creating product:', productData);
       const { data, error } = await supabase
         .from('products')
         .insert([{
@@ -114,50 +109,32 @@ export const productService = {
           quantity: productData.quantity,
           min_quantity: productData.minQuantity,
           unit_price: productData.unitPrice,
-          selling_price: productData.sellingPrice,
-          unit: productData.unit,
-          supplier: productData.supplier,
+          selling_price: productData.sellingPrice || null,
+          unit: productData.unit || null,
+          supplier: productData.supplier || '',
           expiry_date: productData.expiryDate || null,
           last_restocked: productData.lastRestocked,
-          // Nouveaux champs avancés
-          usage_type: productData.usageType,
-          base_units_per_session: productData.baseUnitsPerSession,
-          unit_variations: productData.unitVariations || [],
-          storage_conditions: productData.storageConditions,
-          batch_number: productData.batchNumber,
-          is_prescription_required: productData.isPrescriptionRequired,
-          administration_method: productData.administrationMethod,
-          concentration: productData.concentration,
-          volume_per_unit: productData.volumePerUnit
+          // Advanced fields
+          usage_type: productData.usageType || null,
+          base_units_per_session: productData.baseUnitsPerSession || null,
+          unit_variations: productData.unitVariations || null,
+          storage_conditions: productData.storageConditions || null,
+          batch_number: productData.batchNumber || null,
+          is_prescription_required: productData.isPrescriptionRequired || null,
+          administration_method: productData.administrationMethod || null,
+          concentration: productData.concentration || null,
+          volume_per_unit: productData.volumePerUnit || null
         }])
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
       
-      return {
-        id: data.id,
-        name: data.name,
-        category: data.category,
-        quantity: data.quantity,
-        minQuantity: data.min_quantity,
-        unitPrice: data.unit_price,
-        sellingPrice: data.selling_price || undefined,
-        unit: data.unit || undefined,
-        supplier: data.supplier || '',
-        expiryDate: data.expiry_date || undefined,
-        lastRestocked: data.last_restocked,
-        // Nouveaux champs avancés avec validation de type sécurisée
-        usageType: isValidUsageType(data.usage_type) ? data.usage_type : undefined,
-        baseUnitsPerSession: data.base_units_per_session || undefined,
-        unitVariations: parseUnitVariations(data.unit_variations),
-        storageConditions: data.storage_conditions || undefined,
-        batchNumber: data.batch_number || undefined,
-        isPrescriptionRequired: data.is_prescription_required || undefined,
-        administrationMethod: data.administration_method || undefined,
-        concentration: data.concentration || undefined,
-        volumePerUnit: data.volume_per_unit || undefined
-      };
+      console.log('Created product data:', data);
+      return mapDatabaseRowToProduct(data);
     } catch (error) {
       console.error('Error creating product:', error);
       throw error;
@@ -166,6 +143,7 @@ export const productService = {
 
   async updateProduct(id: string, productData: Omit<Product, 'id'>): Promise<Product> {
     try {
+      console.log('Updating product:', id, productData);
       const { data, error } = await supabase
         .from('products')
         .update({
@@ -174,51 +152,33 @@ export const productService = {
           quantity: productData.quantity,
           min_quantity: productData.minQuantity,
           unit_price: productData.unitPrice,
-          selling_price: productData.sellingPrice,
-          unit: productData.unit,
-          supplier: productData.supplier,
+          selling_price: productData.sellingPrice || null,
+          unit: productData.unit || null,
+          supplier: productData.supplier || '',
           expiry_date: productData.expiryDate || null,
           last_restocked: productData.lastRestocked,
-          // Nouveaux champs avancés
-          usage_type: productData.usageType,
-          base_units_per_session: productData.baseUnitsPerSession,
-          unit_variations: productData.unitVariations || [],
-          storage_conditions: productData.storageConditions,
-          batch_number: productData.batchNumber,
-          is_prescription_required: productData.isPrescriptionRequired,
-          administration_method: productData.administrationMethod,
-          concentration: productData.concentration,
-          volume_per_unit: productData.volumePerUnit
+          // Advanced fields
+          usage_type: productData.usageType || null,
+          base_units_per_session: productData.baseUnitsPerSession || null,
+          unit_variations: productData.unitVariations || null,
+          storage_conditions: productData.storageConditions || null,
+          batch_number: productData.batchNumber || null,
+          is_prescription_required: productData.isPrescriptionRequired || null,
+          administration_method: productData.administrationMethod || null,
+          concentration: productData.concentration || null,
+          volume_per_unit: productData.volumePerUnit || null
         })
         .eq('id', id)
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
       
-      return {
-        id: data.id,
-        name: data.name,
-        category: data.category,
-        quantity: data.quantity,
-        minQuantity: data.min_quantity,
-        unitPrice: data.unit_price,
-        sellingPrice: data.selling_price || undefined,
-        unit: data.unit || undefined,
-        supplier: data.supplier || '',
-        expiryDate: data.expiry_date || undefined,
-        lastRestocked: data.last_restocked,
-        // Nouveaux champs avancés avec validation de type sécurisée
-        usageType: isValidUsageType(data.usage_type) ? data.usage_type : undefined,
-        baseUnitsPerSession: data.base_units_per_session || undefined,
-        unitVariations: parseUnitVariations(data.unit_variations),
-        storageConditions: data.storage_conditions || undefined,
-        batchNumber: data.batch_number || undefined,
-        isPrescriptionRequired: data.is_prescription_required || undefined,
-        administrationMethod: data.administration_method || undefined,
-        concentration: data.concentration || undefined,
-        volumePerUnit: data.volume_per_unit || undefined
-      };
+      console.log('Updated product data:', data);
+      return mapDatabaseRowToProduct(data);
     } catch (error) {
       console.error('Error updating product:', error);
       throw error;
@@ -227,12 +187,17 @@ export const productService = {
 
   async deleteProduct(id: string): Promise<void> {
     try {
+      console.log('Deleting product:', id);
       const { error } = await supabase
         .from('products')
         .delete()
         .eq('id', id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
+      console.log('Product deleted successfully');
     } catch (error) {
       console.error('Error deleting product:', error);
       throw error;
@@ -241,23 +206,32 @@ export const productService = {
 
   async decrementProductQuantity(productId: string, quantity: number): Promise<void> {
     try {
-      // For now, we'll manually handle the decrement
+      console.log('Decrementing product quantity:', productId, quantity);
+      // First get current quantity
       const { data: product, error: fetchError } = await supabase
         .from('products')
         .select('quantity')
         .eq('id', productId)
         .single();
 
-      if (fetchError) throw fetchError;
+      if (fetchError) {
+        console.error('Fetch error:', fetchError);
+        throw fetchError;
+      }
 
       const newQuantity = Math.max(0, product.quantity - quantity);
+      console.log('New quantity will be:', newQuantity);
 
       const { error: updateError } = await supabase
         .from('products')
         .update({ quantity: newQuantity })
         .eq('id', productId);
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        console.error('Update error:', updateError);
+        throw updateError;
+      }
+      console.log('Quantity decremented successfully');
     } catch (error) {
       console.error('Error decrementing product quantity:', error);
       throw error;
@@ -266,13 +240,19 @@ export const productService = {
 
   async getTotalInventoryValue(): Promise<number> {
     try {
+      console.log('Calculating total inventory value...');
       const { data, error } = await supabase
         .from('products')
         .select('quantity, unit_price');
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
 
-      return data?.reduce((sum: number, product: any) => sum + (product.quantity * product.unit_price), 0) || 0;
+      const total = data?.reduce((sum: number, product: any) => sum + (product.quantity * product.unit_price), 0) || 0;
+      console.log('Total inventory value:', total);
+      return total;
     } catch (error) {
       console.error('Error calculating total inventory value:', error);
       throw error;
@@ -281,36 +261,19 @@ export const productService = {
 
   async getProductsBelowMinQuantity(): Promise<Product[]> {
     try {
+      console.log('Fetching products below minimum quantity...');
       const { data, error } = await supabase
         .from('products')
         .select('*')
-        .lt('quantity', 'min_quantity');
+        .filter('quantity', 'lt', 'min_quantity');
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
       
-      return data?.map(product => ({
-        id: product.id,
-        name: product.name,
-        category: product.category,
-        quantity: product.quantity,
-        minQuantity: product.min_quantity,
-        unitPrice: product.unit_price,
-        sellingPrice: product.selling_price || undefined,
-        unit: product.unit || undefined,
-        supplier: product.supplier || '',
-        expiryDate: product.expiry_date || undefined,
-        lastRestocked: product.last_restocked,
-        // Nouveaux champs avancés avec validation de type sécurisée
-        usageType: isValidUsageType(product.usage_type) ? product.usage_type : undefined,
-        baseUnitsPerSession: product.base_units_per_session || undefined,
-        unitVariations: parseUnitVariations(product.unit_variations),
-        storageConditions: product.storage_conditions || undefined,
-        batchNumber: product.batch_number || undefined,
-        isPrescriptionRequired: product.is_prescription_required || undefined,
-        administrationMethod: product.administration_method || undefined,
-        concentration: product.concentration || undefined,
-        volumePerUnit: product.volume_per_unit || undefined
-      })) || [];
+      console.log('Products below min quantity:', data);
+      return data?.map(mapDatabaseRowToProduct) || [];
     } catch (error) {
       console.error('Error fetching products below minimum quantity:', error);
       throw error;
