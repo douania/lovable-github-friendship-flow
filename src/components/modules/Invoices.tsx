@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
-import { Invoice, Patient, Forfait } from '../../types';
+import { Invoice, Patient } from '../../types';
 import { invoiceService } from '../../services/invoiceService';
 import { patientService } from '../../services/patientService';
 import InvoiceForm from '../forms/InvoiceForm';
