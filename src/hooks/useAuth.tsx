@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { User } from '@supabase/supabase-js';
 import { supabase } from '../integrations/supabase/client';
@@ -42,22 +41,34 @@ export const useAuth = () => {
     const getSession = async () => {
       try {
         console.log('[useAuth] Tentative récupération session Supabase...');
-        const { data: { session } } = await supabase.auth.getSession();
-        console.log('[useAuth] Session reçue:', session);
-        if (session?.user) {
-          const role = await fetchUserRole();
-          setUser({
-            ...session.user,
-            role
-          });
-        } else {
-          setUser(null);
-        }
-      } catch (error) {
+        await Promise.race([
+          (async () => {
+            const { data: { session }, error } = await supabase.auth.getSession();
+            if (error) {
+              console.error('[useAuth] Erreur Supabase:', error);
+              setCriticalError('Erreur Supabase lors de getSession: ' + error.message);
+              setUser(null);
+              setLoading(false);
+              return;
+            }
+            console.log('[useAuth] Session reçue:', session);
+            if (session?.user) {
+              const role = await fetchUserRole();
+              setUser({
+                ...session.user,
+                role
+              });
+            } else {
+              setUser(null);
+            }
+            setLoading(false);
+          })(),
+          new Promise<void>((_, reject) => setTimeout(() => reject(new Error('getSession timeout')), 9000))
+        ]);
+      } catch (error: any) {
         console.error('Error getting session:', error);
-        setCriticalError('Erreur critique lors de la récupération de la session :' + String(error));
+        setCriticalError('Erreur critique lors de la récupération de la session : ' + String(error));
         setUser(null);
-      } finally {
         setLoading(false);
       }
     };

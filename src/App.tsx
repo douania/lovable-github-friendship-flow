@@ -22,7 +22,7 @@ import { Forfait } from './types';
 function App() {
   const { user, loading, isAuthenticated, criticalError } = useAuth();
   const [activeModule, setActiveModule] = useState('dashboard');
-  const [preselectedForfait, setPreselectedForfait] = useState(null);
+  const [preselectedForfait, setPreselectedForfait] = useState<Forfait | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [sidebarVisible, setSidebarVisible] = useState(false);
 
