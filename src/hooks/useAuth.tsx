@@ -12,9 +12,13 @@ export const useAuth = () => {
   const [user, setUser] = useState<UserWithRole | null>(null);
   const [loading, setLoading] = useState(true);
 
+  console.log('useAuth hook initialized');
+
   const fetchUserRole = async () => {
     try {
+      console.log('Fetching user role...');
       const role = await userService.getCurrentUserRole();
+      console.log('User role fetched:', role);
       return role;
     } catch (error) {
       console.error('Error fetching user role:', error);
@@ -23,23 +27,32 @@ export const useAuth = () => {
   };
 
   useEffect(() => {
+    console.log('useAuth useEffect triggered');
+    
     // Get current session
     const getSession = async () => {
       try {
+        console.log('Getting session...');
         const { data: { session } } = await supabase.auth.getSession();
+        console.log('Session retrieved:', session ? 'exists' : 'null');
+        
         if (session?.user) {
+          console.log('User found in session, fetching role...');
           const role = await fetchUserRole();
           setUser({
             ...session.user,
             role
           });
+          console.log('User set with role:', role);
         } else {
+          console.log('No user in session');
           setUser(null);
         }
       } catch (error) {
         console.error('Error getting session:', error);
         setUser(null);
       } finally {
+        console.log('Setting loading to false');
         setLoading(false);
       }
     };
@@ -48,7 +61,9 @@ export const useAuth = () => {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_, session) => {
+      async (event, session) => {
+        console.log('Auth state changed:', event, session ? 'session exists' : 'no session');
+        
         if (session?.user) {
           const role = await fetchUserRole();
           setUser({
@@ -72,6 +87,8 @@ export const useAuth = () => {
       console.error('Error signing out:', error);
     }
   };
+
+  console.log('useAuth returning:', { user: user ? 'exists' : 'null', loading, isAuthenticated: !!user });
 
   return {
     user,

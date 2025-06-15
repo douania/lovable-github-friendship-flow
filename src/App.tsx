@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useAuth } from './hooks/useAuth';
 import Auth from './components/Auth';
@@ -20,14 +19,19 @@ import Quotes from './components/modules/Quotes';
 import { Forfait } from './types';
 
 function App() {
+  console.log('App component rendering...');
+  
   const { user, loading, isAuthenticated } = useAuth();
   const [activeModule, setActiveModule] = useState('dashboard');
   const [preselectedForfait, setPreselectedForfait] = useState<Forfait | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [sidebarVisible, setSidebarVisible] = useState(false);
 
+  console.log('App state:', { user: user ? 'exists' : 'null', loading, isAuthenticated });
+
   // Show loading while checking authentication
   if (loading) {
+    console.log('Showing loading screen');
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#FDF6F3' }}>
         <div className="text-center">
@@ -40,12 +44,15 @@ function App() {
 
   // Show login page if user is not authenticated
   if (!isAuthenticated) {
+    console.log('User not authenticated, showing login screen');
     return (
       <div className="min-h-screen" style={{ backgroundColor: '#FDF6F3' }}>
         <Auth onAuthSuccess={() => {}} />
       </div>
     );
   }
+
+  console.log('User authenticated, showing main app');
 
   const handleForfaitSelection = (forfait: Forfait) => {
     setPreselectedForfait(forfait);
@@ -66,6 +73,7 @@ function App() {
 
   const renderModule = () => {
     try {
+      console.log('Rendering module:', activeModule);
       switch (activeModule) {
         case 'dashboard':
           return <Dashboard />;
