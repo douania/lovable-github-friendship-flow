@@ -17,12 +17,18 @@ export const useAuth = () => {
     try {
       console.log('Fetching user role for user:', userId);
       
-      // Simplified role fetching with timeout
-      const { data, error } = await supabase
+      // Add timeout to prevent infinite loading
+      const timeoutPromise = new Promise<string>((_, reject) => {
+        setTimeout(() => reject(new Error('Timeout')), 5000);
+      });
+
+      const queryPromise = supabase
         .from('user_roles')
         .select('role')
         .eq('user_id', userId)
-        .single();
+        .maybeSingle();
+
+      const { data, error } = await Promise.race([queryPromise, timeoutPromise]);
 
       if (error) {
         console.error('Error fetching user role:', error);
