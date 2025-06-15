@@ -16,19 +16,19 @@ export const notificationService = {
 
       return data?.map(notification => ({
         id: notification.id,
-        type: notification.type,
+        type: notification.type as SystemNotification['type'],
         title: notification.title,
         message: notification.message,
-        priority: notification.priority,
-        targetUserId: notification.target_user_id,
-        patientId: notification.patient_id,
-        appointmentId: notification.appointment_id,
-        productId: notification.product_id,
-        isRead: notification.is_read,
-        isDismissed: notification.is_dismissed,
-        scheduledFor: notification.scheduled_for,
-        sentAt: notification.sent_at,
-        expiresAt: notification.expires_at,
+        priority: notification.priority as SystemNotification['priority'],
+        targetUserId: notification.target_user_id || undefined,
+        patientId: notification.patient_id || undefined,
+        appointmentId: notification.appointment_id || undefined,
+        productId: notification.product_id || undefined,
+        isRead: notification.is_read || false,
+        isDismissed: notification.is_dismissed || false,
+        scheduledFor: notification.scheduled_for || undefined,
+        sentAt: notification.sent_at || undefined,
+        expiresAt: notification.expires_at || undefined,
         metadata: notification.metadata || {},
         createdAt: notification.created_at,
         updatedAt: notification.updated_at
@@ -98,17 +98,17 @@ export const notificationService = {
 
       return {
         id: data.id,
-        userId: data.user_id,
-        emailNotifications: data.email_notifications,
-        pushNotifications: data.push_notifications,
-        smsNotifications: data.sms_notifications,
-        stockAlerts: data.stock_alerts,
-        appointmentReminders: data.appointment_reminders,
-        paymentAlerts: data.payment_alerts,
-        marketingNotifications: data.marketing_notifications,
-        reminderHoursBefore: data.reminder_hours_before,
-        createdAt: data.created_at,
-        updatedAt: data.updated_at
+        userId: data.user_id || '',
+        emailNotifications: data.email_notifications ?? true,
+        pushNotifications: data.push_notifications ?? true,
+        smsNotifications: data.sms_notifications ?? false,
+        stockAlerts: data.stock_alerts ?? true,
+        appointmentReminders: data.appointment_reminders ?? true,
+        paymentAlerts: data.payment_alerts ?? true,
+        marketingNotifications: data.marketing_notifications ?? false,
+        reminderHoursBefore: data.reminder_hours_before ?? 24,
+        createdAt: data.created_at || '',
+        updatedAt: data.updated_at || ''
       };
     } catch (error) {
       console.error('Error fetching notification preferences:', error);
@@ -160,17 +160,17 @@ export const notificationService = {
 
       return {
         id: result.id,
-        userId: result.user_id,
-        emailNotifications: result.email_notifications,
-        pushNotifications: result.push_notifications,
-        smsNotifications: result.sms_notifications,
-        stockAlerts: result.stock_alerts,
-        appointmentReminders: result.appointment_reminders,
-        paymentAlerts: result.payment_alerts,
-        marketingNotifications: result.marketing_notifications,
-        reminderHoursBefore: result.reminder_hours_before,
-        createdAt: result.created_at,
-        updatedAt: result.updated_at
+        userId: result.user_id || '',
+        emailNotifications: result.email_notifications ?? true,
+        pushNotifications: result.push_notifications ?? true,
+        smsNotifications: result.sms_notifications ?? false,
+        stockAlerts: result.stock_alerts ?? true,
+        appointmentReminders: result.appointment_reminders ?? true,
+        paymentAlerts: result.payment_alerts ?? true,
+        marketingNotifications: result.marketing_notifications ?? false,
+        reminderHoursBefore: result.reminder_hours_before ?? 24,
+        createdAt: result.created_at || '',
+        updatedAt: result.updated_at || ''
       };
     } catch (error) {
       console.error('Error updating notification preferences:', error);
