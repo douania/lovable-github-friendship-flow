@@ -47,12 +47,6 @@ const Patients: React.FC = () => {
     }
   };
 
-  const filteredPatients = patients.filter(patient =>
-    `${patient.firstName} ${patient.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    patient.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    patient.phone.includes(searchTerm)
-  );
-
   const handleSavePatient = async (patientData: Omit<Patient, 'id'>) => {
     try {
       setError(null);
