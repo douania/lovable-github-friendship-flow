@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { useLocalStorage } from './useLocalStorage';
 
 interface CacheItem<T> {
@@ -35,8 +35,13 @@ export function useCache<T>(
 
   // Get data from cache
   const get = useCallback((cacheKey: string): T | null => {
-    const cache = persist ? persistentCache : cacheRef.current;
-    const item = persist ? cache[cacheKey] : cache.get(cacheKey);
+    let item: CacheItem<any> | null = null;
+    
+    if (persist) {
+      item = persistentCache[cacheKey] || null;
+    } else {
+      item = cacheRef.current.get(cacheKey) || null;
+    }
     
     if (!item) return null;
     
@@ -151,14 +156,21 @@ export function useCache<T>(
 
   // Get cache statistics
   const getStats = useCallback(() => {
-    const cache = persist ? persistentCache : Object.fromEntries(cacheRef.current);
+    let cache: Record<string, CacheItem<any>>;
+    
+    if (persist) {
+      cache = persistentCache;
+    } else {
+      cache = Object.fromEntries(cacheRef.current);
+    }
+    
     const keys = Object.keys(cache);
     const now = Date.now();
     
     return {
       totalEntries: keys.length,
       expiredEntries: keys.filter(key => {
-        const item = persist ? persistentCache[key] : cacheRef.current.get(key);
+        const item = cache[key];
         return item && now > item.expiry;
       }).length,
       hitRate: 0, // Could be calculated with additional tracking
