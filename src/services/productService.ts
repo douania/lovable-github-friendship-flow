@@ -1,51 +1,53 @@
 
-import { supabase } from '../lib/supabase';
+import { supabase } from '../integrations/supabase/client';
 import { Product } from '../types';
 
+const transformProduct = (data: any): Product => {
+  return {
+    id: data.id,
+    name: data.name,
+    category: data.category,
+    quantity: data.quantity,
+    minQuantity: data.min_quantity,
+    unitPrice: data.unit_price,
+    sellingPrice: data.selling_price || undefined,
+    unit: data.unit || undefined,
+    supplier: data.supplier || '',
+    expiryDate: data.expiry_date || undefined,
+    lastRestocked: data.last_restocked,
+    storageConditions: data.storage_conditions || undefined,
+    batchNumber: data.batch_number || undefined,
+    administrationMethod: data.administration_method || undefined,
+    concentration: data.concentration || undefined,
+    volumePerUnit: data.volume_per_unit || undefined,
+    isPrescriptionRequired: data.is_prescription_required || false,
+    baseUnitsPerSession: data.base_units_per_session || 1.0,
+    usageType: (data.usage_type as "fixed" | "variable" | "zone_based") || "fixed",
+    unitVariations: Array.isArray(data.unit_variations) ? data.unit_variations : []
+  };
+};
+
 export const productService = {
-  async getAllProducts(): Promise<Product[]> {
+  async getAll(): Promise<Product[]> {
     try {
       const { data, error } = await supabase
         .from('products')
         .select('*')
         .order('name');
 
-      if (error) throw error;
-      
-      return data?.map(product => ({
-        id: product.id,
-        name: product.name,
-        category: product.category,
-        quantity: product.quantity,
-        minQuantity: product.min_quantity,
-        unitPrice: product.unit_price,
-        sellingPrice: product.selling_price || undefined,
-        unit: product.unit || undefined,
-        supplier: product.supplier || '',
-        expiryDate: product.expiry_date || undefined,
-        lastRestocked: product.last_restocked,
-        // Nouveaux champs avancés
-        usageType: product.usage_type || undefined,
-        baseUnitsPerSession: product.base_units_per_session || undefined,
-        unitVariations: product.unit_variations || undefined,
-        storageConditions: product.storage_conditions || undefined,
-        batchNumber: product.batch_number || undefined,
-        isPrescriptionRequired: product.is_prescription_required || undefined,
-        administrationMethod: product.administration_method || undefined,
-        concentration: product.concentration || undefined,
-        volumePerUnit: product.volume_per_unit || undefined
-      })) || [];
+      if (error) {
+        console.error('Error fetching products:', error);
+        throw error;
+      }
+
+      return data ? data.map(transformProduct) : [];
     } catch (error) {
-      console.error('Error fetching products:', error);
+      console.error('Error in getAll:', error);
       throw error;
     }
   },
 
-  async getAll(): Promise<Product[]> {
-    return this.getAllProducts();
-  },
-
-  async getProductById(id: string): Promise<Product | null> {
+  async getById(id: string): Promise<Product | null> {
     try {
       const { data, error } = await supabase
         .from('products')
@@ -53,246 +55,159 @@ export const productService = {
         .eq('id', id)
         .single();
 
-      if (error) throw error;
-      
-      return data ? {
-        id: data.id,
-        name: data.name,
-        category: data.category,
-        quantity: data.quantity,
-        minQuantity: data.min_quantity,
-        unitPrice: data.unit_price,
-        sellingPrice: data.selling_price || undefined,
-        unit: data.unit || undefined,
-        supplier: data.supplier || '',
-        expiryDate: data.expiry_date || undefined,
-        lastRestocked: data.last_restocked,
-        // Nouveaux champs avancés
-        usageType: data.usage_type || undefined,
-        baseUnitsPerSession: data.base_units_per_session || undefined,
-        unitVariations: data.unit_variations || undefined,
-        storageConditions: data.storage_conditions || undefined,
-        batchNumber: data.batch_number || undefined,
-        isPrescriptionRequired: data.is_prescription_required || undefined,
-        administrationMethod: data.administration_method || undefined,
-        concentration: data.concentration || undefined,
-        volumePerUnit: data.volume_per_unit || undefined
-      } : null;
+      if (error) {
+        if (error.code === 'PGRST116') {
+          return null;
+        }
+        console.error('Error fetching product by ID:', error);
+        throw error;
+      }
+
+      return data ? transformProduct(data) : null;
     } catch (error) {
-      console.error('Error fetching product by ID:', error);
+      console.error('Error in getById:', error);
       throw error;
     }
   },
 
-  async createProduct(productData: Omit<Product, 'id'>): Promise<Product> {
+  async create(product: Omit<Product, 'id'>): Promise<Product> {
     try {
+      const productData = {
+        name: product.name,
+        category: product.category,
+        quantity: product.quantity,
+        min_quantity: product.minQuantity,
+        unit_price: product.unitPrice,
+        selling_price: product.sellingPrice,
+        unit: product.unit,
+        supplier: product.supplier || '',
+        expiry_date: product.expiryDate,
+        last_restocked: product.lastRestocked,
+        storage_conditions: product.storageConditions,
+        batch_number: product.batchNumber,
+        administration_method: product.administrationMethod,
+        concentration: product.concentration,
+        volume_per_unit: product.volumePerUnit,
+        is_prescription_required: product.isPrescriptionRequired || false,
+        base_units_per_session: product.baseUnitsPerSession || 1.0,
+        usage_type: product.usageType || "fixed",
+        unit_variations: product.unitVariations || []
+      };
+
       const { data, error } = await supabase
         .from('products')
-        .insert([{
-          name: productData.name,
-          category: productData.category,
-          quantity: productData.quantity,
-          min_quantity: productData.minQuantity,
-          unit_price: productData.unitPrice,
-          selling_price: productData.sellingPrice,
-          unit: productData.unit,
-          supplier: productData.supplier,
-          expiry_date: productData.expiryDate || null,
-          last_restocked: productData.lastRestocked,
-          // Nouveaux champs avancés
-          usage_type: productData.usageType,
-          base_units_per_session: productData.baseUnitsPerSession,
-          unit_variations: productData.unitVariations || [],
-          storage_conditions: productData.storageConditions,
-          batch_number: productData.batchNumber,
-          is_prescription_required: productData.isPrescriptionRequired,
-          administration_method: productData.administrationMethod,
-          concentration: productData.concentration,
-          volume_per_unit: productData.volumePerUnit
-        }])
+        .insert([productData])
         .select()
         .single();
 
-      if (error) throw error;
-      
-      return {
-        id: data.id,
-        name: data.name,
-        category: data.category,
-        quantity: data.quantity,
-        minQuantity: data.min_quantity,
-        unitPrice: data.unit_price,
-        sellingPrice: data.selling_price || undefined,
-        unit: data.unit || undefined,
-        supplier: data.supplier || '',
-        expiryDate: data.expiry_date || undefined,
-        lastRestocked: data.last_restocked,
-        // Nouveaux champs avancés
-        usageType: data.usage_type || undefined,
-        baseUnitsPerSession: data.base_units_per_session || undefined,
-        unitVariations: data.unit_variations || undefined,
-        storageConditions: data.storage_conditions || undefined,
-        batchNumber: data.batch_number || undefined,
-        isPrescriptionRequired: data.is_prescription_required || undefined,
-        administrationMethod: data.administration_method || undefined,
-        concentration: data.concentration || undefined,
-        volumePerUnit: data.volume_per_unit || undefined
-      };
+      if (error) {
+        console.error('Error creating product:', error);
+        throw error;
+      }
+
+      return transformProduct(data);
     } catch (error) {
-      console.error('Error creating product:', error);
+      console.error('Error in create:', error);
       throw error;
     }
   },
 
-  async updateProduct(id: string, productData: Omit<Product, 'id'>): Promise<Product> {
+  async update(id: string, product: Partial<Omit<Product, 'id'>>): Promise<Product> {
     try {
+      const productData: any = {};
+      
+      if (product.name !== undefined) productData.name = product.name;
+      if (product.category !== undefined) productData.category = product.category;
+      if (product.quantity !== undefined) productData.quantity = product.quantity;
+      if (product.minQuantity !== undefined) productData.min_quantity = product.minQuantity;
+      if (product.unitPrice !== undefined) productData.unit_price = product.unitPrice;
+      if (product.sellingPrice !== undefined) productData.selling_price = product.sellingPrice;
+      if (product.unit !== undefined) productData.unit = product.unit;
+      if (product.supplier !== undefined) productData.supplier = product.supplier;
+      if (product.expiryDate !== undefined) productData.expiry_date = product.expiryDate;
+      if (product.lastRestocked !== undefined) productData.last_restocked = product.lastRestocked;
+      if (product.storageConditions !== undefined) productData.storage_conditions = product.storageConditions;
+      if (product.batchNumber !== undefined) productData.batch_number = product.batchNumber;
+      if (product.administrationMethod !== undefined) productData.administration_method = product.administrationMethod;
+      if (product.concentration !== undefined) productData.concentration = product.concentration;
+      if (product.volumePerUnit !== undefined) productData.volume_per_unit = product.volumePerUnit;
+      if (product.isPrescriptionRequired !== undefined) productData.is_prescription_required = product.isPrescriptionRequired;
+      if (product.baseUnitsPerSession !== undefined) productData.base_units_per_session = product.baseUnitsPerSession;
+      if (product.usageType !== undefined) productData.usage_type = product.usageType;
+      if (product.unitVariations !== undefined) productData.unit_variations = product.unitVariations;
+
       const { data, error } = await supabase
         .from('products')
-        .update({
-          name: productData.name,
-          category: productData.category,
-          quantity: productData.quantity,
-          min_quantity: productData.minQuantity,
-          unit_price: productData.unitPrice,
-          selling_price: productData.sellingPrice,
-          unit: productData.unit,
-          supplier: productData.supplier,
-          expiry_date: productData.expiryDate || null,
-          last_restocked: productData.lastRestocked,
-          // Nouveaux champs avancés
-          usage_type: productData.usageType,
-          base_units_per_session: productData.baseUnitsPerSession,
-          unit_variations: productData.unitVariations || [],
-          storage_conditions: productData.storageConditions,
-          batch_number: productData.batchNumber,
-          is_prescription_required: productData.isPrescriptionRequired,
-          administration_method: productData.administrationMethod,
-          concentration: productData.concentration,
-          volume_per_unit: productData.volumePerUnit
-        })
+        .update(productData)
         .eq('id', id)
         .select()
         .single();
 
-      if (error) throw error;
-      
-      return {
-        id: data.id,
-        name: data.name,
-        category: data.category,
-        quantity: data.quantity,
-        minQuantity: data.min_quantity,
-        unitPrice: data.unit_price,
-        sellingPrice: data.selling_price || undefined,
-        unit: data.unit || undefined,
-        supplier: data.supplier || '',
-        expiryDate: data.expiry_date || undefined,
-        lastRestocked: data.last_restocked,
-        // Nouveaux champs avancés
-        usageType: data.usage_type || undefined,
-        baseUnitsPerSession: data.base_units_per_session || undefined,
-        unitVariations: data.unit_variations || undefined,
-        storageConditions: data.storage_conditions || undefined,
-        batchNumber: data.batch_number || undefined,
-        isPrescriptionRequired: data.is_prescription_required || undefined,
-        administrationMethod: data.administration_method || undefined,
-        concentration: data.concentration || undefined,
-        volumePerUnit: data.volume_per_unit || undefined
-      };
+      if (error) {
+        console.error('Error updating product:', error);
+        throw error;
+      }
+
+      return transformProduct(data);
     } catch (error) {
-      console.error('Error updating product:', error);
+      console.error('Error in update:', error);
       throw error;
     }
   },
 
-  async deleteProduct(id: string): Promise<void> {
+  async delete(id: string): Promise<void> {
     try {
       const { error } = await supabase
         .from('products')
         .delete()
         .eq('id', id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error deleting product:', error);
+        throw error;
+      }
     } catch (error) {
-      console.error('Error deleting product:', error);
+      console.error('Error in delete:', error);
       throw error;
     }
   },
 
-  async decrementProductQuantity(productId: string, quantity: number): Promise<void> {
-    try {
-      // For now, we'll manually handle the decrement
-      const { data: product, error: fetchError } = await supabase
-        .from('products')
-        .select('quantity')
-        .eq('id', productId)
-        .single();
-
-      if (fetchError) throw fetchError;
-
-      const newQuantity = Math.max(0, product.quantity - quantity);
-
-      const { error: updateError } = await supabase
-        .from('products')
-        .update({ quantity: newQuantity })
-        .eq('id', productId);
-
-      if (updateError) throw updateError;
-    } catch (error) {
-      console.error('Error decrementing product quantity:', error);
-      throw error;
-    }
-  },
-
-  async getTotalInventoryValue(): Promise<number> {
-    try {
-      const { data, error } = await supabase
-        .from('products')
-        .select('quantity, unit_price');
-
-      if (error) throw error;
-
-      return data?.reduce((sum: number, product: any) => sum + (product.quantity * product.unit_price), 0) || 0;
-    } catch (error) {
-      console.error('Error calculating total inventory value:', error);
-      throw error;
-    }
-  },
-
-  async getProductsBelowMinQuantity(): Promise<Product[]> {
+  async getByCategory(category: string): Promise<Product[]> {
     try {
       const { data, error } = await supabase
         .from('products')
         .select('*')
-        .lt('quantity', 'min_quantity');
+        .eq('category', category)
+        .order('name');
 
-      if (error) throw error;
-      
-      return data?.map(product => ({
-        id: product.id,
-        name: product.name,
-        category: product.category,
-        quantity: product.quantity,
-        minQuantity: product.min_quantity,
-        unitPrice: product.unit_price,
-        sellingPrice: product.selling_price || undefined,
-        unit: product.unit || undefined,
-        supplier: product.supplier || '',
-        expiryDate: product.expiry_date || undefined,
-        lastRestocked: product.last_restocked,
-        // Nouveaux champs avancés
-        usageType: product.usage_type || undefined,
-        baseUnitsPerSession: product.base_units_per_session || undefined,
-        unitVariations: product.unit_variations || undefined,
-        storageConditions: product.storage_conditions || undefined,
-        batchNumber: product.batch_number || undefined,
-        isPrescriptionRequired: product.is_prescription_required || undefined,
-        administrationMethod: product.administration_method || undefined,
-        concentration: product.concentration || undefined,
-        volumePerUnit: product.volume_per_unit || undefined
-      })) || [];
+      if (error) {
+        console.error('Error fetching products by category:', error);
+        throw error;
+      }
+
+      return data ? data.map(transformProduct) : [];
     } catch (error) {
-      console.error('Error fetching products below minimum quantity:', error);
+      console.error('Error in getByCategory:', error);
+      throw error;
+    }
+  },
+
+  async getLowStock(): Promise<Product[]> {
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .filter('quantity', 'lte', 'min_quantity')
+        .order('name');
+
+      if (error) {
+        console.error('Error fetching low stock products:', error);
+        throw error;
+      }
+
+      return data ? data.map(transformProduct) : [];
+    } catch (error) {
+      console.error('Error in getLowStock:', error);
       throw error;
     }
   }
