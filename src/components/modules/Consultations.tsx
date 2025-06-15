@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Stethoscope, Plus, Search, Eye, Edit } from 'lucide-react';
 import { consultationService } from '../../services/consultationService';
@@ -42,10 +43,6 @@ const Consultations: React.FC = () => {
     loadConsultations();
   }, []);
 
-  useEffect(() => {
-    filterConsultations();
-  }, [consultations, searchTerm]);
-
   const loadConsultations = async () => {
     try {
       setLoading(true);
@@ -82,19 +79,6 @@ const Consultations: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const filterConsultations = () => {
-    let filtered = [...consultations];
-
-    if (searchTerm) {
-      filtered = filtered.filter(consultation => 
-        consultation.patientName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        consultation.soinName?.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    setFilteredConsultations(filtered);
   };
 
   const handleSaveConsultation = async (consultationData: Omit<Consultation, 'id' | 'createdAt' | 'updatedAt'>) => {
