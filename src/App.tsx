@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useAuth } from './hooks/useAuth';
 import Auth from './components/Auth';
@@ -5,6 +6,15 @@ import Header from './components/layout/Header';
 import Sidebar from './components/layout/Sidebar';
 import Dashboard from './components/modules/Dashboard';
 import Calendar from './components/modules/Calendar';
+import Patients from './components/modules/Patients';
+import Appointments from './components/modules/Appointments';
+import Treatments from './components/modules/Treatments';
+import Inventory from './components/modules/Inventory';
+import Analytics from './components/modules/Analytics';
+import TreatmentCatalog from './components/modules/TreatmentCatalog';
+import Consultations from './components/modules/Consultations';
+import Invoices from './components/modules/Invoices';
+import Quotes from './components/modules/Quotes';
 
 function App() {
   console.log('=== APP STARTED ===');
@@ -65,17 +75,28 @@ function App() {
       case 'calendar':
         return <Calendar />;
       case 'patients':
-        return (
-          <div className="p-6">
-            <h1 className="text-2xl font-bold">Patients</h1>
-            <p>Module Patients simplifié</p>
-          </div>
-        );
+        return <Patients />;
+      case 'appointments':
+        return <Appointments />;
+      case 'treatments':  
+        return <Treatments />;
+      case 'inventory':
+        return <Inventory />;
+      case 'analytics':
+        return <Analytics />;
+      case 'catalog':
+        return <TreatmentCatalog onForfaitSelect={(forfait) => console.log('Forfait selected:', forfait)} />;
+      case 'consultations':
+        return <Consultations />;
+      case 'invoices':
+        return <Invoices />;
+      case 'quotes':
+        return <Quotes />;
       default:
         return (
           <div className="p-6">
             <h1 className="text-2xl font-bold">Module: {activeModule}</h1>
-            <p>Module {activeModule} simplifié pour débogage</p>
+            <p>Module {activeModule} en cours de développement</p>
           </div>
         );
     }
