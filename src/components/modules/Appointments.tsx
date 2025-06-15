@@ -9,6 +9,8 @@ import { productService } from '../../services/productService';
 import AppointmentForm from '../forms/AppointmentForm';
 import AppointmentFilters from '../appointments/AppointmentFilters';
 import AppointmentsList from '../appointments/AppointmentsList';
+import { usePaginatedData } from '../../hooks/usePaginatedData';
+import PaginationControls from '../ui/PaginationControls';
 
 const Appointments: React.FC = () => {
   const { appointments, loading, error, refetch, updateAppointment, createAppointment } = useAppointments();
@@ -33,11 +35,26 @@ const Appointments: React.FC = () => {
     loadTreatments();
   }, []);
 
-  // Filtrer les rendez-vous
-  const filteredAppointments = appointments.filter(apt => {
+  // Filtrer les rendez-vous par date et statut
+  const dateFilteredAppointments = appointments.filter(apt => {
     const matchesDate = apt.date === selectedDate;
     const matchesStatus = statusFilter === 'all' || apt.status === statusFilter;
     return matchesDate && matchesStatus;
+  });
+
+  // Utiliser la pagination intelligente pour les rendez-vous filtrés
+  const {
+    paginatedData: paginatedAppointments,
+    pagination,
+    totalItems,
+    isFiltered
+  } = usePaginatedData({
+    data: dateFilteredAppointments,
+    searchTerm: '', // Pas de recherche textuelle pour les rendez-vous pour l'instant
+    searchFields: [],
+    initialPageSize: 10,
+    sortKey: 'time',
+    sortDirection: 'asc'
   });
 
   const handleSaveAppointment = async (appointmentData: Omit<Appointment, 'id'>) => {
@@ -131,7 +148,7 @@ const Appointments: React.FC = () => {
         viewMode={viewMode}
         selectedDate={selectedDate}
         statusFilter={statusFilter}
-        appointmentsCount={filteredAppointments.length}
+        appointmentsCount={totalItems}
         onViewModeChange={setViewMode}
         onDateChange={setSelectedDate}
         onStatusFilterChange={setStatusFilter}
@@ -139,12 +156,21 @@ const Appointments: React.FC = () => {
 
       <div className="space-y-4">
         <AppointmentsList
-          appointments={filteredAppointments}
+          appointments={paginatedAppointments}
           loading={loading}
           getPatientName={getPatientName}
           getTreatmentName={getTreatmentName}
           onUpdateStatus={updateAppointmentStatus}
         />
+        
+        {totalItems > 0 && (
+          <PaginationControls
+            pagination={pagination}
+            className="mt-6"
+            showPageSizeSelector={true}
+            showInfo={true}
+          />
+        )}
       </div>
 
       {(showAddModal || editingAppointment) && (
