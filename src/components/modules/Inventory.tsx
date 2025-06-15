@@ -4,6 +4,8 @@ import { Product } from '../../types';
 import { useLocalStorage } from '../../hooks/useLocalStorage';
 import { mockProducts } from '../../data/mockData';
 import ProductForm from '../forms/ProductForm';
+import { usePaginatedData } from '../../hooks/usePaginatedData';
+import PaginationControls from '../ui/PaginationControls';
 
 const Inventory: React.FC = () => {
   const [products, setProducts] = useLocalStorage<Product[]>('products', mockProducts);
@@ -14,11 +16,18 @@ const Inventory: React.FC = () => {
 
   const categories = ['all', ...Array.from(new Set(products.map(p => p.category)))];
   
-  const filteredProducts = products.filter(product => {
-    const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         product.supplier?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = categoryFilter === 'all' || product.category === categoryFilter;
-    return matchesSearch && matchesCategory;
+  // Use paginated data
+  const {
+    paginatedData: paginatedProducts,
+    pagination,
+    totalItems,
+    isFiltered
+  } = usePaginatedData({
+    data: products,
+    searchTerm,
+    filters: { category: categoryFilter },
+    searchFields: ['name', 'supplier'],
+    initialPageSize: 12
   });
 
   const lowStockProducts = products.filter(p => p.quantity <= p.minQuantity);
@@ -144,10 +153,6 @@ const Inventory: React.FC = () => {
           <h1 className="text-2xl font-bold text-gray-800">Gestion des Stocks</h1>
           <p className="text-gray-600">Suivi des produits et consommables</p>
         </div>
-        <button className="flex items-center space-x-2 bg-gradient-to-r from-pink-500 to-orange-500 text-white px-6 py-3 rounded-xl hover:shadow-lg transition-all">
-          <Plus className="w-5 h-5" />
-          <span>Nouveau Produit</span>
-        </button>
         <button 
           onClick={() => setShowAddModal(true)}
           className="flex items-center space-x-2 bg-gradient-to-r from-pink-500 to-orange-500 text-white px-6 py-3 rounded-xl hover:shadow-lg transition-all"
@@ -238,21 +243,30 @@ const Inventory: React.FC = () => {
         </select>
         
         <div className="text-sm text-gray-600 bg-white px-4 py-3 rounded-xl border border-gray-200">
-          {filteredProducts.length} produit(s)
+          {isFiltered ? `${totalItems} produit(s) trouvé(s)` : `${totalItems} produit(s)`}
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredProducts.map((product) => (
+        {paginatedProducts.map((product) => (
           <ProductCard key={product.id} product={product} />
         ))}
       </div>
 
-      {filteredProducts.length === 0 && (
+      {totalItems > 0 && (
+        <PaginationControls
+          pagination={pagination}
+          className="mt-6"
+        />
+      )}
+
+      {totalItems === 0 && (
         <div className="text-center py-12">
           <Package className="w-12 h-12 text-gray-300 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-600 mb-2">Aucun produit trouvé</h3>
-          <p className="text-gray-500">Aucun produit ne correspond à vos critères de recherche</p>
+          <p className="text-gray-500">
+            {isFiltered ? 'Aucun produit ne correspond à vos critères de recherche' : 'Commencez par ajouter votre premier produit'}
+          </p>
         </div>
       )}
 

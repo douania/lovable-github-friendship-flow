@@ -3,6 +3,8 @@ import { Search, Plus, Eye, Edit, Phone, Mail, Calendar } from 'lucide-react';
 import { Patient } from '../../types';
 import { patientService } from '../../services/patientService';
 import PatientForm from '../forms/PatientForm';
+import { usePaginatedData } from '../../hooks/usePaginatedData';
+import PaginationControls from '../ui/PaginationControls';
 
 const Patients: React.FC = () => {
   const [patients, setPatients] = useState<Patient[]>([]);
@@ -12,6 +14,19 @@ const Patients: React.FC = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+
+  // Use paginated data
+  const {
+    paginatedData: paginatedPatients,
+    pagination,
+    totalItems,
+    isFiltered
+  } = usePaginatedData({
+    data: patients,
+    searchTerm,
+    searchFields: ['firstName', 'lastName', 'email', 'phone'],
+    initialPageSize: 12
+  });
 
   // Charger les patients au montage du composant
   React.useEffect(() => {
@@ -179,7 +194,7 @@ const Patients: React.FC = () => {
           />
         </div>
         <div className="text-sm text-gray-600 bg-white px-4 py-3 rounded-xl border border-gray-200">
-          {filteredPatients.length} patient(s)
+          {isFiltered ? `${totalItems} patient(s) trouvé(s)` : `${totalItems} patient(s)`}
         </div>
       </div>
 
@@ -189,14 +204,23 @@ const Patients: React.FC = () => {
           <p className="text-gray-600">Chargement des patients...</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredPatients.map((patient) => (
-            <PatientCard key={patient.id} patient={patient} />
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {paginatedPatients.map((patient) => (
+              <PatientCard key={patient.id} patient={patient} />
+            ))}
+          </div>
+
+          {totalItems > 0 && (
+            <PaginationControls
+              pagination={pagination}
+              className="mt-6"
+            />
+          )}
+        </>
       )}
 
-      {!loading && filteredPatients.length === 0 && (
+      {!loading && totalItems === 0 && (
         <div className="text-center py-12">
           <Search className="w-12 h-12 text-gray-300 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-600 mb-2">Aucun patient trouvé</h3>
