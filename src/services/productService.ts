@@ -2,9 +2,18 @@ import { supabase } from '../lib/supabase';
 import { Product } from '../types';
 
 // Helper function to validate usage type
-const isValidUsageType = (value: string | null): value is 'fixed' | 'variable' | 'zone_based' => {
+const isValidUsageType = (value: string | null | undefined): value is 'fixed' | 'variable' | 'zone_based' => {
   if (!value) return false;
   return ['fixed', 'variable', 'zone_based'].includes(value);
+};
+
+// Helper function to safely parse unit variations
+const parseUnitVariations = (data: any): Array<{ factor: string; value: string; units: number; }> | undefined => {
+  if (!data) return undefined;
+  if (Array.isArray(data)) {
+    return data as Array<{ factor: string; value: string; units: number; }>;
+  }
+  return undefined;
 };
 
 export const productService = {
@@ -30,9 +39,9 @@ export const productService = {
         expiryDate: product.expiry_date || undefined,
         lastRestocked: product.last_restocked,
         // Nouveaux champs avancés avec validation de type sécurisée
-        usageType: isValidUsageType(product.usage_type) ? product.usage_type : undefined,
+        usageType: isValidUsageType(product.usage_type) ? product.usage_type as 'fixed' | 'variable' | 'zone_based' : undefined,
         baseUnitsPerSession: product.base_units_per_session || undefined,
-        unitVariations: Array.isArray(product.unit_variations) ? product.unit_variations as Array<{ factor: string; value: string; units: number; }> : undefined,
+        unitVariations: parseUnitVariations(product.unit_variations),
         storageConditions: product.storage_conditions || undefined,
         batchNumber: product.batch_number || undefined,
         isPrescriptionRequired: product.is_prescription_required || undefined,
@@ -73,9 +82,9 @@ export const productService = {
         expiryDate: data.expiry_date || undefined,
         lastRestocked: data.last_restocked,
         // Nouveaux champs avancés avec validation de type sécurisée
-        usageType: isValidUsageType(data.usage_type) ? data.usage_type : undefined,
+        usageType: isValidUsageType(data.usage_type) ? data.usage_type as 'fixed' | 'variable' | 'zone_based' : undefined,
         baseUnitsPerSession: data.base_units_per_session || undefined,
-        unitVariations: Array.isArray(data.unit_variations) ? data.unit_variations as Array<{ factor: string; value: string; units: number; }> : undefined,
+        unitVariations: parseUnitVariations(data.unit_variations),
         storageConditions: data.storage_conditions || undefined,
         batchNumber: data.batch_number || undefined,
         isPrescriptionRequired: data.is_prescription_required || undefined,
@@ -133,9 +142,9 @@ export const productService = {
         expiryDate: data.expiry_date || undefined,
         lastRestocked: data.last_restocked,
         // Nouveaux champs avancés avec validation de type sécurisée
-        usageType: isValidUsageType(data.usage_type) ? data.usage_type : undefined,
+        usageType: isValidUsageType(data.usage_type) ? data.usage_type as 'fixed' | 'variable' | 'zone_based' : undefined,
         baseUnitsPerSession: data.base_units_per_session || undefined,
-        unitVariations: Array.isArray(data.unit_variations) ? data.unit_variations as Array<{ factor: string; value: string; units: number; }> : undefined,
+        unitVariations: parseUnitVariations(data.unit_variations),
         storageConditions: data.storage_conditions || undefined,
         batchNumber: data.batch_number || undefined,
         isPrescriptionRequired: data.is_prescription_required || undefined,
@@ -194,9 +203,9 @@ export const productService = {
         expiryDate: data.expiry_date || undefined,
         lastRestocked: data.last_restocked,
         // Nouveaux champs avancés avec validation de type sécurisée
-        usageType: isValidUsageType(data.usage_type) ? data.usage_type : undefined,
+        usageType: isValidUsageType(data.usage_type) ? data.usage_type as 'fixed' | 'variable' | 'zone_based' : undefined,
         baseUnitsPerSession: data.base_units_per_session || undefined,
-        unitVariations: Array.isArray(data.unit_variations) ? data.unit_variations as Array<{ factor: string; value: string; units: number; }> : undefined,
+        unitVariations: parseUnitVariations(data.unit_variations),
         storageConditions: data.storage_conditions || undefined,
         batchNumber: data.batch_number || undefined,
         isPrescriptionRequired: data.is_prescription_required || undefined,
@@ -286,9 +295,9 @@ export const productService = {
         expiryDate: product.expiry_date || undefined,
         lastRestocked: product.last_restocked,
         // Nouveaux champs avancés avec validation de type sécurisée
-        usageType: isValidUsageType(product.usage_type) ? product.usage_type : undefined,
+        usageType: isValidUsageType(product.usage_type) ? product.usage_type as 'fixed' | 'variable' | 'zone_based' : undefined,
         baseUnitsPerSession: product.base_units_per_session || undefined,
-        unitVariations: Array.isArray(product.unit_variations) ? product.unit_variations as Array<{ factor: string; value: string; units: number; }> : undefined,
+        unitVariations: parseUnitVariations(product.unit_variations),
         storageConditions: product.storage_conditions || undefined,
         batchNumber: product.batch_number || undefined,
         isPrescriptionRequired: product.is_prescription_required || undefined,
