@@ -65,9 +65,9 @@ const Inventory: React.FC = () => {
     try {
       setError(null);
 
-      // Log le début de la requête
-      console.log('[Inventory] Lancement productService.getAll()...');
-      const data = await productService.getAll();
+      // Correction ici: appel de la bonne fonction !
+      console.log('[Inventory] Lancement productService.getAllProducts()...');
+      const data = await productService.getAllProducts();
       console.log('[Inventory] Données reçues de Supabase:', data);
 
       if (!Array.isArray(data)) {
