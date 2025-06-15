@@ -1,6 +1,12 @@
 import { supabase } from '../lib/supabase';
 import { Product } from '../types';
 
+// Helper function to validate usage type
+const isValidUsageType = (value: string | null): value is 'fixed' | 'variable' | 'zone_based' => {
+  if (!value) return false;
+  return ['fixed', 'variable', 'zone_based'].includes(value);
+};
+
 export const productService = {
   async getAllProducts(): Promise<Product[]> {
     try {
@@ -24,7 +30,7 @@ export const productService = {
         expiryDate: product.expiry_date || undefined,
         lastRestocked: product.last_restocked,
         // Nouveaux champs avancés avec validation de type sécurisée
-        usageType: (['fixed', 'variable', 'zone_based'].includes(product.usage_type) ? product.usage_type : undefined) as 'fixed' | 'variable' | 'zone_based' | undefined,
+        usageType: isValidUsageType(product.usage_type) ? product.usage_type : undefined,
         baseUnitsPerSession: product.base_units_per_session || undefined,
         unitVariations: Array.isArray(product.unit_variations) ? product.unit_variations as Array<{ factor: string; value: string; units: number; }> : undefined,
         storageConditions: product.storage_conditions || undefined,
@@ -67,7 +73,7 @@ export const productService = {
         expiryDate: data.expiry_date || undefined,
         lastRestocked: data.last_restocked,
         // Nouveaux champs avancés avec validation de type sécurisée
-        usageType: (['fixed', 'variable', 'zone_based'].includes(data.usage_type) ? data.usage_type : undefined) as 'fixed' | 'variable' | 'zone_based' | undefined,
+        usageType: isValidUsageType(data.usage_type) ? data.usage_type : undefined,
         baseUnitsPerSession: data.base_units_per_session || undefined,
         unitVariations: Array.isArray(data.unit_variations) ? data.unit_variations as Array<{ factor: string; value: string; units: number; }> : undefined,
         storageConditions: data.storage_conditions || undefined,
@@ -127,7 +133,7 @@ export const productService = {
         expiryDate: data.expiry_date || undefined,
         lastRestocked: data.last_restocked,
         // Nouveaux champs avancés avec validation de type sécurisée
-        usageType: (['fixed', 'variable', 'zone_based'].includes(data.usage_type) ? data.usage_type : undefined) as 'fixed' | 'variable' | 'zone_based' | undefined,
+        usageType: isValidUsageType(data.usage_type) ? data.usage_type : undefined,
         baseUnitsPerSession: data.base_units_per_session || undefined,
         unitVariations: Array.isArray(data.unit_variations) ? data.unit_variations as Array<{ factor: string; value: string; units: number; }> : undefined,
         storageConditions: data.storage_conditions || undefined,
@@ -188,7 +194,7 @@ export const productService = {
         expiryDate: data.expiry_date || undefined,
         lastRestocked: data.last_restocked,
         // Nouveaux champs avancés avec validation de type sécurisée
-        usageType: (['fixed', 'variable', 'zone_based'].includes(data.usage_type) ? data.usage_type : undefined) as 'fixed' | 'variable' | 'zone_based' | undefined,
+        usageType: isValidUsageType(data.usage_type) ? data.usage_type : undefined,
         baseUnitsPerSession: data.base_units_per_session || undefined,
         unitVariations: Array.isArray(data.unit_variations) ? data.unit_variations as Array<{ factor: string; value: string; units: number; }> : undefined,
         storageConditions: data.storage_conditions || undefined,
@@ -280,7 +286,7 @@ export const productService = {
         expiryDate: product.expiry_date || undefined,
         lastRestocked: product.last_restocked,
         // Nouveaux champs avancés avec validation de type sécurisée
-        usageType: (['fixed', 'variable', 'zone_based'].includes(product.usage_type) ? product.usage_type : undefined) as 'fixed' | 'variable' | 'zone_based' | undefined,
+        usageType: isValidUsageType(product.usage_type) ? product.usage_type : undefined,
         baseUnitsPerSession: product.base_units_per_session || undefined,
         unitVariations: Array.isArray(product.unit_variations) ? product.unit_variations as Array<{ factor: string; value: string; units: number; }> : undefined,
         storageConditions: product.storage_conditions || undefined,
