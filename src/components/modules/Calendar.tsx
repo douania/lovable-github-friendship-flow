@@ -25,20 +25,28 @@ const Calendar: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [availableSlots, setAvailableSlots] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  console.log('Calendar component rendering with date:', currentDate);
 
   useEffect(() => {
+    console.log('Calendar useEffect for appointments triggered');
     loadAppointments();
-  }, [currentDate]);
+  }, [currentDate.getFullYear(), currentDate.getMonth()]); // Dependency plus spécifique
 
   useEffect(() => {
+    console.log('Calendar useEffect for available slots triggered', { selectedDate, user: !!user });
     if (selectedDate && user) {
       loadAvailableSlots();
     }
-  }, [selectedDate, user]);
+  }, [selectedDate, user?.id]); // Dependency plus spécifique
 
   const loadAppointments = async () => {
     try {
+      console.log('Loading appointments for:', currentDate);
       setLoading(true);
+      setError(null);
+      
       const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
       const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
       
@@ -47,6 +55,8 @@ const Calendar: React.FC = () => {
         const aptDate = new Date(apt.date);
         return aptDate >= startOfMonth && aptDate <= endOfMonth;
       });
+
+      console.log('Found appointments:', monthAppointments.length);
 
       const enrichedAppointments = await Promise.all(
         monthAppointments.map(async (apt) => {
@@ -66,15 +76,20 @@ const Calendar: React.FC = () => {
       setAppointments(enrichedAppointments);
     } catch (error) {
       console.error('Erreur lors du chargement des rendez-vous:', error);
+      setError('Erreur lors du chargement des rendez-vous');
     } finally {
       setLoading(false);
     }
   };
 
   const loadAvailableSlots = async () => {
-    if (!user) return;
+    if (!user) {
+      console.log('No user, skipping available slots loading');
+      return;
+    }
     
     try {
+      console.log('Loading available slots for:', selectedDate);
       const slots = await availabilityService.getAvailableTimeSlots(user.id, selectedDate);
       setAvailableSlots(slots);
     } catch (error) {
@@ -86,10 +101,12 @@ const Calendar: React.FC = () => {
   const handleDateClick = (day: number) => {
     if (!day) return;
     const dateString = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    console.log('Date clicked:', dateString);
     setSelectedDate(dateString);
   };
 
   const navigateMonth = (direction: 'prev' | 'next') => {
+    console.log('Navigating month:', direction);
     setCurrentDate(prev => {
       const newDate = new Date(prev);
       if (direction === 'prev') {
@@ -103,10 +120,28 @@ const Calendar: React.FC = () => {
 
   const getDayAppointments = () => {
     if (!selectedDate) return [];
-    const dayNumber = parseInt(selectedDate.split('-')[2]);
-    const dateString = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(dayNumber).padStart(2, '0')}`;
-    return appointments.filter(apt => apt.date === dateString);
+    return appointments.filter(apt => apt.date === selectedDate);
   };
+
+  if (error) {
+    return (
+      <div className="p-6">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <h3 className="text-red-800 font-medium">Erreur</h3>
+          <p className="text-red-600 text-sm mt-1">{error}</p>
+          <button 
+            onClick={() => {
+              setError(null);
+              loadAppointments();
+            }}
+            className="mt-2 bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700"
+          >
+            Réessayer
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
