@@ -1,7 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
 import { Search, Plus, AlertTriangle, Package, TrendingDown } from 'lucide-react';
-// Calendrier retiré car non utilisé
 import { Product } from '../../types';
 import { productService } from '../../services/productService';
 import ProductForm from '../forms/ProductForm';

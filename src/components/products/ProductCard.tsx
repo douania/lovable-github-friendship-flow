@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { AlertTriangle, Calendar } from 'lucide-react';
 import { Product } from '../../types';
@@ -29,7 +30,6 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onRestock }) => {
           </span>
         </div>
       </div>
-      
       <div className="grid grid-cols-2 gap-4 mb-4">
         <div>
           <p className="text-sm text-gray-600">Stock actuel</p>
@@ -42,7 +42,6 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onRestock }) => {
           <p className="text-xl font-bold text-gray-800">{product.minQuantity}</p>
         </div>
       </div>
-      
       <div className="space-y-2 mb-4">
         <div className="flex justify-between">
           <span className="text-sm text-gray-600">Prix unitaire</span>
@@ -73,7 +72,6 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onRestock }) => {
           </div>
         )}
       </div>
-      
       {product.expiryDate && (
         <div className={`p-3 rounded-lg ${isExpiringSoon ? 'bg-red-50 border border-red-200' : 'bg-gray-50'}`}>
           <div className="flex items-center space-x-2">
@@ -89,7 +87,6 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onRestock }) => {
           </div>
         </div>
       )}
-      
       <div className="mt-4 flex justify-between text-xs text-gray-500">
         <span>Maj: {new Date(product.lastRestocked).toLocaleDateString('fr-FR')}</span>
         {isLowStock && onRestock && (
