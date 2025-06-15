@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Search, Plus, AlertTriangle, Package, TrendingDown } from 'lucide-react';
 import { Product } from '../../types';
 import { productService } from '../../services/productService';
@@ -16,19 +15,60 @@ const Inventory: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // NEW: Timout/cancellation support
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   useEffect(() => {
-    console.log('Inventory module mounted. Loading products...');
-    loadProducts();
+    let cancelled = false;
+    console.log('[Inventory] Module mounted. Lancement du chargement des produits...');
+    setLoading(true);
+
+    // Timeout: si rien ne revient dans les 7s, on affiche une erreur
+    timeoutRef.current = setTimeout(() => {
+      if (!cancelled) {
+        setLoading(false);
+        setError(
+          "Le chargement du stock prend trop de temps. Vérifiez votre connexion réseau ou la configuration Supabase."
+        );
+        console.warn('[Inventory] Timeout de sécurité atteint (7s)');
+      }
+    }, 7000);
+
+    loadProducts()
+      .then(() => {
+        if (!cancelled) {
+          if (timeoutRef.current) clearTimeout(timeoutRef.current);
+          setLoading(false);
+          console.log('[Inventory] Produits chargés !');
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          if (timeoutRef.current) clearTimeout(timeoutRef.current);
+          setLoading(false);
+          setError(
+            "Échec du chargement du stock. Détails : " +
+              (err?.message || JSON.stringify(err))
+          );
+          console.error('[Inventory] Erreur dans loadProducts:', err);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+    // eslint-disable-next-line
   }, []);
 
   const loadProducts = async () => {
     try {
-      setLoading(true);
       setError(null);
 
-      // Ajout de console.log pour traçage détaillé
+      // Log le début de la requête
+      console.log('[Inventory] Lancement productService.getAll()...');
       const data = await productService.getAll();
-      console.log('Fetched products from Supabase:', data);
+      console.log('[Inventory] Données reçues de Supabase:', data);
 
       if (!Array.isArray(data)) {
         setError("Données reçues non valides de Supabase.");
@@ -37,12 +77,8 @@ const Inventory: React.FC = () => {
         setProducts(data);
       }
     } catch (err: any) {
-      console.error('Erreur lors du chargement des produits:', err);
-      setError('Erreur lors du chargement des produits. Vérifiez votre connexion Supabase ou vos droits.');
       setProducts([]);
-    } finally {
-      setLoading(false);
-      console.log('Products charging terminé.');
+      throw err; // remonte l’erreur pour l’attraper dans useEffect
     }
   };
 
