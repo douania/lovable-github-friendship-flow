@@ -105,6 +105,10 @@ function App() {
             <p className="text-red-600 text-sm mt-1">
               Une erreur est survenue lors du chargement du module. Veuillez rafraîchir la page.
             </p>
+            <details className="mt-2">
+              <summary className="text-red-600 text-sm cursor-pointer">Détails de l'erreur</summary>
+              <pre className="text-xs mt-1 text-red-500">{String(error)}</pre>
+            </details>
           </div>
         </div>
       );
