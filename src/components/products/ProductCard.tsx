@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { AlertTriangle, Package, Calendar, TrendingDown } from 'lucide-react';
+import { AlertTriangle, Calendar } from 'lucide-react';
 import { Product } from '../../types';
 
 interface ProductCardProps {
