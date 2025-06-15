@@ -3,7 +3,7 @@ import { Product } from '../types';
 
 // Helper function to validate usage type
 const isValidUsageType = (value: string | null | undefined): value is 'fixed' | 'variable' | 'zone_based' => {
-  if (!value) return false;
+  if (!value || typeof value !== 'string') return false;
   return ['fixed', 'variable', 'zone_based'].includes(value);
 };
 
@@ -11,7 +11,13 @@ const isValidUsageType = (value: string | null | undefined): value is 'fixed' | 
 const parseUnitVariations = (data: any): Array<{ factor: string; value: string; units: number; }> | undefined => {
   if (!data) return undefined;
   if (Array.isArray(data)) {
-    return data as Array<{ factor: string; value: string; units: number; }>;
+    return data.filter(item => 
+      item && 
+      typeof item === 'object' && 
+      'factor' in item && 
+      'value' in item && 
+      'units' in item
+    );
   }
   return undefined;
 };
@@ -39,7 +45,7 @@ export const productService = {
         expiryDate: product.expiry_date || undefined,
         lastRestocked: product.last_restocked,
         // Nouveaux champs avancés avec validation de type sécurisée
-        usageType: isValidUsageType(product.usage_type) ? product.usage_type as 'fixed' | 'variable' | 'zone_based' : undefined,
+        usageType: isValidUsageType(product.usage_type) ? product.usage_type : undefined,
         baseUnitsPerSession: product.base_units_per_session || undefined,
         unitVariations: parseUnitVariations(product.unit_variations),
         storageConditions: product.storage_conditions || undefined,
@@ -82,7 +88,7 @@ export const productService = {
         expiryDate: data.expiry_date || undefined,
         lastRestocked: data.last_restocked,
         // Nouveaux champs avancés avec validation de type sécurisée
-        usageType: isValidUsageType(data.usage_type) ? data.usage_type as 'fixed' | 'variable' | 'zone_based' : undefined,
+        usageType: isValidUsageType(data.usage_type) ? data.usage_type : undefined,
         baseUnitsPerSession: data.base_units_per_session || undefined,
         unitVariations: parseUnitVariations(data.unit_variations),
         storageConditions: data.storage_conditions || undefined,
@@ -142,7 +148,7 @@ export const productService = {
         expiryDate: data.expiry_date || undefined,
         lastRestocked: data.last_restocked,
         // Nouveaux champs avancés avec validation de type sécurisée
-        usageType: isValidUsageType(data.usage_type) ? data.usage_type as 'fixed' | 'variable' | 'zone_based' : undefined,
+        usageType: isValidUsageType(data.usage_type) ? data.usage_type : undefined,
         baseUnitsPerSession: data.base_units_per_session || undefined,
         unitVariations: parseUnitVariations(data.unit_variations),
         storageConditions: data.storage_conditions || undefined,
@@ -203,7 +209,7 @@ export const productService = {
         expiryDate: data.expiry_date || undefined,
         lastRestocked: data.last_restocked,
         // Nouveaux champs avancés avec validation de type sécurisée
-        usageType: isValidUsageType(data.usage_type) ? data.usage_type as 'fixed' | 'variable' | 'zone_based' : undefined,
+        usageType: isValidUsageType(data.usage_type) ? data.usage_type : undefined,
         baseUnitsPerSession: data.base_units_per_session || undefined,
         unitVariations: parseUnitVariations(data.unit_variations),
         storageConditions: data.storage_conditions || undefined,
@@ -295,7 +301,7 @@ export const productService = {
         expiryDate: product.expiry_date || undefined,
         lastRestocked: product.last_restocked,
         // Nouveaux champs avancés avec validation de type sécurisée
-        usageType: isValidUsageType(product.usage_type) ? product.usage_type as 'fixed' | 'variable' | 'zone_based' : undefined,
+        usageType: isValidUsageType(product.usage_type) ? product.usage_type : undefined,
         baseUnitsPerSession: product.base_units_per_session || undefined,
         unitVariations: parseUnitVariations(product.unit_variations),
         storageConditions: product.storage_conditions || undefined,
