@@ -1,92 +1,22 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Search, Plus, AlertTriangle, Package, TrendingDown } from 'lucide-react';
+import React, { useState } from 'react';
+import { Search, Plus, AlertTriangle, Package, TrendingDown, Calendar } from 'lucide-react';
 import { Product } from '../../types';
-import { productService } from '../../services/productService';
+import { useLocalStorage } from '../../hooks/useLocalStorage';
+import { mockProducts } from '../../data/mockData';
 import ProductForm from '../forms/ProductForm';
-import ProductCard from '../products/ProductCard';
-import LowStockAlert from '../products/LowStockAlert';
 
 const Inventory: React.FC = () => {
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useLocalStorage<Product[]>('products', mockProducts);
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  // NEW: Timout/cancellation support
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    console.log('[Inventory] Module mounted. Lancement du chargement des produits...');
-    setLoading(true);
-
-    // Timeout: si rien ne revient dans les 7s, on affiche une erreur
-    timeoutRef.current = setTimeout(() => {
-      if (!cancelled) {
-        setLoading(false);
-        setError(
-          "Le chargement du stock prend trop de temps. Vérifiez votre connexion réseau ou la configuration Supabase."
-        );
-        console.warn('[Inventory] Timeout de sécurité atteint (7s)');
-      }
-    }, 7000);
-
-    loadProducts()
-      .then(() => {
-        if (!cancelled) {
-          if (timeoutRef.current) clearTimeout(timeoutRef.current);
-          setLoading(false);
-          console.log('[Inventory] Produits chargés !');
-        }
-      })
-      .catch((err) => {
-        if (!cancelled) {
-          if (timeoutRef.current) clearTimeout(timeoutRef.current);
-          setLoading(false);
-          setError(
-            "Échec du chargement du stock. Détails : " +
-              (err?.message || JSON.stringify(err))
-          );
-          console.error('[Inventory] Erreur dans loadProducts:', err);
-        }
-      });
-
-    return () => {
-      cancelled = true;
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    };
-    // eslint-disable-next-line
-  }, []);
-
-  const loadProducts = async () => {
-    try {
-      setError(null);
-
-      // Correction ici: appel de la bonne fonction !
-      console.log('[Inventory] Lancement productService.getAllProducts()...');
-      const data = await productService.getAllProducts();
-      console.log('[Inventory] Données reçues de Supabase:', data);
-
-      if (!Array.isArray(data)) {
-        setError("Données reçues non valides de Supabase.");
-        setProducts([]);
-      } else {
-        setProducts(data);
-      }
-    } catch (err: any) {
-      setProducts([]);
-      throw err; // remonte l’erreur pour l’attraper dans useEffect
-    }
-  };
 
   const categories = ['all', ...Array.from(new Set(products.map(p => p.category)))];
-
+  
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (product.supplier && product.supplier.toLowerCase().includes(searchTerm.toLowerCase()));
+                         product.supplier?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = categoryFilter === 'all' || product.category === categoryFilter;
     return matchesSearch && matchesCategory;
   });
@@ -94,26 +24,117 @@ const Inventory: React.FC = () => {
   const lowStockProducts = products.filter(p => p.quantity <= p.minQuantity);
   const totalValue = products.reduce((sum, p) => sum + (p.quantity * p.unitPrice), 0);
 
-  const handleSaveProduct = async (productData: Omit<Product, 'id'>) => {
-    try {
-      setError(null);
-
-      if (editingProduct) {
-        const updatedProduct = await productService.updateProduct(editingProduct.id, productData);
-        setProducts(prev => prev.map(p =>
-          p.id === editingProduct.id ? updatedProduct : p
-        ));
-      } else {
-        const newProduct = await productService.createProduct(productData);
-        setProducts(prev => [newProduct, ...prev]);
-      }
-
-      setShowAddModal(false);
-      setEditingProduct(null);
-    } catch (err) {
-      console.error('Erreur lors de la sauvegarde du produit:', err);
-      setError('Erreur lors de la sauvegarde. Veuillez réessayer.');
+  const handleSaveProduct = (productData: Omit<Product, 'id'>) => {
+    if (editingProduct) {
+      setProducts(prev => prev.map(p => 
+        p.id === editingProduct.id 
+          ? { ...productData, id: editingProduct.id }
+          : p
+      ));
+    } else {
+      const newProduct: Product = {
+        ...productData,
+        id: Date.now().toString()
+      };
+      setProducts(prev => [...prev, newProduct]);
     }
+    setShowAddModal(false);
+    setEditingProduct(null);
+  };
+
+  const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
+    const isLowStock = product.quantity <= product.minQuantity;
+    const isExpiringSoon = product.expiryDate && 
+      new Date(product.expiryDate) <= new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+
+    return (
+      <div className={`bg-white p-6 rounded-2xl shadow-sm border transition-all hover:shadow-md ${
+        isLowStock ? 'border-orange-200 bg-orange-50' : 'border-gray-100'
+      }`}>
+        <div className="flex justify-between items-start mb-4">
+          <div className="flex-1">
+            <div className="flex items-center space-x-2 mb-2">
+              <h3 className="font-semibold text-gray-800">{product.name}</h3>
+              {isLowStock && (
+                <AlertTriangle className="w-4 h-4 text-orange-500" />
+              )}
+            </div>
+            <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">
+              {product.category}
+            </span>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-2 gap-4 mb-4">
+          <div>
+            <p className="text-sm text-gray-600">Stock actuel</p>
+            <p className={`text-xl font-bold ${isLowStock ? 'text-orange-600' : 'text-gray-800'}`}>
+              {product.quantity}
+            </p>
+          </div>
+          <div>
+            <p className="text-sm text-gray-600">Stock minimum</p>
+            <p className="text-xl font-bold text-gray-800">{product.minQuantity}</p>
+          </div>
+        </div>
+        
+        <div className="space-y-2 mb-4">
+          <div className="flex justify-between">
+            <span className="text-sm text-gray-600">Prix unitaire</span>
+            <span className="text-sm font-medium text-gray-800">{product.unitPrice.toLocaleString()} FCFA</span>
+          </div>
+          {product.sellingPrice && (
+            <div className="flex justify-between">
+              <span className="text-sm text-gray-600">Prix vente conseillé</span>
+              <span className="text-sm font-medium text-green-600">{product.sellingPrice.toLocaleString()} FCFA</span>
+            </div>
+          )}
+          {product.unit && (
+            <div className="flex justify-between">
+              <span className="text-sm text-gray-600">Unité</span>
+              <span className="text-sm font-medium text-gray-800">{product.unit}</span>
+            </div>
+          )}
+          <div className="flex justify-between">
+            <span className="text-sm text-gray-600">Valeur totale</span>
+            <span className="text-sm font-medium text-gray-800">
+              {(product.quantity * product.unitPrice).toLocaleString()} FCFA
+            </span>
+          </div>
+          {product.supplier && (
+            <div className="flex justify-between">
+              <span className="text-sm text-gray-600">Fournisseur</span>
+              <span className="text-sm font-medium text-gray-800">{product.supplier}</span>
+            </div>
+          )}
+        </div>
+        
+        {product.expiryDate && (
+          <div className={`p-3 rounded-lg ${isExpiringSoon ? 'bg-red-50 border border-red-200' : 'bg-gray-50'}`}>
+            <div className="flex items-center space-x-2">
+              <Calendar className={`w-4 h-4 ${isExpiringSoon ? 'text-red-500' : 'text-gray-500'}`} />
+              <div>
+                <p className={`text-sm font-medium ${isExpiringSoon ? 'text-red-800' : 'text-gray-700'}`}>
+                  Expiration: {new Date(product.expiryDate).toLocaleDateString('fr-FR')}
+                </p>
+                {isExpiringSoon && (
+                  <p className="text-red-600 text-xs">Expire bientôt!</p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+        
+        <div className="mt-4 flex justify-between text-xs text-gray-500">
+          <span>Maj: {new Date(product.lastRestocked).toLocaleDateString('fr-FR')}</span>
+          {isLowStock && (
+            <button className="px-3 py-1 bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 transition-colors">
+              Réapprovisionner
+            </button>
+          )}
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -123,7 +144,11 @@ const Inventory: React.FC = () => {
           <h1 className="text-2xl font-bold text-gray-800">Gestion des Stocks</h1>
           <p className="text-gray-600">Suivi des produits et consommables</p>
         </div>
-        <button
+        <button className="flex items-center space-x-2 bg-gradient-to-r from-pink-500 to-orange-500 text-white px-6 py-3 rounded-xl hover:shadow-lg transition-all">
+          <Plus className="w-5 h-5" />
+          <span>Nouveau Produit</span>
+        </button>
+        <button 
           onClick={() => setShowAddModal(true)}
           className="flex items-center space-x-2 bg-gradient-to-r from-pink-500 to-orange-500 text-white px-6 py-3 rounded-xl hover:shadow-lg transition-all"
         >
@@ -131,18 +156,6 @@ const Inventory: React.FC = () => {
           <span>Nouveau Produit</span>
         </button>
       </div>
-
-      {error && (
-        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl">
-          <p className="text-red-800 text-sm">{error}</p>
-          <button
-            onClick={() => setError(null)}
-            className="text-red-600 hover:text-red-800 text-sm underline mt-1"
-          >
-            Fermer
-          </button>
-        </div>
-      )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-2xl border border-blue-100">
@@ -156,7 +169,7 @@ const Inventory: React.FC = () => {
             </div>
           </div>
         </div>
-
+        
         <div className="bg-gradient-to-r from-orange-50 to-red-50 p-6 rounded-2xl border border-orange-100">
           <div className="flex items-center justify-between">
             <div>
@@ -168,7 +181,7 @@ const Inventory: React.FC = () => {
             </div>
           </div>
         </div>
-
+        
         <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-6 rounded-2xl border border-green-100">
           <div className="flex items-center justify-between">
             <div>
@@ -182,7 +195,24 @@ const Inventory: React.FC = () => {
         </div>
       </div>
 
-      <LowStockAlert products={lowStockProducts} />
+      {lowStockProducts.length > 0 && (
+        <div className="bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 p-6 rounded-2xl">
+          <div className="flex items-center space-x-3 mb-4">
+            <AlertTriangle className="w-6 h-6 text-orange-600" />
+            <div>
+              <h3 className="font-semibold text-orange-800">Alerte Stock Faible</h3>
+              <p className="text-orange-700">{lowStockProducts.length} produit(s) nécessitent un réapprovisionnement</p>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {lowStockProducts.map(product => (
+              <span key={product.id} className="px-3 py-1 bg-orange-100 text-orange-800 text-sm rounded-full">
+                {product.name} ({product.quantity}/{product.minQuantity})
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
         <div className="flex-1 relative">
@@ -195,7 +225,7 @@ const Inventory: React.FC = () => {
             className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent"
           />
         </div>
-
+        
         <select
           value={categoryFilter}
           onChange={(e) => setCategoryFilter(e.target.value)}
@@ -206,26 +236,19 @@ const Inventory: React.FC = () => {
             <option key={category} value={category}>{category}</option>
           ))}
         </select>
-
+        
         <div className="text-sm text-gray-600 bg-white px-4 py-3 rounded-xl border border-gray-200">
           {filteredProducts.length} produit(s)
         </div>
       </div>
 
-      {loading ? (
-        <div className="text-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">Chargement des produits... (vérifiez la console si cela dure trop longtemps)</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredProducts.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
-      )}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredProducts.map((product) => (
+          <ProductCard key={product.id} product={product} />
+        ))}
+      </div>
 
-      {!loading && filteredProducts.length === 0 && (
+      {filteredProducts.length === 0 && (
         <div className="text-center py-12">
           <Package className="w-12 h-12 text-gray-300 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-600 mb-2">Aucun produit trouvé</h3>

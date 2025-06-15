@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useAuth } from './hooks/useAuth';
 import Auth from './components/Auth';
@@ -19,31 +20,13 @@ import Quotes from './components/modules/Quotes';
 import { Forfait } from './types';
 
 function App() {
-  const { user, loading, isAuthenticated, criticalError } = useAuth();
+  const { user, loading, isAuthenticated } = useAuth();
   const [activeModule, setActiveModule] = useState('dashboard');
   const [preselectedForfait, setPreselectedForfait] = useState<Forfait | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [sidebarVisible, setSidebarVisible] = useState(false);
 
-  // Affichage du détail d'erreur technique
-  if (criticalError) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-red-50">
-        <div className="text-center max-w-lg flex flex-col gap-6 p-4">
-          <div className="text-3xl font-bold text-red-700">Erreur critique</div>
-          <div className="bg-white rounded-xl border border-red-200 text-red-800 p-6 shadow whitespace-pre-wrap">{criticalError}</div>
-          <div className="text-sm text-gray-600">
-            - Vérifiez que Supabase est bien configuré<br />
-            - Testez en ouvrant l’app dans un nouvel onglet<br />
-            - Essayez en navigation privée ou sur un autre navigateur<br />
-            - Contactez le support si le problème persiste
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Loading classique
+  // Show loading while checking authentication
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#FDF6F3' }}>
