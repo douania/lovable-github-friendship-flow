@@ -4,7 +4,6 @@ import { Plus } from 'lucide-react';
 import { Appointment } from '../../types';
 import { useAppointments } from '../../hooks/useAppointments';
 import { usePatients } from '../../hooks/usePatients';
-import { patientService } from '../../services/patientService';
 import { treatmentService } from '../../services/treatmentService';
 import { productService } from '../../services/productService';
 import AppointmentForm from '../forms/AppointmentForm';
@@ -12,7 +11,7 @@ import AppointmentFilters from '../appointments/AppointmentFilters';
 import AppointmentsList from '../appointments/AppointmentsList';
 
 const Appointments: React.FC = () => {
-  const { appointments, loading, error, refetch, updateAppointment } = useAppointments();
+  const { appointments, loading, error, refetch, updateAppointment, createAppointment } = useAppointments();
   const { patients } = usePatients();
   const [treatments, setTreatments] = useState<any[]>([]);
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
@@ -51,9 +50,7 @@ const Appointments: React.FC = () => {
           await processConsumedProducts(appointmentData.consumedProducts);
         }
       } else {
-        // Pour les nouveaux rendez-vous, utiliser le hook useAppointments
-        // Note: Le hook devra être étendu pour supporter la création
-        console.log('Création de nouveau rendez-vous à implémenter');
+        await createAppointment(appointmentData);
       }
       
       setShowAddModal(false);
@@ -83,7 +80,15 @@ const Appointments: React.FC = () => {
           setShowAddModal(true);
         }
       } else {
-        await updateAppointment(appointmentId, { status });
+        // Récupérer l'appointment complet et mettre à jour seulement le statut
+        const appointment = appointments.find(a => a.id === appointmentId);
+        if (appointment) {
+          const updatedAppointment: Omit<Appointment, 'id'> = {
+            ...appointment,
+            status
+          };
+          await updateAppointment(appointmentId, updatedAppointment);
+        }
       }
     } catch (err) {
       console.error('Erreur lors de la mise à jour du statut:', err);
