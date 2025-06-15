@@ -1,7 +1,8 @@
 
 import React from 'react';
-import { Menu, LogOut, User, Settings } from 'lucide-react';
+import { Menu, LogOut, User, Settings, ExternalLink } from 'lucide-react';
 import NotificationCenter from '../notifications/NotificationCenter';
+import { supabase } from '../../integrations/supabase/client';
 
 interface HeaderProps {
   user: any;
@@ -10,8 +11,16 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ user, onToggleSidebar }) => {
   const handleLogout = async () => {
-    // TODO: Implement logout functionality
-    console.log('Logout clicked');
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
+
+  const openClientPortal = () => {
+    // Ouvrir l'espace client dans un nouvel onglet
+    window.open('/client', '_blank');
   };
 
   return (
@@ -40,6 +49,14 @@ const Header: React.FC<HeaderProps> = ({ user, onToggleSidebar }) => {
           </div>
 
           <div className="flex items-center space-x-2">
+            <button
+              onClick={openClientPortal}
+              className="p-2 text-gray-600 hover:text-blue-600 transition-colors"
+              title="Espace Client"
+            >
+              <ExternalLink className="w-5 h-5" />
+            </button>
+            
             <button
               className="p-2 text-gray-600 hover:text-pink-600 transition-colors"
               title="Paramètres"

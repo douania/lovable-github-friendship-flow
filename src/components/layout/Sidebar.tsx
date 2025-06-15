@@ -1,106 +1,83 @@
 
 import React from 'react';
 import { 
-  Home, 
+  LayoutDashboard, 
   Users, 
-  Scissors, 
-  DollarSign, 
   Calendar, 
+  Package, 
   FileText, 
   BarChart3, 
-  Package,
-  Gift,
-  Calculator,
-  CalendarDays,
-  Stethoscope,
-  Receipt,
-  ChevronLeft,
-  ChevronRight
+  Scissors, 
+  ShoppingCart,
+  UserCheck,
+  Save,
+  Settings 
 } from 'lucide-react';
 
 interface SidebarProps {
   activeModule: string;
   onModuleChange: (module: string) => void;
   isCollapsed: boolean;
-  onToggleCollapse: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ 
-  activeModule, 
-  onModuleChange, 
-  isCollapsed, 
-  onToggleCollapse 
-}) => {
+const Sidebar: React.FC<SidebarProps> = ({ activeModule, onModuleChange, isCollapsed }) => {
   const menuItems = [
-    { id: 'dashboard', label: 'Tableau de bord', icon: Home },
-    { id: 'calendar', label: 'Planning', icon: CalendarDays },
-    { id: 'patients', label: 'Patients', icon: Users },
-    { id: 'consultations', label: 'Consultations', icon: Stethoscope },
-    { id: 'treatments', label: 'Catalogue soins', icon: Scissors },
-    { id: 'quotes', label: 'Devis', icon: Receipt },
-    { id: 'pricelist', label: 'Tarifs', icon: DollarSign },
-    { id: 'pricing-consumables', label: 'Tarifs & Consommables', icon: Calculator },
-    { id: 'appointments', label: 'Rendez-vous', icon: Calendar },
-    { id: 'invoices', label: 'Facturation', icon: FileText },
-    { id: 'analytics', label: 'Analyses', icon: BarChart3 },
-    { id: 'inventory', label: 'Stock', icon: Package },
-    { id: 'forfaits', label: 'Forfaits', icon: Gift },
+    { id: 'dashboard', name: 'Tableau de bord', icon: LayoutDashboard },
+    { id: 'patients', name: 'Patients', icon: Users },
+    { id: 'appointments', name: 'Rendez-vous', icon: Calendar },
+    { id: 'treatments', name: 'Soins', icon: Scissors },
+    { id: 'inventory', name: 'Stock', icon: Package },
+    { id: 'invoices', name: 'Factures', icon: FileText },
+    { id: 'quotes', name: 'Devis', icon: ShoppingCart },
+    { id: 'consultations', name: 'Consultations', icon: UserCheck },
+    { id: 'analytics', name: 'Analyses', icon: BarChart3 },
+    { id: 'backup', name: 'Sauvegardes', icon: Save },
   ];
 
   return (
-    <aside className={`
-      ${isCollapsed ? 'w-16' : 'w-64'} 
-      bg-white shadow-sm border-r border-pink-100 h-screen overflow-y-auto transition-all duration-300 flex-shrink-0
-      ${isCollapsed ? 'md:w-16' : 'md:w-64'}
-      ${isCollapsed ? 'hidden md:block' : 'block'}
-    `}>
-      <div className="p-4">
-        {/* Toggle Button */}
-        <div className="flex justify-end mb-4">
-          <button
-            onClick={onToggleCollapse}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            title={isCollapsed ? 'Développer la sidebar' : 'Réduire la sidebar'}
-          >
-            {isCollapsed ? (
-              <ChevronRight className="w-4 h-4 text-gray-600" />
-            ) : (
-              <ChevronLeft className="w-4 h-4 text-gray-600" />
-            )}
-          </button>
-        </div>
-
-        {/* Menu Items */}
-        <nav className="space-y-2">
-          {menuItems.map((item) => {
-            const Icon = item.icon;
-            return (
+    <aside className={`bg-white shadow-lg transition-all duration-300 ${
+      isCollapsed ? 'w-16' : 'w-64'
+    } flex flex-col h-full`}>
+      <div className="p-4 border-b border-gray-200">
+        {!isCollapsed && (
+          <h2 className="text-xl font-bold text-gray-800">Institut</h2>
+        )}
+      </div>
+      
+      <nav className="flex-1 p-4">
+        <ul className="space-y-2">
+          {menuItems.map((item) => (
+            <li key={item.id}>
               <button
-                key={item.id}
                 onClick={() => onModuleChange(item.id)}
-                className={`
-                  w-full flex items-center ${isCollapsed ? 'justify-center' : 'space-x-3'} 
-                  px-4 py-3 rounded-lg text-left transition-colors group
-                  ${activeModule === item.id 
-                    ? 'bg-gradient-to-r from-pink-100 to-orange-100 text-pink-800 border border-pink-200' 
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                  }
-                `}
-                title={isCollapsed ? item.label : ''}
+                className={`w-full flex items-center p-3 rounded-lg transition-colors ${
+                  activeModule === item.id
+                    ? 'bg-pink-100 text-pink-700 border-r-2 border-pink-500'
+                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                }`}
+                title={isCollapsed ? item.name : ''}
               >
-                <Icon className="w-5 h-5 flex-shrink-0" />
-                {!isCollapsed && (
-                  <span className="font-medium">{item.label}</span>
-                )}
-                {isCollapsed && (
-                  <div className="absolute left-16 bg-gray-800 text-white px-2 py-1 rounded text-sm opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 whitespace-nowrap">
-                    {item.label}
-                  </div>
-                )}
+                <item.icon className="w-5 h-5" />
+                {!isCollapsed && <span className="ml-3">{item.name}</span>}
               </button>
-            );
-          })}
-        </nav>
+            </li>
+          ))}
+        </ul>
+      </nav>
+      
+      <div className="p-4 border-t border-gray-200">
+        <button
+          onClick={() => onModuleChange('settings')}
+          className={`w-full flex items-center p-3 rounded-lg transition-colors ${
+            activeModule === 'settings'
+              ? 'bg-pink-100 text-pink-700'
+              : 'text-gray-600 hover:bg-gray-100'
+          }`}
+          title={isCollapsed ? 'Paramètres' : ''}
+        >
+          <Settings className="w-5 h-5" />
+          {!isCollapsed && <span className="ml-3">Paramètres</span>}
+        </button>
       </div>
     </aside>
   );

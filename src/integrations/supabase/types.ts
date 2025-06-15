@@ -205,6 +205,117 @@ export type Database = {
         }
         Relationships: []
       }
+      client_access: {
+        Row: {
+          created_at: string | null
+          email: string
+          id: string
+          is_active: boolean | null
+          last_login: string | null
+          password_hash: string
+          patient_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          id?: string
+          is_active?: boolean | null
+          last_login?: string | null
+          password_hash: string
+          patient_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          id?: string
+          is_active?: boolean | null
+          last_login?: string | null
+          password_hash?: string
+          patient_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_access_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      client_activity_logs: {
+        Row: {
+          action: string
+          client_id: string
+          created_at: string | null
+          details: Json | null
+          id: string
+          ip_address: unknown | null
+          user_agent: string | null
+        }
+        Insert: {
+          action: string
+          client_id: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          ip_address?: unknown | null
+          user_agent?: string | null
+        }
+        Update: {
+          action?: string
+          client_id?: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          ip_address?: unknown | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_activity_logs_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "client_access"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      client_sessions: {
+        Row: {
+          client_id: string
+          created_at: string | null
+          expires_at: string
+          id: string
+          session_token: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string | null
+          expires_at: string
+          id?: string
+          session_token: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string | null
+          expires_at?: string
+          id?: string
+          session_token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_sessions_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "client_access"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       consultations: {
         Row: {
           appointment_id: string | null
