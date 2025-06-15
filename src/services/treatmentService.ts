@@ -1,4 +1,5 @@
-import { supabase } from '../lib/supabase';
+
+import { supabase } from '../integrations/supabase/client';
 import { Treatment } from '../types';
 
 // Fonction pour convertir les données de la DB vers le type Treatment

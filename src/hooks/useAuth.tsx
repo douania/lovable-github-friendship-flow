@@ -17,25 +17,18 @@ export const useAuth = () => {
     try {
       console.log('Fetching user role for user:', userId);
       
-      // Add timeout to prevent infinite loading
-      const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('Timeout')), 5000);
-      });
-
-      const queryPromise = supabase
+      const { data, error } = await supabase
         .from('user_roles')
         .select('role')
         .eq('user_id', userId)
         .maybeSingle();
 
-      const result = await Promise.race([queryPromise, timeoutPromise]);
-
-      if (result.error) {
-        console.error('Error fetching user role:', result.error);
+      if (error) {
+        console.error('Error fetching user role:', error);
         return 'praticien';
       }
 
-      const role = result.data?.role || 'praticien';
+      const role = data?.role || 'praticien';
       console.log('User role fetched:', role);
       return role;
     } catch (error) {
@@ -47,6 +40,8 @@ export const useAuth = () => {
   useEffect(() => {
     console.log('useAuth useEffect triggered');
     
+    let mounted = true;
+    
     // Get current session
     const getSession = async () => {
       try {
@@ -54,32 +49,44 @@ export const useAuth = () => {
         const { data: { session } } = await supabase.auth.getSession();
         console.log('Session retrieved:', session ? 'exists' : 'null');
         
+        if (!mounted) return;
+        
         if (session?.user) {
           console.log('User found in session, fetching role...');
           try {
             const role = await fetchUserRole(session.user.id);
-            setUser({
-              ...session.user,
-              role
-            });
-            console.log('User set with role:', role);
+            if (mounted) {
+              setUser({
+                ...session.user,
+                role
+              });
+              console.log('User set with role:', role);
+            }
           } catch (roleError) {
             console.error('Error fetching role, setting user without role:', roleError);
-            setUser({
-              ...session.user,
-              role: 'praticien'
-            });
+            if (mounted) {
+              setUser({
+                ...session.user,
+                role: 'praticien'
+              });
+            }
           }
         } else {
           console.log('No user in session');
-          setUser(null);
+          if (mounted) {
+            setUser(null);
+          }
         }
       } catch (error) {
         console.error('Error getting session:', error);
-        setUser(null);
+        if (mounted) {
+          setUser(null);
+        }
       } finally {
-        console.log('Setting loading to false');
-        setLoading(false);
+        if (mounted) {
+          console.log('Setting loading to false');
+          setLoading(false);
+        }
       }
     };
 
@@ -90,29 +97,43 @@ export const useAuth = () => {
       async (event, session) => {
         console.log('Auth state changed:', event, session ? 'session exists' : 'no session');
         
+        if (!mounted) return;
+        
         if (session?.user) {
           try {
             const role = await fetchUserRole(session.user.id);
-            setUser({
-              ...session.user,
-              role
-            });
-            console.log('Auth change: User set with role:', role);
+            if (mounted) {
+              setUser({
+                ...session.user,
+                role
+              });
+              console.log('Auth change: User set with role:', role);
+            }
           } catch (roleError) {
             console.error('Auth change: Error fetching role, setting user without role:', roleError);
-            setUser({
-              ...session.user,
-              role: 'praticien'
-            });
+            if (mounted) {
+              setUser({
+                ...session.user,
+                role: 'praticien'
+              });
+            }
           }
         } else {
-          setUser(null);
+          if (mounted) {
+            setUser(null);
+          }
         }
-        setLoading(false);
+        
+        if (mounted) {
+          setLoading(false);
+        }
       }
     );
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signOut = async () => {
