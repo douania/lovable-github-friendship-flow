@@ -1,9 +1,9 @@
 
 import { useState, useEffect, createContext, useContext } from 'react';
 import { clientAuthService } from '../services/clientAuthService';
-import { ClientAuthContext, ClientAccess } from '../types/client';
+import type { ClientAuthContext, ClientAccess } from '../types/client';
 
-const ClientAuthContext = createContext<ClientAuthContext | undefined>(undefined);
+const ClientAuthContextProvider = createContext<ClientAuthContext | undefined>(undefined);
 
 export const ClientAuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [client, setClient] = useState<ClientAccess | null>(null);
@@ -56,11 +56,11 @@ export const ClientAuthProvider = ({ children }: { children: React.ReactNode }) 
     signOut,
   };
 
-  return <ClientAuthContext.Provider value={value}>{children}</ClientAuthContext.Provider>;
+  return <ClientAuthContextProvider.Provider value={value}>{children}</ClientAuthContextProvider.Provider>;
 };
 
 export const useClientAuth = () => {
-  const context = useContext(ClientAuthContext);
+  const context = useContext(ClientAuthContextProvider);
   if (context === undefined) {
     throw new Error('useClientAuth must be used within a ClientAuthProvider');
   }

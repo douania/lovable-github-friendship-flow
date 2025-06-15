@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { LogOut, Home, Calendar, History, FileText, User, Settings } from 'lucide-react';
+import { LogOut, Home, Calendar, History, FileText, User } from 'lucide-react';
 import { useClientAuth } from '../../hooks/useClientAuth';
 import ClientDashboard from './ClientDashboard';
 import ClientAppointments from './ClientAppointments';

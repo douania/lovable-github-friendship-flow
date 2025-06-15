@@ -1,6 +1,6 @@
 
 import { supabase } from '../integrations/supabase/client';
-import { ClientAccess, ClientSession } from '../types/client';
+import { ClientAccess } from '../types/client';
 
 export const clientAuthService = {
   // Authentifier un client
@@ -59,10 +59,10 @@ export const clientAuthService = {
           id: clientData.id,
           patientId: clientData.patient_id,
           email: clientData.email,
-          isActive: clientData.is_active,
-          lastLogin: clientData.last_login,
-          createdAt: clientData.created_at,
-          updatedAt: clientData.updated_at
+          isActive: clientData.is_active ?? true,
+          lastLogin: clientData.last_login ?? undefined,
+          createdAt: clientData.created_at ?? '',
+          updatedAt: clientData.updated_at ?? ''
         }
       };
     } catch (error) {
@@ -104,10 +104,10 @@ export const clientAuthService = {
           id: sessionData.client_access.id,
           patientId: sessionData.client_access.patient_id,
           email: sessionData.client_access.email,
-          isActive: sessionData.client_access.is_active,
-          lastLogin: sessionData.client_access.last_login,
-          createdAt: sessionData.client_access.created_at,
-          updatedAt: sessionData.client_access.updated_at
+          isActive: sessionData.client_access.is_active ?? true,
+          lastLogin: sessionData.client_access.last_login ?? undefined,
+          createdAt: sessionData.client_access.created_at ?? '',
+          updatedAt: sessionData.client_access.updated_at ?? ''
         },
         patient: sessionData.client_access.patients
       };

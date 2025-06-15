@@ -17,6 +17,7 @@ import Invoices from './components/modules/Invoices';
 import Quotes from './components/modules/Quotes';
 import PriceList from './components/modules/PriceList';
 import PricingAndConsumables from './components/modules/PricingAndConsumables';
+import BackupManagement from './components/modules/BackupManagement';
 
 function App() {
   console.log('=== APP STARTED ===');
@@ -98,6 +99,8 @@ function App() {
         return <PriceList />;
       case 'pricing-consumables':
         return <PricingAndConsumables />;
+      case 'backup':
+        return <BackupManagement />;
       default:
         return (
           <div className="p-6">
@@ -134,7 +137,6 @@ function App() {
               setSidebarVisible(false);
             }}
             isCollapsed={sidebarCollapsed}
-            onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
           />
         </div>
 

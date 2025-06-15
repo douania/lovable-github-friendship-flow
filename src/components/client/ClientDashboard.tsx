@@ -4,7 +4,7 @@ import { Calendar, FileText, User, Clock, CreditCard } from 'lucide-react';
 import { useClientAuth } from '../../hooks/useClientAuth';
 
 const ClientDashboard: React.FC = () => {
-  const { patient, client } = useClientAuth();
+  const { patient } = useClientAuth();
 
   const quickStats = [
     {
