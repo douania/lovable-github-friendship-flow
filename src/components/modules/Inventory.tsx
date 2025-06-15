@@ -1,9 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { Search, Plus, AlertTriangle, Package, TrendingDown, Calendar } from 'lucide-react';
 import { Product } from '../../types';
 import { productService } from '../../services/productService';
 import ProductForm from '../forms/ProductForm';
+import ProductCard from '../products/ProductCard';
+import LowStockAlert from '../products/LowStockAlert';
 
 const Inventory: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -64,101 +65,6 @@ const Inventory: React.FC = () => {
       console.error('Erreur lors de la sauvegarde du produit:', err);
       setError('Erreur lors de la sauvegarde. Veuillez réessayer.');
     }
-  };
-
-  const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
-    const isLowStock = product.quantity <= product.minQuantity;
-    const isExpiringSoon = product.expiryDate && 
-      new Date(product.expiryDate) <= new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-
-    return (
-      <div className={`bg-white p-6 rounded-2xl shadow-sm border transition-all hover:shadow-md ${
-        isLowStock ? 'border-orange-200 bg-orange-50' : 'border-gray-100'
-      }`}>
-        <div className="flex justify-between items-start mb-4">
-          <div className="flex-1">
-            <div className="flex items-center space-x-2 mb-2">
-              <h3 className="font-semibold text-gray-800">{product.name}</h3>
-              {isLowStock && (
-                <AlertTriangle className="w-4 h-4 text-orange-500" />
-              )}
-            </div>
-            <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">
-              {product.category}
-            </span>
-          </div>
-        </div>
-        
-        <div className="grid grid-cols-2 gap-4 mb-4">
-          <div>
-            <p className="text-sm text-gray-600">Stock actuel</p>
-            <p className={`text-xl font-bold ${isLowStock ? 'text-orange-600' : 'text-gray-800'}`}>
-              {product.quantity}
-            </p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-600">Stock minimum</p>
-            <p className="text-xl font-bold text-gray-800">{product.minQuantity}</p>
-          </div>
-        </div>
-        
-        <div className="space-y-2 mb-4">
-          <div className="flex justify-between">
-            <span className="text-sm text-gray-600">Prix unitaire</span>
-            <span className="text-sm font-medium text-gray-800">{product.unitPrice.toLocaleString()} FCFA</span>
-          </div>
-          {product.sellingPrice && (
-            <div className="flex justify-between">
-              <span className="text-sm text-gray-600">Prix vente conseillé</span>
-              <span className="text-sm font-medium text-green-600">{product.sellingPrice.toLocaleString()} FCFA</span>
-            </div>
-          )}
-          {product.unit && (
-            <div className="flex justify-between">
-              <span className="text-sm text-gray-600">Unité</span>
-              <span className="text-sm font-medium text-gray-800">{product.unit}</span>
-            </div>
-          )}
-          <div className="flex justify-between">
-            <span className="text-sm text-gray-600">Valeur totale</span>
-            <span className="text-sm font-medium text-gray-800">
-              {(product.quantity * product.unitPrice).toLocaleString()} FCFA
-            </span>
-          </div>
-          {product.supplier && (
-            <div className="flex justify-between">
-              <span className="text-sm text-gray-600">Fournisseur</span>
-              <span className="text-sm font-medium text-gray-800">{product.supplier}</span>
-            </div>
-          )}
-        </div>
-        
-        {product.expiryDate && (
-          <div className={`p-3 rounded-lg ${isExpiringSoon ? 'bg-red-50 border border-red-200' : 'bg-gray-50'}`}>
-            <div className="flex items-center space-x-2">
-              <Calendar className={`w-4 h-4 ${isExpiringSoon ? 'text-red-500' : 'text-gray-500'}`} />
-              <div>
-                <p className={`text-sm font-medium ${isExpiringSoon ? 'text-red-800' : 'text-gray-700'}`}>
-                  Expiration: {new Date(product.expiryDate).toLocaleDateString('fr-FR')}
-                </p>
-                {isExpiringSoon && (
-                  <p className="text-red-600 text-xs">Expire bientôt!</p>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-        
-        <div className="mt-4 flex justify-between text-xs text-gray-500">
-          <span>Maj: {new Date(product.lastRestocked).toLocaleDateString('fr-FR')}</span>
-          {isLowStock && (
-            <button className="px-3 py-1 bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 transition-colors">
-              Réapprovisionner
-            </button>
-          )}
-        </div>
-      </div>
-    );
   };
 
   return (
@@ -227,24 +133,7 @@ const Inventory: React.FC = () => {
         </div>
       </div>
 
-      {lowStockProducts.length > 0 && (
-        <div className="bg-gradient-to-r from-orange-50 to-red-50 border border-orange-200 p-6 rounded-2xl">
-          <div className="flex items-center space-x-3 mb-4">
-            <AlertTriangle className="w-6 h-6 text-orange-600" />
-            <div>
-              <h3 className="font-semibold text-orange-800">Alerte Stock Faible</h3>
-              <p className="text-orange-700">{lowStockProducts.length} produit(s) nécessitent un réapprovisionnement</p>
-            </div>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {lowStockProducts.map(product => (
-              <span key={product.id} className="px-3 py-1 bg-orange-100 text-orange-800 text-sm rounded-full">
-                {product.name} ({product.quantity}/{product.minQuantity})
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
+      <LowStockAlert products={lowStockProducts} />
 
       <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
         <div className="flex-1 relative">
