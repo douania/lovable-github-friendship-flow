@@ -4,6 +4,7 @@ import { useAuth } from './hooks/useAuth';
 import Auth from './components/Auth';
 import Header from './components/layout/Header';
 import Sidebar from './components/layout/Sidebar';
+import Dashboard from './components/modules/Dashboard';
 
 function App() {
   console.log('=== APP STARTED ===');
@@ -58,15 +59,9 @@ function App() {
   const renderModule = () => {
     console.log('Rendering module:', activeModule);
     
-    // Version simplifiée pour tester - juste un message pour chaque module
     switch (activeModule) {
       case 'dashboard':
-        return (
-          <div className="p-6">
-            <h1 className="text-2xl font-bold">Dashboard</h1>
-            <p>Module Dashboard chargé avec succès</p>
-          </div>
-        );
+        return <Dashboard />;
       case 'calendar':
         return (
           <div className="p-6">
