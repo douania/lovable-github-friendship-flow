@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Search, Plus, AlertTriangle, Package, TrendingDown } from 'lucide-react';
 import { Product } from '../../types';
@@ -16,6 +17,7 @@ const Inventory: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    console.log('Inventory module mounted. Loading products...');
     loadProducts();
   }, []);
 
@@ -23,18 +25,29 @@ const Inventory: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
+
+      // Ajout de console.log pour traçage détaillé
       const data = await productService.getAll();
-      setProducts(data);
-    } catch (err) {
+      console.log('Fetched products from Supabase:', data);
+
+      if (!Array.isArray(data)) {
+        setError("Données reçues non valides de Supabase.");
+        setProducts([]);
+      } else {
+        setProducts(data);
+      }
+    } catch (err: any) {
       console.error('Erreur lors du chargement des produits:', err);
-      setError('Erreur lors du chargement des produits. Vérifiez votre connexion Supabase.');
+      setError('Erreur lors du chargement des produits. Vérifiez votre connexion Supabase ou vos droits.');
+      setProducts([]);
     } finally {
       setLoading(false);
+      console.log('Products charging terminé.');
     }
   };
 
   const categories = ['all', ...Array.from(new Set(products.map(p => p.category)))];
-  
+
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (product.supplier && product.supplier.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -48,17 +61,17 @@ const Inventory: React.FC = () => {
   const handleSaveProduct = async (productData: Omit<Product, 'id'>) => {
     try {
       setError(null);
-      
+
       if (editingProduct) {
         const updatedProduct = await productService.updateProduct(editingProduct.id, productData);
-        setProducts(prev => prev.map(p => 
+        setProducts(prev => prev.map(p =>
           p.id === editingProduct.id ? updatedProduct : p
         ));
       } else {
         const newProduct = await productService.createProduct(productData);
         setProducts(prev => [newProduct, ...prev]);
       }
-      
+
       setShowAddModal(false);
       setEditingProduct(null);
     } catch (err) {
@@ -74,7 +87,7 @@ const Inventory: React.FC = () => {
           <h1 className="text-2xl font-bold text-gray-800">Gestion des Stocks</h1>
           <p className="text-gray-600">Suivi des produits et consommables</p>
         </div>
-        <button 
+        <button
           onClick={() => setShowAddModal(true)}
           className="flex items-center space-x-2 bg-gradient-to-r from-pink-500 to-orange-500 text-white px-6 py-3 rounded-xl hover:shadow-lg transition-all"
         >
@@ -86,7 +99,7 @@ const Inventory: React.FC = () => {
       {error && (
         <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl">
           <p className="text-red-800 text-sm">{error}</p>
-          <button 
+          <button
             onClick={() => setError(null)}
             className="text-red-600 hover:text-red-800 text-sm underline mt-1"
           >
@@ -107,7 +120,7 @@ const Inventory: React.FC = () => {
             </div>
           </div>
         </div>
-        
+
         <div className="bg-gradient-to-r from-orange-50 to-red-50 p-6 rounded-2xl border border-orange-100">
           <div className="flex items-center justify-between">
             <div>
@@ -119,7 +132,7 @@ const Inventory: React.FC = () => {
             </div>
           </div>
         </div>
-        
+
         <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-6 rounded-2xl border border-green-100">
           <div className="flex items-center justify-between">
             <div>
@@ -146,7 +159,7 @@ const Inventory: React.FC = () => {
             className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent"
           />
         </div>
-        
+
         <select
           value={categoryFilter}
           onChange={(e) => setCategoryFilter(e.target.value)}
@@ -157,7 +170,7 @@ const Inventory: React.FC = () => {
             <option key={category} value={category}>{category}</option>
           ))}
         </select>
-        
+
         <div className="text-sm text-gray-600 bg-white px-4 py-3 rounded-xl border border-gray-200">
           {filteredProducts.length} produit(s)
         </div>
@@ -166,7 +179,7 @@ const Inventory: React.FC = () => {
       {loading ? (
         <div className="text-center py-12">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">Chargement des produits...</p>
+          <p className="text-gray-600">Chargement des produits... (vérifiez la console si cela dure trop longtemps)</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
