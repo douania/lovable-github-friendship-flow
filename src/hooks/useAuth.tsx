@@ -18,7 +18,7 @@ export const useAuth = () => {
       console.log('Fetching user role for user:', userId);
       
       // Add timeout to prevent infinite loading
-      const timeoutPromise = new Promise<string>((_, reject) => {
+      const timeoutPromise = new Promise<never>((_, reject) => {
         setTimeout(() => reject(new Error('Timeout')), 5000);
       });
 
@@ -28,14 +28,14 @@ export const useAuth = () => {
         .eq('user_id', userId)
         .maybeSingle();
 
-      const { data, error } = await Promise.race([queryPromise, timeoutPromise]);
+      const result = await Promise.race([queryPromise, timeoutPromise]);
 
-      if (error) {
-        console.error('Error fetching user role:', error);
+      if (result.error) {
+        console.error('Error fetching user role:', result.error);
         return 'praticien';
       }
 
-      const role = data?.role || 'praticien';
+      const role = result.data?.role || 'praticien';
       console.log('User role fetched:', role);
       return role;
     } catch (error) {
