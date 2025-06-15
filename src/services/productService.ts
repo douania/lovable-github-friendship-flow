@@ -1,4 +1,3 @@
-
 import { supabase } from '../integrations/supabase/client';
 import { Product } from '../types';
 
@@ -208,6 +207,41 @@ export const productService = {
       return data ? data.map(transformProduct) : [];
     } catch (error) {
       console.error('Error in getLowStock:', error);
+      throw error;
+    }
+  },
+
+  async decrementProductQuantity(productId: string, quantity: number): Promise<void> {
+    try {
+      // First get the current product to check available quantity
+      const { data: product, error: fetchError } = await supabase
+        .from('products')
+        .select('quantity')
+        .eq('id', productId)
+        .single();
+
+      if (fetchError) {
+        console.error('Error fetching product for decrement:', fetchError);
+        throw fetchError;
+      }
+
+      if (!product) {
+        throw new Error('Product not found');
+      }
+
+      const newQuantity = Math.max(0, product.quantity - quantity);
+
+      const { error } = await supabase
+        .from('products')
+        .update({ quantity: newQuantity })
+        .eq('id', productId);
+
+      if (error) {
+        console.error('Error decrementing product quantity:', error);
+        throw error;
+      }
+    } catch (error) {
+      console.error('Error in decrementProductQuantity:', error);
       throw error;
     }
   }
