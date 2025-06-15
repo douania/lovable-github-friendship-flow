@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Clock, User } from 'lucide-react';
+import { Clock } from 'lucide-react';
 
 interface Appointment {
   id: string;
