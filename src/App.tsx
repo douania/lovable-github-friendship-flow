@@ -1,10 +1,10 @@
-
 import { useState } from 'react';
 import { useAuth } from './hooks/useAuth';
 import Auth from './components/Auth';
 import Header from './components/layout/Header';
 import Sidebar from './components/layout/Sidebar';
 import Dashboard from './components/modules/Dashboard';
+import Calendar from './components/modules/Calendar';
 
 function App() {
   console.log('=== APP STARTED ===');
@@ -63,12 +63,7 @@ function App() {
       case 'dashboard':
         return <Dashboard />;
       case 'calendar':
-        return (
-          <div className="p-6">
-            <h1 className="text-2xl font-bold">Planning</h1>
-            <p>Module Calendar simplifié</p>
-          </div>
-        );
+        return <Calendar />;
       case 'patients':
         return (
           <div className="p-6">
