@@ -50,7 +50,6 @@ export function useOptimizedPagination<T extends Record<string, any>>(
   });
 
   const {
-    paginatedData,
     pagination,
     totalItems,
     isFiltered
