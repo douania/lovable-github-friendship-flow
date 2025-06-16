@@ -8,8 +8,6 @@ interface PreloaderOptions {
 }
 
 export function useSmartPreloader<T>(
-  data: T[],
-  pageSize: number,
   currentPage: number,
   totalPages: number,
   preloadFn: (page: number) => Promise<T[]>,
@@ -38,17 +36,17 @@ export function useSmartPreloader<T>(
     }
 
     // Précharger les pages
-    for (const page of pagesToPreload) {
-      preloadingPages.current.add(page);
+    for (const pageToPreload of pagesToPreload) {
+      preloadingPages.current.add(pageToPreload);
       
       try {
-        await preloadFn(page);
-        preloadedPages.current.add(page);
-        console.log(`Page ${page} preloaded successfully`);
+        await preloadFn(pageToPreload);
+        preloadedPages.current.add(pageToPreload);
+        console.log(`Page ${pageToPreload} preloaded successfully`);
       } catch (error) {
-        console.error(`Failed to preload page ${page}:`, error);
+        console.error(`Failed to preload page ${pageToPreload}:`, error);
       } finally {
-        preloadingPages.current.delete(page);
+        preloadingPages.current.delete(pageToPreload);
       }
     }
   }, [shouldPreload, maxPreloadPages, currentPage, totalPages, preloadFn]);

@@ -56,10 +56,9 @@ export function useOptimizedPagination<T extends Record<string, any>>(
     isFiltered
   } = paginationResult;
 
-  // Fonction de préchargement simulée (à adapter selon vos besoins)
-  const preloadNextPage = useCallback(async (page: number) => {
-    // Ici, vous pourriez précharger les données de la page suivante
-    // Pour l'instant, on simule juste le préchargement
+  // Fonction de préchargement simulée
+  const preloadNextPage = useCallback(async () => {
+    // Simulation du préchargement
     return new Promise<T[]>((resolve) => {
       setTimeout(() => {
         resolve([]);
@@ -73,8 +72,6 @@ export function useOptimizedPagination<T extends Record<string, any>>(
     isPreloading,
     preloadedPagesCount
   } = useSmartPreloader(
-    paginatedData,
-    pagination.pageSize,
     pagination.currentPage,
     pagination.totalPages,
     preloadNextPage,

@@ -1,6 +1,7 @@
 
 import React, { Suspense, ComponentType } from 'react';
 import { Loader2 } from 'lucide-react';
+import { ErrorBoundary } from './ErrorBoundary';
 
 interface LazyComponentProps {
   fallback?: React.ReactNode;
@@ -25,7 +26,7 @@ function DefaultError() {
   );
 }
 
-export function LazyComponent<T = {}>(
+export function LazyComponent<T extends Record<string, any> = {}>(
   LazyImport: () => Promise<{ default: ComponentType<T> }>,
   options: LazyComponentProps = {}
 ) {
@@ -37,9 +38,9 @@ export function LazyComponent<T = {}>(
     return (
       <div className={className}>
         <Suspense fallback={fallback}>
-          <React.ErrorBoundary fallback={error}>
-            <LazyLoadedComponent {...props} />
-          </React.ErrorBoundary>
+          <ErrorBoundary fallback={error}>
+            <LazyLoadedComponent {...(props as any)} />
+          </ErrorBoundary>
         </Suspense>
       </div>
     );
