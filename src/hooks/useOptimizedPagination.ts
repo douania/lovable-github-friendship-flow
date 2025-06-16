@@ -4,6 +4,7 @@ import { usePaginatedData } from './usePaginatedData';
 import { useDebounce } from './useDebounce';
 import { useSmartPreloader } from './useSmartPreloader';
 import { usePerformanceMetrics } from './usePerformanceMetrics';
+import { useAdvancedCache } from './useAdvancedCache';
 
 interface UseOptimizedPaginationOptions<T> {
   data: T[];
@@ -16,6 +17,7 @@ interface UseOptimizedPaginationOptions<T> {
   debounceMs?: number;
   enablePreloading?: boolean;
   preloadThreshold?: number;
+  enableAdvancedCache?: boolean;
 }
 
 export function useOptimizedPagination<T extends Record<string, any>>(
@@ -31,10 +33,25 @@ export function useOptimizedPagination<T extends Record<string, any>>(
     componentName,
     debounceMs = 300,
     enablePreloading = true,
-    preloadThreshold = 2
+    preloadThreshold = 2,
+    enableAdvancedCache = true
   } = options;
 
   const { recordPaginationMetric, startMetric, endMetric } = usePerformanceMetrics();
+  
+  // Cache avancé pour la pagination
+  const { 
+    fetchWithCache, 
+    invalidateByTags, 
+    getCacheStats 
+  } = useAdvancedCache([], {
+    ttl: 10 * 60 * 1000, // 10 minutes
+    persist: false,
+    key: `pagination_${componentName}`,
+    tags: [componentName, 'pagination'],
+    priority: 'high',
+    autoCleanup: true
+  });
   
   // Debouncer la recherche pour éviter les re-rendus excessifs
   const debouncedSearchTerm = useDebounce(searchTerm, debounceMs);
@@ -55,17 +72,29 @@ export function useOptimizedPagination<T extends Record<string, any>>(
     isFiltered
   } = paginationResult;
 
-  // Fonction de préchargement simulée
+  // Fonction de préchargement avec cache
   const preloadNextPage = useCallback(async () => {
-    // Simulation du préchargement
-    return new Promise<T[]>((resolve) => {
-      setTimeout(() => {
-        resolve([]);
-      }, 100);
-    });
-  }, []);
+    if (!enableAdvancedCache) {
+      return new Promise<T[]>((resolve) => {
+        setTimeout(() => resolve([]), 100);
+      });
+    }
 
-  // Smart preloader
+    const cacheKey = `preload_${componentName}_page_${pagination.currentPage + 1}`;
+    
+    return fetchWithCache(
+      cacheKey,
+      async () => {
+        // Simulation du préchargement avec cache
+        await new Promise(resolve => setTimeout(resolve, 100));
+        return [] as T[];
+      },
+      false,
+      ['preload', componentName]
+    );
+  }, [enableAdvancedCache, componentName, pagination.currentPage, fetchWithCache]);
+
+  // Smart preloader avec cache
   const {
     preloadNextPages,
     isPreloading,
@@ -81,17 +110,17 @@ export function useOptimizedPagination<T extends Record<string, any>>(
     }
   );
 
-  // Mesurer les performances de rendu
+  // Mesurer les performances de rendu avec cache
   const measureRenderPerformance = useCallback(() => {
     const metricName = `${componentName}_render`;
     startMetric(metricName, {
       totalItems,
       pageSize: pagination.pageSize,
       currentPage: pagination.currentPage,
-      searchTerm: debouncedSearchTerm
+      searchTerm: debouncedSearchTerm,
+      cacheEnabled: enableAdvancedCache
     });
 
-    // Simuler la fin de rendu avec setTimeout
     setTimeout(() => {
       const metric = endMetric(metricName);
       if (metric && metric.duration) {
@@ -111,10 +140,18 @@ export function useOptimizedPagination<T extends Record<string, any>>(
     pagination.pageSize,
     pagination.currentPage,
     debouncedSearchTerm,
+    enableAdvancedCache,
     startMetric,
     endMetric,
     recordPaginationMetric
   ]);
+
+  // Invalider le cache quand les données changent
+  useEffect(() => {
+    if (enableAdvancedCache && data.length > 0) {
+      invalidateByTags([componentName, 'pagination']);
+    }
+  }, [data.length, enableAdvancedCache, invalidateByTags, componentName]);
 
   // Déclencher le préchargement quand nécessaire
   useEffect(() => {
@@ -133,6 +170,7 @@ export function useOptimizedPagination<T extends Record<string, any>>(
     isSearching: searchTerm !== debouncedSearchTerm,
     isPreloading,
     preloadedPagesCount,
+    cacheStats: enableAdvancedCache ? getCacheStats() : null,
     renderMetrics: {
       totalItems,
       currentPage: pagination.currentPage,
@@ -144,6 +182,8 @@ export function useOptimizedPagination<T extends Record<string, any>>(
     debouncedSearchTerm,
     isPreloading,
     preloadedPagesCount,
+    enableAdvancedCache,
+    getCacheStats,
     totalItems,
     pagination.currentPage,
     pagination.pageSize,
