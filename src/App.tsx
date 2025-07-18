@@ -19,6 +19,9 @@ import PriceList from './components/modules/PriceList';
 import PricingAndConsumables from './components/modules/PricingAndConsumables';
 import BackupManagement from './components/modules/BackupManagement';
 import Settings from './components/modules/Settings';
+import Availability from './components/modules/Availability';
+import ConsumptionReports from './components/modules/ConsumptionReports';
+import ProfitabilityDashboard from './components/modules/ProfitabilityDashboard';
 
 function App() {
   console.log('=== APP STARTED ===');
@@ -104,6 +107,12 @@ function App() {
         return <BackupManagement />;
       case 'settings':
         return <Settings />;
+      case 'availability':
+        return <Availability />;
+      case 'consumption-reports':
+        return <ConsumptionReports />;
+      case 'profitability':
+        return <ProfitabilityDashboard />;
       default:
         return (
           <div className="p-6">

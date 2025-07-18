@@ -31,7 +31,10 @@ const Sidebar: React.FC<SidebarProps> = ({ activeModule, onModuleChange, isColla
     { id: 'quotes', name: 'Devis', icon: ShoppingCart },
     { id: 'consultations', name: 'Consultations', icon: UserCheck },
     { id: 'analytics', name: 'Analyses', icon: BarChart3 },
+    { id: 'consumption-reports', name: 'Consommation', icon: BarChart3 },
+    { id: 'profitability', name: 'Rentabilité', icon: BarChart3 },
     { id: 'backup', name: 'Sauvegardes', icon: Save },
+    { id: 'availability', name: 'Disponibilités', icon: Calendar },
   ];
 
   return (
