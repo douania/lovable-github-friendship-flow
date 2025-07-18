@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, Plus, Edit, Trash2, Save } from 'lucide-react';
+import { Calendar, Clock, Plus, Trash2, Save } from 'lucide-react';
 import { supabase } from '../../integrations/supabase/client';
 import { useAuth } from '../../hooks/useAuth';
 
@@ -313,13 +313,6 @@ const Availability: React.FC = () => {
                       </div>
                       
                       <div className="flex items-center space-x-2">
-                        <button
-                          onClick={() => setEditingSlot(slot.id)}
-                          className="p-1 text-gray-400 hover:text-gray-600"
-                          title="Modifier"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
                         <button
                           onClick={() => deleteSlot(slot.id)}
                           className="p-1 text-gray-400 hover:text-red-600"
