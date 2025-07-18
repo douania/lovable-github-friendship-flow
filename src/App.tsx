@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from './hooks/useAuth';
 import Auth from './components/Auth';
 import Header from './components/layout/Header';
@@ -22,6 +22,7 @@ import Settings from './components/modules/Settings';
 import Availability from './components/modules/Availability';
 import ConsumptionReports from './components/modules/ConsumptionReports';
 import ProfitabilityDashboard from './components/modules/ProfitabilityDashboard';
+import ClientApp from './components/client/ClientApp';
 
 function App() {
   console.log('=== APP STARTED ===');
@@ -30,13 +31,36 @@ function App() {
   const [activeModule, setActiveModule] = useState('dashboard');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [sidebarVisible, setSidebarVisible] = useState(false);
+  const [isClientPortal, setIsClientPortal] = useState(false);
+
+  // Vérifier si l'URL contient "/client" pour afficher le portail client
+  useEffect(() => {
+    const checkClientPortal = () => {
+      const path = window.location.pathname;
+      setIsClientPortal(path.includes('/client') || path === '/client');
+    };
+    
+    checkClientPortal();
+    
+    // Écouter les changements d'URL
+    const handlePopState = () => checkClientPortal();
+    window.addEventListener('popstate', handlePopState);
+    
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   console.log('App render - Auth state:', { 
     hasUser: !!user, 
     loading, 
     isAuthenticated,
-    activeModule
+    activeModule,
+    isClientPortal
   });
+
+  // Si c'est le portail client, l'afficher directement
+  if (isClientPortal) {
+    return <ClientApp />;
+  }
 
   // Show loading while checking authentication
   if (loading) {
