@@ -36,7 +36,6 @@ const VirtualizedPatients: React.FC = () => {
 
   // Hook pour la pagination virtuelle
   const {
-    items: virtualizedPatients,
     loading: loadingMore,
     hasMore,
     loadMore
@@ -51,7 +50,7 @@ const VirtualizedPatients: React.FC = () => {
   );
 
   // Rendu d'un patient dans la liste virtuelle
-  const renderPatient = (patient: Patient, index: number) => (
+  const renderPatient = (patient: Patient) => (
     <div className="flex items-center space-x-4 p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors">
       <div className="w-12 h-12 bg-gradient-to-r from-pink-500 to-orange-500 rounded-full flex items-center justify-center text-white font-semibold">
         {patient.firstName[0]}{patient.lastName[0]}

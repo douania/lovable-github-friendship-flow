@@ -1,6 +1,5 @@
 
-import React, { useState, useRef, useEffect } from 'react';
-import { useAdvancedCache } from '../../hooks/useAdvancedCache';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 
 interface OptimizedImageProps {
   src: string;
@@ -32,12 +31,6 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
   const [error, setError] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);
   
-  const { fetchWithCache } = useAdvancedCache('', {
-    ttl: 30 * 60 * 1000, // 30 minutes pour les images
-    persist: true,
-    key: 'images',
-    tags: ['images']
-  });
 
   // Intersection Observer pour le lazy loading
   useEffect(() => {
