@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Users, 
   Calendar, 
@@ -8,13 +8,38 @@ import {
   Clock,
   Star
 } from 'lucide-react';
-import { mockPatients, mockTreatments, mockProducts } from '../../data/mockData';
+import { Patient, Product } from '../../types';
+import { patientService } from '../../services/patientService';
+import { productService } from '../../services/productService';
 
 const Dashboard: React.FC = () => {
+  const [patients, setPatients] = useState<Patient[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadDashboardData();
+  }, []);
+
+  const loadDashboardData = async () => {
+    try {
+      const [patientsData, productsData] = await Promise.all([
+        patientService.getAll(),
+        productService.getAll()
+      ]);
+      setPatients(patientsData);
+      setProducts(productsData);
+    } catch (error) {
+      console.error('Erreur lors du chargement des données:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const todayRevenue = 425000;
   const monthlyRevenue = 3200000;
   const todayAppointments = 6;
-  const lowStockItems = mockProducts.filter(p => p.quantity <= p.minQuantity).length;
+  const lowStockItems = products.filter(p => p.quantity <= p.minQuantity).length;
 
   const stats = [
     {
@@ -33,7 +58,7 @@ const Dashboard: React.FC = () => {
     },
     {
       title: 'Total patients',
-      value: mockPatients.length.toString(),
+      value: patients.length.toString(),
       icon: Users,
       color: 'text-purple-600',
       bgColor: 'bg-purple-50'
@@ -47,11 +72,29 @@ const Dashboard: React.FC = () => {
     }
   ];
 
+  if (loading) {
+    return (
+      <div className="p-6">
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Chargement du tableau de bord...</p>
+        </div>
+      </div>
+    );
+  }
+
   const recentAppointments = [
     { time: '09:00', patient: 'Aïssatou Diop', treatment: 'Laser CO2', status: 'confirmed' },
     { time: '10:30', patient: 'Fatou Ba', treatment: 'Peeling', status: 'confirmed' },
     { time: '14:00', patient: 'Marième Fall', treatment: 'Botox', status: 'pending' },
     { time: '15:30', patient: 'Khady Sy', treatment: 'Consultation', status: 'confirmed' }
+  ];
+
+  const popularTreatments = [
+    { id: '1', name: 'Laser CO2 Fractionné', category: 'Laser', price: 125000, duration: 45 },
+    { id: '2', name: 'Peeling Chimique', category: 'Soins visage', price: 75000, duration: 30 },
+    { id: '3', name: 'Botox Rides', category: 'Injection', price: 150000, duration: 20 },
+    { id: '4', name: 'Consultation', category: 'Diagnostic', price: 25000, duration: 30 }
   ];
 
   return (
@@ -121,7 +164,7 @@ const Dashboard: React.FC = () => {
             <Star className="w-5 h-5 text-gray-400" />
           </div>
           <div className="space-y-3">
-            {mockTreatments.slice(0, 4).map((treatment) => (
+            {popularTreatments.slice(0, 4).map((treatment) => (
               <div key={treatment.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
                 <div>
                   <p className="font-medium text-gray-800">{treatment.name}</p>

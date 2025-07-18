@@ -1,10 +1,34 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { TrendingUp, DollarSign, Users, Calendar, Star, Package } from 'lucide-react';
-import { mockPatients, mockProducts } from '../../data/mockData';
+import { Patient, Product } from '../../types';
+import { patientService } from '../../services/patientService';
+import { productService } from '../../services/productService';
 
 const Analytics: React.FC = () => {
   const [selectedPeriod, setSelectedPeriod] = useState('month');
+  const [patients, setPatients] = useState<Patient[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadAnalyticsData();
+  }, []);
+
+  const loadAnalyticsData = async () => {
+    try {
+      const [patientsData, productsData] = await Promise.all([
+        patientService.getAll(),
+        productService.getAll()
+      ]);
+      setPatients(patientsData);
+      setProducts(productsData);
+    } catch (error) {
+      console.error('Erreur lors du chargement des données analytics:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const monthlyRevenue = 3200000;
   const dailyAverage = monthlyRevenue / 30;
@@ -30,6 +54,17 @@ const Analytics: React.FC = () => {
     { method: 'Espèces', percentage: 35, amount: 1120000 },
     { method: 'Carte bancaire', percentage: 20, amount: 640000 }
   ];
+
+  if (loading) {
+    return (
+      <div className="p-6">
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Chargement des analytics...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 space-y-6">
@@ -184,7 +219,7 @@ const Analytics: React.FC = () => {
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
           <h2 className="text-lg font-semibold text-gray-800 mb-4">Patients Fidèles</h2>
           <div className="space-y-3">
-            {mockPatients.slice(0, 5).map((patient) => (
+            {patients.slice(0, 5).map((patient) => (
               <div key={patient.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
                 <div className="flex items-center space-x-3">
                   <div className="w-8 h-8 bg-gradient-to-r from-pink-100 to-orange-100 rounded-full flex items-center justify-center">
@@ -206,7 +241,7 @@ const Analytics: React.FC = () => {
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
           <h2 className="text-lg font-semibold text-gray-800 mb-4">Alertes Stock</h2>
           <div className="space-y-3">
-            {mockProducts.filter(p => p.quantity <= p.minQuantity).map((product) => (
+            {products.filter(p => p.quantity <= p.minQuantity).map((product) => (
               <div key={product.id} className="flex items-center justify-between p-3 bg-orange-50 rounded-xl border border-orange-200">
                 <div className="flex items-center space-x-3">
                   <Package className="w-5 h-5 text-orange-600" />
