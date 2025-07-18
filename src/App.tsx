@@ -18,6 +18,7 @@ import Quotes from './components/modules/Quotes';
 import PriceList from './components/modules/PriceList';
 import PricingAndConsumables from './components/modules/PricingAndConsumables';
 import BackupManagement from './components/modules/BackupManagement';
+import Settings from './components/modules/Settings';
 
 function App() {
   console.log('=== APP STARTED ===');
@@ -101,6 +102,8 @@ function App() {
         return <PricingAndConsumables />;
       case 'backup':
         return <BackupManagement />;
+      case 'settings':
+        return <Settings />;
       default:
         return (
           <div className="p-6">
