@@ -3,7 +3,7 @@ import { Search, Plus, Eye, Edit, Phone, Mail, Calendar } from 'lucide-react';
 import { Patient } from '../../types';
 import { patientService } from '../../services/patientService';
 import PatientForm from '../forms/PatientForm';
-import { useOptimizedPagination } from '../../hooks/useOptimizedPagination';
+import { usePaginatedData } from '../../hooks/usePaginatedData';
 import PaginationControls from '../ui/PaginationControls';
 
 const Patients: React.FC = () => {
@@ -15,23 +15,17 @@ const Patients: React.FC = () => {
   const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
 
-  // Utiliser la pagination optimisée avec toutes les optimisations de performance
+  // Utiliser la pagination simple et stable
   const {
     paginatedData: paginatedPatients,
     pagination,
     totalItems,
-    isFiltered,
-    performanceStats,
-    isSearching
-  } = useOptimizedPagination({
+    isFiltered
+  } = usePaginatedData({
     data: patients,
     searchTerm,
     searchFields: ['firstName', 'lastName', 'email', 'phone'],
-    initialPageSize: 12,
-    componentName: 'Patients',
-    debounceMs: 300,
-    enablePreloading: true,
-    preloadThreshold: 2
+    initialPageSize: 12
   });
 
   // Charger les patients au montage du composant
@@ -160,23 +154,6 @@ const Patients: React.FC = () => {
         <div>
           <h1 className="text-2xl font-bold text-gray-800">Patients</h1>
           <p className="text-gray-600">Gestion des fiches clients</p>
-          {/* Indicateurs de performance */}
-          {(isSearching || performanceStats.isPreloading) && (
-            <div className="flex items-center space-x-4 text-sm text-gray-500 mt-1">
-              {isSearching && (
-                <span className="flex items-center">
-                  <div className="w-2 h-2 bg-orange-400 rounded-full animate-pulse mr-1"></div>
-                  Recherche en cours...
-                </span>
-              )}
-              {performanceStats.isPreloading && (
-                <span className="flex items-center">
-                  <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse mr-1"></div>
-                  Préchargement ({performanceStats.preloadedPagesCount} pages)
-                </span>
-              )}
-            </div>
-          )}
         </div>
         <button 
           onClick={() => setShowAddModal(true)}
@@ -209,11 +186,6 @@ const Patients: React.FC = () => {
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent"
           />
-          {isSearching && (
-            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-              <div className="w-4 h-4 border-2 border-pink-500 border-t-transparent rounded-full animate-spin"></div>
-            </div>
-          )}
         </div>
         <div className="text-sm text-gray-600 bg-white px-4 py-3 rounded-xl border border-gray-200">
           {isFiltered ? `${totalItems} patient(s) trouvé(s)` : `${totalItems} patient(s)`}
