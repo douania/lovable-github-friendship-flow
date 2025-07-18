@@ -1,8 +1,10 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Calendar, Clock, MapPin, User } from 'lucide-react';
+import AppointmentBooking from './AppointmentBooking';
 
 const ClientAppointments: React.FC = () => {
+  const [showBooking, setShowBooking] = useState(false);
   const upcomingAppointments = [
     {
       id: '1',
@@ -56,7 +58,10 @@ const ClientAppointments: React.FC = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-gray-900">Mes rendez-vous</h1>
-        <button className="bg-pink-600 text-white px-4 py-2 rounded-lg hover:bg-pink-700 transition-colors">
+        <button 
+          onClick={() => setShowBooking(true)}
+          className="bg-pink-600 text-white px-4 py-2 rounded-lg hover:bg-pink-700 transition-colors"
+        >
           Demander un RDV
         </button>
       </div>
@@ -136,6 +141,11 @@ const ClientAppointments: React.FC = () => {
           <li>• N'hésitez pas à poser vos questions</li>
         </ul>
       </div>
+
+      {/* Modal de réservation */}
+      {showBooking && (
+        <AppointmentBooking onClose={() => setShowBooking(false)} />
+      )}
     </div>
   );
 };
