@@ -8,17 +8,19 @@ import {
   Clock,
   Star
 } from 'lucide-react';
-import { Patient, Product, Appointment, Invoice } from '../../types';
+import { Patient, Product, Appointment, Invoice, Treatment } from '../../types';
 import { patientService } from '../../services/patientService';
 import { productService } from '../../services/productService';
 import { appointmentService } from '../../services/appointmentService';
 import { invoiceService } from '../../services/invoiceService';
+import { treatmentService } from '../../services/treatmentService';
 
 const Dashboard: React.FC = () => {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [treatments, setTreatments] = useState<Treatment[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -27,16 +29,18 @@ const Dashboard: React.FC = () => {
 
   const loadDashboardData = async () => {
     try {
-      const [patientsData, productsData, appointmentsData, invoicesData] = await Promise.all([
+      const [patientsData, productsData, appointmentsData, invoicesData, treatmentsData] = await Promise.all([
         patientService.getAll(),
         productService.getAll(),
         appointmentService.getAll(),
-        invoiceService.getAll()
+        invoiceService.getAll(),
+        treatmentService.getAll()
       ]);
       setPatients(patientsData);
       setProducts(productsData);
       setAppointments(appointmentsData);
       setInvoices(invoicesData);
+      setTreatments(treatmentsData);
     } catch (error) {
       console.error('Erreur lors du chargement des données:', error);
     } finally {
@@ -114,7 +118,7 @@ const Dashboard: React.FC = () => {
     );
   }
 
-  // Calcul des soins populaires basé sur les vrais rendez-vous
+  // Calcul des soins populaires basé sur les vrais rendez-vous avec les noms des traitements
   const treatmentCounts = appointments.reduce((acc, apt) => {
     acc[apt.treatmentId] = (acc[apt.treatmentId] || 0) + 1;
     return acc;
@@ -123,14 +127,17 @@ const Dashboard: React.FC = () => {
   const popularTreatments = Object.entries(treatmentCounts)
     .sort(([, a], [, b]) => b - a)
     .slice(0, 4)
-    .map(([treatmentId, count]) => ({
-      id: treatmentId,
-      name: `Traitement ${treatmentId.substring(0, 8)}`, // On affichera l'ID en attendant d'avoir les noms
-      category: 'Soin',
-      price: 75000, // Prix par défaut, à ajuster selon vos tarifs
-      duration: 45,
-      count
-    }));
+    .map(([treatmentId, count]) => {
+      const treatment = treatments.find(t => t.id === treatmentId);
+      return {
+        id: treatmentId,
+        name: treatment?.name || `Traitement ${treatmentId.substring(0, 8)}`,
+        category: treatment?.category || 'Soin',
+        price: treatment?.price || 0,
+        duration: treatment?.duration || 45,
+        count
+      };
+    });
 
   return (
     <div className="p-6 space-y-6">
@@ -178,8 +185,8 @@ const Dashboard: React.FC = () => {
               </div>
             ) : (
               todayAppointments.slice(0, 4).map((apt) => {
-                // Trouver le patient correspondant
                 const patient = patients.find(p => p.id === apt.patientId);
+                const treatment = treatments.find(t => t.id === apt.treatmentId);
                 return (
                   <div key={apt.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
                     <div className="flex items-center space-x-3">
@@ -193,7 +200,7 @@ const Dashboard: React.FC = () => {
                     </div>
                     <div className="text-right">
                       <p className="text-sm font-medium text-gray-800">
-                        Traitement {apt.treatmentId.substring(0, 8)}
+                        {treatment?.name || `Traitement ${apt.treatmentId.substring(0, 8)}`}
                       </p>
                       <span className={`text-xs px-2 py-1 rounded-full ${
                         apt.status === 'scheduled' ? 'bg-blue-100 text-blue-600' :
