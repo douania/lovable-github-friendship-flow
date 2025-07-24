@@ -122,8 +122,8 @@ const ExcelReporting: React.FC = () => {
 
     const revenueData = filteredAppointments.map(appointment => ({
       'Date': new Date(appointment.date).toLocaleDateString('fr-FR'),
-      'Patient ID': appointment.patient_id,
-      'Traitement ID': appointment.treatment_id,
+      'Patient ID': appointment.patientId,
+      'Traitement ID': appointment.treatmentId,
       'Montant estimé': '50000', // Valeur exemple
       'Mode paiement': 'Espèces', // Valeur exemple
       'Statut': 'Payé'
@@ -147,19 +147,19 @@ const ExcelReporting: React.FC = () => {
       'Nom produit': product.name,
       'Catégorie': product.category,
       'Stock actuel': product.quantity,
-      'Stock minimum': product.min_quantity,
-      'Prix unitaire': product.unit_price,
+      'Stock minimum': product.minQuantity,
+      'Prix unitaire': product.unitPrice,
       'Unité': product.unit || 'unité',
       'Fournisseur': product.supplier || '',
-      'Date expiration': product.expiry_date ? new Date(product.expiry_date).toLocaleDateString('fr-FR') : '',
-      'Dernier réapprovisionnement': new Date(product.last_restocked).toLocaleDateString('fr-FR'),
-      'Statut stock': product.quantity <= product.min_quantity ? 'Stock faible' : 'Stock OK',
-      'Valeur stock': (product.quantity * product.unit_price).toLocaleString() + ' FCFA'
+      'Date expiration': product.expiryDate ? new Date(product.expiryDate).toLocaleDateString('fr-FR') : '',
+      'Dernier réapprovisionnement': new Date(product.lastRestocked).toLocaleDateString('fr-FR'),
+      'Statut stock': product.quantity <= product.minQuantity ? 'Stock faible' : 'Stock OK',
+      'Valeur stock': (product.quantity * product.unitPrice).toLocaleString() + ' FCFA'
     }));
     
     // Ajouter statistiques
-    const totalValue = products.reduce((sum, p) => sum + (p.quantity * p.unit_price), 0);
-    const lowStockCount = products.filter(p => p.quantity <= p.min_quantity).length;
+    const totalValue = products.reduce((sum, p) => sum + (p.quantity * p.unitPrice), 0);
+    const lowStockCount = products.filter(p => p.quantity <= p.minQuantity).length;
     
     const summary = [{
       'Nom produit': '--- STATISTIQUES ---',
@@ -308,7 +308,7 @@ const ExcelReporting: React.FC = () => {
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-green-600">
-                      {patients.filter(p => p.last_visit).length}
+                      {patients.filter(p => p.lastVisit).length}
                     </div>
                     <div className="text-gray-600">Avec visites</div>
                   </div>
@@ -345,7 +345,7 @@ const ExcelReporting: React.FC = () => {
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-red-600">
-                      {products.filter(p => p.quantity <= p.min_quantity).length}
+                      {products.filter(p => p.quantity <= p.minQuantity).length}
                     </div>
                     <div className="text-gray-600">Stock faible</div>
                   </div>
