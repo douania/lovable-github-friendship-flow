@@ -8,13 +8,17 @@ import {
   Clock,
   Star
 } from 'lucide-react';
-import { Patient, Product } from '../../types';
+import { Patient, Product, Appointment, Invoice } from '../../types';
 import { patientService } from '../../services/patientService';
 import { productService } from '../../services/productService';
+import { appointmentService } from '../../services/appointmentService';
+import { invoiceService } from '../../services/invoiceService';
 
 const Dashboard: React.FC = () => {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -23,12 +27,16 @@ const Dashboard: React.FC = () => {
 
   const loadDashboardData = async () => {
     try {
-      const [patientsData, productsData] = await Promise.all([
+      const [patientsData, productsData, appointmentsData, invoicesData] = await Promise.all([
         patientService.getAll(),
-        productService.getAll()
+        productService.getAll(),
+        appointmentService.getAll(),
+        invoiceService.getAll()
       ]);
       setPatients(patientsData);
       setProducts(productsData);
+      setAppointments(appointmentsData);
+      setInvoices(invoicesData);
     } catch (error) {
       console.error('Erreur lors du chargement des données:', error);
     } finally {
@@ -36,9 +44,32 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  const todayRevenue = 425000;
-  const monthlyRevenue = 3200000;
-  const todayAppointments = 6;
+  // Calculs des métriques réelles
+  const today = new Date().toISOString().split('T')[0];
+  const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
+
+  // Revenus du jour (factures payées aujourd'hui)
+  const todayRevenue = invoices
+    .filter(invoice => 
+      invoice.status === 'paid' && 
+      invoice.paidAt && 
+      invoice.paidAt.split('T')[0] === today
+    )
+    .reduce((sum, invoice) => sum + invoice.amount, 0);
+
+  // Revenus mensuels (factures payées ce mois)
+  const monthlyRevenue = invoices
+    .filter(invoice => 
+      invoice.status === 'paid' && 
+      invoice.paidAt && 
+      invoice.paidAt >= startOfMonth
+    )
+    .reduce((sum, invoice) => sum + invoice.amount, 0);
+
+  // Rendez-vous d'aujourd'hui
+  const todayAppointments = appointments.filter(apt => apt.date === today);
+
+  // Produits en stock faible
   const lowStockItems = products.filter(p => p.quantity <= p.minQuantity).length;
 
   const stats = [
@@ -51,7 +82,7 @@ const Dashboard: React.FC = () => {
     },
     {
       title: 'RDV aujourd\'hui',
-      value: todayAppointments.toString(),
+      value: todayAppointments.length.toString(),
       icon: Calendar,
       color: 'text-blue-600',
       bgColor: 'bg-blue-50'
@@ -83,19 +114,23 @@ const Dashboard: React.FC = () => {
     );
   }
 
-  const recentAppointments = [
-    { time: '09:00', patient: 'Aïssatou Diop', treatment: 'Laser CO2', status: 'confirmed' },
-    { time: '10:30', patient: 'Fatou Ba', treatment: 'Peeling', status: 'confirmed' },
-    { time: '14:00', patient: 'Marième Fall', treatment: 'Botox', status: 'pending' },
-    { time: '15:30', patient: 'Khady Sy', treatment: 'Consultation', status: 'confirmed' }
-  ];
+  // Calcul des soins populaires basé sur les vrais rendez-vous
+  const treatmentCounts = appointments.reduce((acc, apt) => {
+    acc[apt.treatmentId] = (acc[apt.treatmentId] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
 
-  const popularTreatments = [
-    { id: '1', name: 'Laser CO2 Fractionné', category: 'Laser', price: 125000, duration: 45 },
-    { id: '2', name: 'Peeling Chimique', category: 'Soins visage', price: 75000, duration: 30 },
-    { id: '3', name: 'Botox Rides', category: 'Injection', price: 150000, duration: 20 },
-    { id: '4', name: 'Consultation', category: 'Diagnostic', price: 25000, duration: 30 }
-  ];
+  const popularTreatments = Object.entries(treatmentCounts)
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, 4)
+    .map(([treatmentId, count]) => ({
+      id: treatmentId,
+      name: `Traitement ${treatmentId.substring(0, 8)}`, // On affichera l'ID en attendant d'avoir les noms
+      category: 'Soin',
+      price: 75000, // Prix par défaut, à ajuster selon vos tarifs
+      duration: 45,
+      count
+    }));
 
   return (
     <div className="p-6 space-y-6">
@@ -136,25 +171,46 @@ const Dashboard: React.FC = () => {
             <Clock className="w-5 h-5 text-gray-400" />
           </div>
           <div className="space-y-3">
-            {recentAppointments.map((apt, aptIndex) => (
-              <div key={aptIndex} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
-                <div className="flex items-center space-x-3">
-                  <div className="w-2 h-2 bg-pink-400 rounded-full"></div>
-                  <div>
-                    <p className="font-medium text-gray-800">{apt.time}</p>
-                    <p className="text-sm text-gray-600">{apt.patient}</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-medium text-gray-800">{apt.treatment}</p>
-                  <span className={`text-xs px-2 py-1 rounded-full ${
-                    apt.status === 'confirmed' ? 'bg-green-100 text-green-600' : 'bg-yellow-100 text-yellow-600'
-                  }`}>
-                    {apt.status === 'confirmed' ? 'Confirmé' : 'En attente'}
-                  </span>
-                </div>
+            {todayAppointments.length === 0 ? (
+              <div className="text-center py-8">
+                <Calendar className="h-8 w-8 text-gray-300 mx-auto mb-2" />
+                <p className="text-gray-500">Aucun rendez-vous aujourd'hui</p>
               </div>
-            ))}
+            ) : (
+              todayAppointments.slice(0, 4).map((apt) => {
+                // Trouver le patient correspondant
+                const patient = patients.find(p => p.id === apt.patientId);
+                return (
+                  <div key={apt.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-2 h-2 bg-pink-400 rounded-full"></div>
+                      <div>
+                        <p className="font-medium text-gray-800">{apt.time}</p>
+                        <p className="text-sm text-gray-600">
+                          {patient ? `${patient.firstName} ${patient.lastName}` : 'Patient inconnu'}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-medium text-gray-800">
+                        Traitement {apt.treatmentId.substring(0, 8)}
+                      </p>
+                      <span className={`text-xs px-2 py-1 rounded-full ${
+                        apt.status === 'scheduled' ? 'bg-blue-100 text-blue-600' :
+                        apt.status === 'completed' ? 'bg-green-100 text-green-600' :
+                        apt.status === 'cancelled' ? 'bg-red-100 text-red-600' :
+                        'bg-yellow-100 text-yellow-600'
+                      }`}>
+                        {apt.status === 'scheduled' ? 'Programmé' :
+                         apt.status === 'completed' ? 'Terminé' :
+                         apt.status === 'cancelled' ? 'Annulé' :
+                         apt.status === 'no-show' ? 'Absent' : apt.status}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
         </div>
 
@@ -164,18 +220,25 @@ const Dashboard: React.FC = () => {
             <Star className="w-5 h-5 text-gray-400" />
           </div>
           <div className="space-y-3">
-            {popularTreatments.slice(0, 4).map((treatment) => (
-              <div key={treatment.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
-                <div>
-                  <p className="font-medium text-gray-800">{treatment.name}</p>
-                  <p className="text-sm text-gray-600">{treatment.category}</p>
-                </div>
-                <div className="text-right">
-                  <p className="font-bold text-pink-600">{treatment.price.toLocaleString()} FCFA</p>
-                  <p className="text-xs text-gray-500">{treatment.duration} min</p>
-                </div>
+            {popularTreatments.length === 0 ? (
+              <div className="text-center py-8">
+                <Star className="h-8 w-8 text-gray-300 mx-auto mb-2" />
+                <p className="text-gray-500">Aucun traitement enregistré</p>
               </div>
-            ))}
+            ) : (
+              popularTreatments.map((treatment) => (
+                <div key={treatment.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                  <div>
+                    <p className="font-medium text-gray-800">{treatment.name}</p>
+                    <p className="text-sm text-gray-600">{treatment.count} séance(s)</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-bold text-pink-600">{treatment.price.toLocaleString()} FCFA</p>
+                    <p className="text-xs text-gray-500">{treatment.duration} min</p>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>
