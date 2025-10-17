@@ -6,6 +6,7 @@ import { patientService } from '../../services/patientService';
 import { soinService } from '../../services/soinService';
 import { Patient, Soin } from '../../types';
 import PhotoUpload from './PhotoUpload';
+import SignaturePad from './SignaturePad';
 
 interface ConsultationFormProps {
   consultation?: Consultation;
@@ -35,7 +36,8 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
     sideEffects: consultation?.sideEffects || '',
     nextAppointmentRecommended: consultation?.nextAppointmentRecommended || '',
     consentSigned: consultation?.consentSigned || false,
-    satisfactionRating: consultation?.satisfactionRating || 0
+    satisfactionRating: consultation?.satisfactionRating || 0,
+    signature: ''
   });
 
   useEffect(() => {
@@ -304,6 +306,13 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
                 Consentement éclairé signé
               </label>
             </div>
+
+            {/* Signature */}
+            {formData.consentSigned && (
+              <SignaturePad
+                onSignatureChange={(signature) => setFormData(prev => ({ ...prev, signature }))}
+              />
+            )}
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
