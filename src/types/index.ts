@@ -159,9 +159,14 @@ export interface Forfait {
   isActive: boolean;
   ordre: number;
   createdAt: string;
+  categorie?: ForfaitCategorie;
+  badges?: ForfaitBadge[];
   // Relations
   soins?: Soin[];
 }
+
+export type ForfaitCategorie = 'decouverte' | 'premium' | 'zone' | 'saisonnier' | 'autre';
+export type ForfaitBadge = 'bestseller' | 'nouveau' | 'promo' | 'limite';
 
 export interface Stats {
   todayRevenue: number;
