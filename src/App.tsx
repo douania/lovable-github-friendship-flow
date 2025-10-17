@@ -8,7 +8,7 @@ import Dashboard from './components/modules/Dashboard';
 import Calendar from './components/modules/Calendar';
 import Patients from './components/modules/Patients';
 import Appointments from './components/modules/Appointments';
-import Treatments from './components/modules/Treatments';
+
 import Inventory from './components/modules/Inventory';
 import Analytics from './components/modules/Analytics';
 import TreatmentCatalog from './components/modules/TreatmentCatalog';
@@ -110,7 +110,7 @@ function App() {
       case 'appointments':
         return <Appointments />;
       case 'treatments':  
-        return <Treatments />;
+        return <TreatmentCatalog onForfaitSelect={(forfait) => console.log('Forfait selected:', forfait)} />;
       case 'inventory':
         return <Inventory />;
       case 'analytics':
