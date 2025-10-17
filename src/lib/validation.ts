@@ -94,3 +94,33 @@ export const quoteSchema = z.object({
   valid_until: z.string().optional(),
   notes: z.string().max(2000).optional().or(z.literal(''))
 });
+
+// Soin validation schema
+export const soinSchema = z.object({
+  nom: z.string().trim().min(1, "Le nom est requis").max(200),
+  appareilId: z.string().uuid("ID appareil invalide"),
+  zoneId: z.string().uuid("ID zone invalide"),
+  duree: z.number().int().min(1, "La durée doit être d'au moins 1 minute").max(480),
+  prix: z.number().int().min(0, "Le prix doit être positif"),
+  description: z.string().max(2000).optional().or(z.literal('')),
+  contreIndications: z.array(z.string().max(500)).max(50).optional(),
+  conseilsPostTraitement: z.array(z.string().max(500)).max(50).optional(),
+  expectedConsumables: z.array(z.object({
+    productId: z.string().uuid(),
+    quantity: z.number().min(0)
+  })).optional(),
+  isActive: z.boolean().optional()
+});
+
+// Forfait validation schema
+export const forfaitSchema = z.object({
+  nom: z.string().trim().min(1, "Le nom est requis").max(200),
+  description: z.string().max(2000).optional().or(z.literal('')),
+  soinIds: z.array(z.string().uuid()).min(1, "Au moins un soin est requis").max(50),
+  nbSeances: z.number().int().min(1, "Le nombre de séances doit être d'au moins 1").max(100),
+  validiteMois: z.number().int().min(1, "La validité doit être d'au moins 1 mois").max(36),
+  prixTotal: z.number().int().min(0, "Le prix total doit être positif"),
+  prixReduit: z.number().int().min(0, "Le prix réduit doit être positif"),
+  isActive: z.boolean().optional(),
+  ordre: z.number().int().min(0).optional()
+});
