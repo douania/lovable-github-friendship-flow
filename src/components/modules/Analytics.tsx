@@ -41,18 +41,19 @@ const Analytics: React.FC = () => {
     { name: 'Consultation', revenue: 300000, count: 15, growth: 8 }
   ];
 
+  // Données exemple - seront remplacées par de vraies données
   const monthlyData = [
-    { month: 'Jan', revenue: 2800000, appointments: 42 },
-    { month: 'Fév', revenue: 3200000, appointments: 48 },
-    { month: 'Mar', revenue: 2900000, appointments: 45 },
-    { month: 'Avr', revenue: 3500000, appointments: 52 },
-    { month: 'Mai', revenue: 3100000, appointments: 49 }
+    { month: 'Jan', revenue: 0, appointments: 0 },
+    { month: 'Fév', revenue: 0, appointments: 0 },
+    { month: 'Mar', revenue: 0, appointments: 0 },
+    { month: 'Avr', revenue: 0, appointments: 0 },
+    { month: 'Mai', revenue: 0, appointments: 0 }
   ];
 
   const paymentMethods = [
-    { method: 'Mobile Money', percentage: 45, amount: 1440000 },
-    { method: 'Espèces', percentage: 35, amount: 1120000 },
-    { method: 'Carte bancaire', percentage: 20, amount: 640000 }
+    { method: 'Mobile Money', percentage: 0, amount: 0 },
+    { method: 'Espèces', percentage: 0, amount: 0 },
+    { method: 'Carte bancaire', percentage: 0, amount: 0 }
   ];
 
   if (loading) {
