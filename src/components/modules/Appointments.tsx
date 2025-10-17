@@ -20,6 +20,11 @@ const Appointments: React.FC = () => {
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [patientFilter, setPatientFilter] = useState<string>('all');
+  const [treatmentFilter, setTreatmentFilter] = useState<string>('all');
+  const [dateRangeStart, setDateRangeStart] = useState('');
+  const [dateRangeEnd, setDateRangeEnd] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
@@ -39,11 +44,35 @@ const Appointments: React.FC = () => {
     loadTreatments();
   }, []);
 
-  // Filtrer les rendez-vous par date et statut
-  const dateFilteredAppointments = appointments.filter(apt => {
-    const matchesDate = apt.date === selectedDate;
+  // Filtrer les rendez-vous avec tous les critères
+  const filteredAppointments = appointments.filter(apt => {
+    // Filtre par date unique ou plage
+    let matchesDate = true;
+    if (dateRangeStart && dateRangeEnd) {
+      matchesDate = apt.date >= dateRangeStart && apt.date <= dateRangeEnd;
+    } else if (selectedDate) {
+      matchesDate = apt.date === selectedDate;
+    }
+    
+    // Filtre par statut
     const matchesStatus = statusFilter === 'all' || apt.status === statusFilter;
-    return matchesDate && matchesStatus;
+    
+    // Filtre par patient
+    const matchesPatient = patientFilter === 'all' || apt.patientId === patientFilter;
+    
+    // Filtre par traitement
+    const matchesTreatment = treatmentFilter === 'all' || apt.treatmentId === treatmentFilter;
+    
+    // Recherche textuelle (nom patient ou traitement)
+    let matchesSearch = true;
+    if (searchTerm) {
+      const patientName = getPatientName(apt.patientId).toLowerCase();
+      const treatmentName = getTreatmentName(apt.treatmentId).toLowerCase();
+      matchesSearch = patientName.includes(searchTerm.toLowerCase()) || 
+                     treatmentName.includes(searchTerm.toLowerCase());
+    }
+    
+    return matchesDate && matchesStatus && matchesPatient && matchesTreatment && matchesSearch;
   });
 
   // Utiliser la pagination intelligente pour les rendez-vous filtrés
@@ -52,8 +81,8 @@ const Appointments: React.FC = () => {
     pagination,
     totalItems
   } = usePaginatedData({
-    data: dateFilteredAppointments,
-    searchTerm: '', // Pas de recherche textuelle pour les rendez-vous pour l'instant
+    data: filteredAppointments,
+    searchTerm: '',
     searchFields: [],
     initialPageSize: 10,
     sortKey: 'time',
@@ -198,6 +227,18 @@ const Appointments: React.FC = () => {
         onViewModeChange={setViewMode}
         onDateChange={setSelectedDate}
         onStatusFilterChange={setStatusFilter}
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        patientFilter={patientFilter}
+        onPatientFilterChange={setPatientFilter}
+        treatmentFilter={treatmentFilter}
+        onTreatmentFilterChange={setTreatmentFilter}
+        dateRangeStart={dateRangeStart}
+        onDateRangeStartChange={setDateRangeStart}
+        dateRangeEnd={dateRangeEnd}
+        onDateRangeEndChange={setDateRangeEnd}
+        patients={patients}
+        treatments={treatments}
       />
 
       <div className="space-y-4">
