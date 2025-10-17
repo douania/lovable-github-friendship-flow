@@ -137,58 +137,68 @@ export default function SoinsCatalog() {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">Chargement des soins...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Chargement des soins...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       {/* Debug info */}
       {process.env.NODE_ENV === 'development' && (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-sm">
+        <div className="bg-warning-light border border-warning/20 rounded-lg p-4 text-sm">
           <p><strong>Debug:</strong> {soins.length} soins chargés, {filteredSoins.length} après filtrage</p>
         </div>
       )}
 
       {/* Header with actions */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <div className="relative">
+      <div className="flex items-center justify-between flex-wrap gap-4">
+        <div className="flex items-center space-x-3">
+          <div className="relative group">
             <input
               type="text"
               placeholder="Rechercher un soin..."
-              className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg w-80 focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+              className="input-elegant pl-10 pr-4 w-80 transition-all duration-300 group-hover:shadow-elegant-sm"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground transition-colors group-hover:text-primary" size={18} />
           </div>
           
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className={`flex items-center space-x-2 px-4 py-2 border rounded-lg transition-colors ${
-              showFilters ? 'bg-pink-50 border-pink-300 text-pink-700' : 'border-gray-300 hover:bg-gray-50'
+            className={`flex items-center space-x-2 px-4 py-2.5 border rounded-lg transition-all duration-300 ${
+              showFilters 
+                ? 'bg-primary-light border-primary text-primary shadow-elegant-sm' 
+                : 'border-border hover:bg-muted hover:border-primary/30'
             }`}
           >
             <Filter size={18} />
-            <span>Filtres</span>
+            <span className="font-medium">Filtres</span>
           </button>
         </div>
 
-        <div className="flex items-center space-x-4">
-          <div className="flex items-center space-x-1 border border-gray-300 rounded-lg">
+        <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-1 border border-border rounded-lg p-1 bg-card shadow-elegant-sm">
             <button
               onClick={() => setViewMode('grid')}
-              className={`p-2 ${viewMode === 'grid' ? 'bg-pink-100 text-pink-600' : 'text-gray-600 hover:bg-gray-100'}`}
+              className={`p-2 rounded transition-all duration-200 ${
+                viewMode === 'grid' 
+                  ? 'bg-gradient-to-r from-primary to-accent text-white shadow-sm' 
+                  : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+              }`}
             >
               <Grid size={18} />
             </button>
             <button
               onClick={() => setViewMode('list')}
-              className={`p-2 ${viewMode === 'list' ? 'bg-pink-100 text-pink-600' : 'text-gray-600 hover:bg-gray-100'}`}
+              className={`p-2 rounded transition-all duration-200 ${
+                viewMode === 'list' 
+                  ? 'bg-gradient-to-r from-primary to-accent text-white shadow-sm' 
+                  : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+              }`}
             >
               <List size={18} />
             </button>
@@ -197,7 +207,7 @@ export default function SoinsCatalog() {
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as SortBy)}
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500"
+            className="input-elegant px-4 py-2.5 font-medium cursor-pointer hover:shadow-elegant-sm"
           >
             <option value="name">Trier par nom</option>
             <option value="price">Trier par prix</option>
@@ -207,7 +217,7 @@ export default function SoinsCatalog() {
 
           <button
             onClick={openSoinForm}
-            className="bg-pink-500 hover:bg-pink-600 text-white font-medium py-2 px-4 rounded-lg flex items-center space-x-2 transition-colors"
+            className="btn-primary flex items-center space-x-2"
           >
             <Plus size={18} />
             <span>Nouveau Soin</span>
@@ -217,27 +227,30 @@ export default function SoinsCatalog() {
 
       {/* Filters panel */}
       {showFilters && (
-        <div className="bg-white p-4 border border-gray-200 rounded-lg space-y-4">
-          <h3 className="font-medium text-gray-800">Filtres avancés</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="card-elegant p-6 space-y-4 animate-scale-in border-l-4 border-l-primary">
+          <h3 className="font-semibold text-foreground text-lg flex items-center gap-2">
+            <Filter size={20} className="text-primary" />
+            Filtres avancés
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-foreground mb-2">
                 Fourchette de prix (€)
               </label>
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-3">
                 <input
                   type="number"
                   value={priceRange[0]}
                   onChange={(e) => setPriceRange([parseInt(e.target.value) || 0, priceRange[1]])}
-                  className="w-24 px-3 py-1 border border-gray-300 rounded"
+                  className="input-elegant w-28 text-center"
                   placeholder="Min"
                 />
-                <span>-</span>
+                <span className="text-muted-foreground font-medium">—</span>
                 <input
                   type="number"
                   value={priceRange[1]}
                   onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value) || 1000])}
-                  className="w-24 px-3 py-1 border border-gray-300 rounded"
+                  className="input-elegant w-28 text-center"
                   placeholder="Max"
                 />
               </div>
@@ -247,8 +260,10 @@ export default function SoinsCatalog() {
       )}
 
       {/* Results summary */}
-      <div className="flex items-center justify-between text-sm text-gray-600">
-        <span>{filteredSoins.length} soin(s) trouvé(s)</span>
+      <div className="flex items-center justify-between">
+        <span className="text-sm font-medium text-muted-foreground">
+          <span className="text-primary font-semibold">{filteredSoins.length}</span> soin(s) trouvé(s)
+        </span>
       </div>
 
       {/* Soins grid/list */}
@@ -259,76 +274,104 @@ export default function SoinsCatalog() {
         {filteredSoins.map((soin) => (
           <div
             key={soin.id}
-            className={`bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-all duration-200 ${
-              viewMode === 'list' ? 'flex items-center p-4' : 'overflow-hidden'
+            className={`group card-elegant hover:shadow-elegant-md hover:border-primary/20 ${
+              viewMode === 'list' ? 'flex items-center p-5' : 'overflow-hidden'
             }`}
           >
             {viewMode === 'grid' ? (
               <div className="p-6">
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-800 mb-2">{soin.nom}</h3>
-                    <p className="text-gray-600 text-sm line-clamp-2">{soin.description}</p>
+                    <h3 className="text-xl font-bold text-foreground mb-2 group-hover:text-primary transition-colors">
+                      {soin.nom}
+                    </h3>
+                    <p className="text-muted-foreground text-sm line-clamp-2 leading-relaxed">
+                      {soin.description}
+                    </p>
                   </div>
                 </div>
                 
-                <div className="flex items-center space-x-4 mb-4 text-sm text-gray-500">
-                  <div className="flex items-center space-x-1">
-                    <Clock size={14} />
-                    <span>{soin.duree} min</span>
+                <div className="flex items-center space-x-4 mb-5 pt-4 border-t border-border">
+                  <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                    <div className="p-1.5 bg-primary-light rounded-md">
+                      <Clock size={14} className="text-primary" />
+                    </div>
+                    <span className="font-medium">{soin.duree} min</span>
                   </div>
-                  <div className="flex items-center space-x-1">
-                    <Euro size={14} />
-                    <span className="text-pink-600 font-semibold">{soin.prix} €</span>
+                  <div className="flex items-center space-x-2">
+                    <div className="p-1.5 bg-primary-light rounded-md">
+                      <Euro size={14} className="text-primary" />
+                    </div>
+                    <span className="text-primary font-bold text-lg">{soin.prix} €</span>
                   </div>
                 </div>
 
-                <div className="flex justify-between items-center pt-4 border-t border-gray-100">
+                <div className="flex justify-between items-center pt-4 border-t border-border">
                   <div className="flex space-x-2">
                     <button
                       onClick={() => handleEditSoin(soin)}
-                      className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                      className="p-2.5 text-muted-foreground hover:text-primary hover:bg-primary-light rounded-lg transition-all duration-200 hover:scale-110"
+                      title="Modifier"
                     >
                       <Edit2 size={16} />
                     </button>
                     <button
                       onClick={() => handleDeleteSoin(soin.id)}
-                      className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                      className="p-2.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-all duration-200 hover:scale-110"
+                      title="Supprimer"
                     >
                       <Trash2 size={16} />
                     </button>
                   </div>
-                  <span className={`px-2 py-1 text-xs rounded-full ${
-                    soin.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'
+                  <span className={`badge-elegant ${
+                    soin.isActive 
+                      ? 'bg-success-light text-success border border-success/20' 
+                      : 'bg-muted text-muted-foreground border border-border'
                   }`}>
-                    {soin.isActive ? 'Actif' : 'Inactif'}
+                    {soin.isActive ? '✓ Actif' : 'Inactif'}
                   </span>
                 </div>
               </div>
             ) : (
               <>
                 <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-gray-800">{soin.nom}</h3>
-                  <p className="text-gray-600 text-sm mt-1">{soin.description}</p>
+                  <h3 className="text-lg font-bold text-foreground group-hover:text-primary transition-colors">
+                    {soin.nom}
+                  </h3>
+                  <p className="text-muted-foreground text-sm mt-1 line-clamp-1">
+                    {soin.description}
+                  </p>
                 </div>
                 <div className="flex items-center space-x-6 ml-4">
-                  <div className="text-sm text-gray-500">
-                    <Clock size={14} className="inline mr-1" />
-                    {soin.duree} min
+                  <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                    <div className="p-1.5 bg-primary-light rounded-md">
+                      <Clock size={14} className="text-primary" />
+                    </div>
+                    <span className="font-medium">{soin.duree} min</span>
                   </div>
-                  <div className="text-pink-600 font-semibold">
-                    {soin.prix} €
+                  <div className="flex items-center space-x-2">
+                    <div className="p-1.5 bg-primary-light rounded-md">
+                      <Euro size={14} className="text-primary" />
+                    </div>
+                    <span className="text-primary font-bold text-lg">{soin.prix} €</span>
                   </div>
+                  <span className={`badge-elegant ${
+                    soin.isActive 
+                      ? 'bg-success-light text-success border border-success/20' 
+                      : 'bg-muted text-muted-foreground'
+                  }`}>
+                    {soin.isActive ? '✓ Actif' : 'Inactif'}
+                  </span>
                   <div className="flex space-x-2">
                     <button
                       onClick={() => handleEditSoin(soin)}
-                      className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg"
+                      className="p-2.5 text-muted-foreground hover:text-primary hover:bg-primary-light rounded-lg transition-all duration-200"
                     >
                       <Edit2 size={16} />
                     </button>
                     <button
                       onClick={() => handleDeleteSoin(soin.id)}
-                      className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg"
+                      className="p-2.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-all duration-200"
                     >
                       <Trash2 size={16} />
                     </button>
@@ -341,21 +384,23 @@ export default function SoinsCatalog() {
       </div>
 
       {filteredSoins.length === 0 && !isLoading && (
-        <div className="text-center py-12">
-          <div className="text-gray-400 mb-4">
-            <Search size={48} className="mx-auto" />
+        <div className="text-center py-16 card-elegant animate-fade-in">
+          <div className="mb-6 flex justify-center">
+            <div className="p-6 bg-primary-light rounded-full">
+              <Search size={48} className="text-primary" />
+            </div>
           </div>
-          <h3 className="text-lg font-medium text-gray-600 mb-2">Aucun soin trouvé</h3>
-          <p className="text-gray-500">
+          <h3 className="text-xl font-bold text-foreground mb-2">Aucun soin trouvé</h3>
+          <p className="text-muted-foreground max-w-md mx-auto mb-6">
             {soins.length === 0 ? 
-              "Aucun soin n'est disponible dans la base de données" :
-              "Essayez de modifier vos critères de recherche"
+              "Aucun soin n'est disponible dans la base de données. Créez votre premier soin pour commencer." :
+              "Essayez de modifier vos critères de recherche pour afficher plus de résultats."
             }
           </p>
           {soins.length === 0 && (
             <button
               onClick={openSoinForm}
-              className="mt-4 bg-pink-500 hover:bg-pink-600 text-white font-medium py-2 px-4 rounded-lg"
+              className="btn-primary"
             >
               Créer le premier soin
             </button>
