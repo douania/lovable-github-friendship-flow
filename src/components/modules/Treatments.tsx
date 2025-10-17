@@ -143,10 +143,6 @@ const Treatments: React.FC = () => {
           <h1 className="text-2xl font-bold text-gray-800">Catalogue des Soins</h1>
           <p className="text-gray-600">Gestion des traitements proposés</p>
         </div>
-        <button className="flex items-center space-x-2 bg-gradient-to-r from-pink-500 to-orange-500 text-white px-6 py-3 rounded-xl hover:shadow-lg transition-all">
-          <Plus className="w-5 h-5" />
-          <span>Nouveau Soin</span>
-        </button>
         <button 
           onClick={() => setShowAddModal(true)}
           className="flex items-center space-x-2 bg-gradient-to-r from-pink-500 to-orange-500 text-white px-6 py-3 rounded-xl hover:shadow-lg transition-all"

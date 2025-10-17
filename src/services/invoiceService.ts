@@ -3,6 +3,32 @@ import { supabase } from '../integrations/supabase/client';
 import { Invoice } from '../types';
 
 export const invoiceService = {
+  async generateInvoiceNumber(): Promise<string> {
+    try {
+      const currentYear = new Date().getFullYear();
+      
+      const { data, error } = await supabase
+        .from('invoices')
+        .select('id')
+        .like('id', `FAC-${currentYear}-%`)
+        .order('created_at', { ascending: false })
+        .limit(1);
+      
+      if (error) throw error;
+      
+      let nextNumber = 1;
+      if (data && data.length > 0) {
+        const lastNumber = parseInt(data[0].id.split('-')[2]);
+        nextNumber = lastNumber + 1;
+      }
+      
+      return `FAC-${currentYear}-${String(nextNumber).padStart(3, '0')}`;
+    } catch (error) {
+      console.error('Error generating invoice number:', error);
+      throw error;
+    }
+  },
+
   async getAll(): Promise<Invoice[]> {
     try {
       const { data, error } = await supabase
@@ -113,10 +139,12 @@ export const invoiceService = {
 
   async createInvoice(invoiceData: Omit<Invoice, 'id'>): Promise<Invoice> {
     try {
+      const invoiceNumber = await this.generateInvoiceNumber();
+      
       const { data, error } = await supabase
         .from('invoices')
         .insert({
-          id: crypto.randomUUID(),
+          id: invoiceNumber,
           patient_id: invoiceData.patientId,
           treatment_ids: invoiceData.treatmentIds,
           amount: invoiceData.amount,

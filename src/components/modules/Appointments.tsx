@@ -5,11 +5,13 @@ import { useAppointments } from '../../hooks/useAppointments';
 import { usePatients } from '../../hooks/usePatients';
 import { treatmentService } from '../../services/treatmentService';
 import { productService } from '../../services/productService';
+import { invoiceService } from '../../services/invoiceService';
 import AppointmentForm from '../forms/AppointmentForm';
 import AppointmentFilters from '../appointments/AppointmentFilters';
 import AppointmentsList from '../appointments/AppointmentsList';
 import { usePaginatedData } from '../../hooks/usePaginatedData';
 import PaginationControls from '../ui/PaginationControls';
+import { useToast } from '../../hooks/use-toast';
 
 const Appointments: React.FC = () => {
   const { appointments, loading, error, refetch, updateAppointment, createAppointment } = useAppointments();
@@ -20,6 +22,9 @@ const Appointments: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
+  const [showInvoiceModal, setShowInvoiceModal] = useState(false);
+  const [appointmentForInvoice, setAppointmentForInvoice] = useState<Appointment | null>(null);
+  const { toast } = useToast();
 
   // Charger les traitements au montage
   React.useEffect(() => {
@@ -60,9 +65,14 @@ const Appointments: React.FC = () => {
       if (editingAppointment) {
         await updateAppointment(editingAppointment.id, appointmentData);
         
-        // Si le rendez-vous est marqué comme terminé et qu'il y a des produits consommés
         if (appointmentData.status === 'completed' && appointmentData.consumedProducts && appointmentData.consumedProducts.length > 0) {
           await processConsumedProducts(appointmentData.consumedProducts);
+        }
+        
+        if (appointmentData.status === 'completed') {
+          const fullAppointment = { ...appointmentData, id: editingAppointment.id };
+          setAppointmentForInvoice(fullAppointment as Appointment);
+          setShowInvoiceModal(true);
         }
       } else {
         await createAppointment(appointmentData);
@@ -73,6 +83,11 @@ const Appointments: React.FC = () => {
       refetch();
     } catch (err) {
       console.error('Erreur lors de la sauvegarde du rendez-vous:', err);
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de la sauvegarde du rendez-vous",
+        variant: "destructive"
+      });
     }
   };
 
@@ -118,6 +133,39 @@ const Appointments: React.FC = () => {
   const getTreatmentName = (treatmentId: string) => {
     const treatment = treatments.find(t => t.id === treatmentId);
     return treatment ? treatment.name : 'Soin inconnu';
+  };
+
+  const createInvoiceFromAppointment = async () => {
+    if (!appointmentForInvoice) return;
+    
+    try {
+      const treatment = treatments.find(t => t.id === appointmentForInvoice.treatmentId);
+      const invoiceData = {
+        patientId: appointmentForInvoice.patientId,
+        treatmentIds: [appointmentForInvoice.treatmentId],
+        amount: treatment?.price || 0,
+        status: 'unpaid' as const,
+        paymentMethod: 'cash' as const,
+        createdAt: new Date().toISOString(),
+      };
+      
+      await invoiceService.create(invoiceData);
+      
+      toast({
+        title: "Facture créée",
+        description: "La facture a été créée avec succès",
+      });
+      
+      setShowInvoiceModal(false);
+      setAppointmentForInvoice(null);
+    } catch (err) {
+      console.error('Erreur création facture:', err);
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de la création de la facture",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
@@ -183,6 +231,34 @@ const Appointments: React.FC = () => {
             setEditingAppointment(null);
           }}
         />
+      )}
+
+      {showInvoiceModal && appointmentForInvoice && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 max-w-md">
+            <h3 className="text-xl font-bold mb-4">Créer la facture ?</h3>
+            <p className="text-gray-600 mb-6">
+              Le rendez-vous est terminé. Voulez-vous créer la facture maintenant ?
+            </p>
+            <div className="flex space-x-4">
+              <button 
+                onClick={createInvoiceFromAppointment}
+                className="flex-1 bg-gradient-to-r from-pink-500 to-orange-500 text-white px-4 py-2 rounded-lg hover:shadow-lg transition-all"
+              >
+                Créer la facture
+              </button>
+              <button 
+                onClick={() => {
+                  setShowInvoiceModal(false);
+                  setAppointmentForInvoice(null);
+                }}
+                className="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition-all"
+              >
+                Plus tard
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

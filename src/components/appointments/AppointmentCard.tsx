@@ -1,7 +1,8 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import { Appointment } from '../../types';
+import { invoiceService } from '../../services/invoiceService';
 
 interface AppointmentCardProps {
   appointment: Appointment;
@@ -16,6 +17,25 @@ const AppointmentCard: React.FC<AppointmentCardProps> = ({
   getTreatmentName,
   onUpdateStatus
 }) => {
+  const [hasInvoice, setHasInvoice] = useState(false);
+
+  useEffect(() => {
+    const checkInvoice = async () => {
+      if (appointment.status === 'completed') {
+        try {
+          const invoices = await invoiceService.getByPatient(appointment.patientId);
+          const found = invoices.some(inv => 
+            inv.treatmentIds.includes(appointment.treatmentId)
+          );
+          setHasInvoice(found);
+        } catch (err) {
+          console.error('Error checking invoice:', err);
+        }
+      }
+    };
+    checkInvoice();
+  }, [appointment]);
+
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'completed':
@@ -58,9 +78,16 @@ const AppointmentCard: React.FC<AppointmentCardProps> = ({
             <p className="text-sm text-gray-600">{getTreatmentName(appointment.treatmentId)}</p>
           </div>
         </div>
-        <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(appointment.status)}`}>
-          {getStatusText(appointment.status)}
-        </span>
+        <div className="flex items-center space-x-2">
+          <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(appointment.status)}`}>
+            {getStatusText(appointment.status)}
+          </span>
+          {hasInvoice && (
+            <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
+              ✓ Facture créée
+            </span>
+          )}
+        </div>
       </div>
       
       <div className="flex justify-between items-center">
