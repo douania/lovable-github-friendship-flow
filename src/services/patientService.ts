@@ -1,5 +1,6 @@
 import { supabase } from '../integrations/supabase/client';
 import { Patient } from '../types';
+import { patientSchema } from '../lib/validation';
 
 export const patientService = {
   async getAll(): Promise<Patient[]> {
@@ -71,19 +72,22 @@ export const patientService = {
 
   async create(patientData: Omit<Patient, 'id'>): Promise<Patient> {
     try {
+      // Validate input data
+      const validated = patientSchema.parse({
+        first_name: patientData.firstName,
+        last_name: patientData.lastName,
+        email: patientData.email,
+        phone: patientData.phone,
+        date_of_birth: patientData.dateOfBirth,
+        skin_type: patientData.skinType,
+        medical_history: patientData.medicalHistory,
+        contraindications: patientData.contraindications,
+        last_visit: patientData.lastVisit
+      });
+
       const { data, error } = await supabase
         .from('patients')
-        .insert([{
-          first_name: patientData.firstName,
-          last_name: patientData.lastName,
-          email: patientData.email,
-          phone: patientData.phone,
-          date_of_birth: patientData.dateOfBirth,
-          skin_type: patientData.skinType,
-          medical_history: patientData.medicalHistory,
-          contraindications: patientData.contraindications,
-          last_visit: patientData.lastVisit || null
-        }])
+        .insert([validated])
         .select()
         .single();
 
@@ -110,19 +114,22 @@ export const patientService = {
 
   async update(id: string, patientData: Omit<Patient, 'id'>): Promise<Patient> {
     try {
+      // Validate input data
+      const validated = patientSchema.parse({
+        first_name: patientData.firstName,
+        last_name: patientData.lastName,
+        email: patientData.email,
+        phone: patientData.phone,
+        date_of_birth: patientData.dateOfBirth,
+        skin_type: patientData.skinType,
+        medical_history: patientData.medicalHistory,
+        contraindications: patientData.contraindications,
+        last_visit: patientData.lastVisit
+      });
+
       const { data, error } = await supabase
         .from('patients')
-        .update({
-          first_name: patientData.firstName,
-          last_name: patientData.lastName,
-          email: patientData.email,
-          phone: patientData.phone,
-          date_of_birth: patientData.dateOfBirth,
-          skin_type: patientData.skinType,
-          medical_history: patientData.medicalHistory,
-          contraindications: patientData.contraindications,
-          last_visit: patientData.lastVisit || null
-        })
+        .update(validated)
         .eq('id', id)
         .select()
         .single();
