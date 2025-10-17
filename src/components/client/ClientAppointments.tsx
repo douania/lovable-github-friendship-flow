@@ -1,10 +1,11 @@
 
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, User } from 'lucide-react';
+import { Calendar, Clock, User, X } from 'lucide-react';
 import { useClientAuth } from '../../hooks/useClientAuth';
 import { appointmentService } from '../../services/appointmentService';
 import { Appointment } from '../../types';
 import AppointmentBooking from './AppointmentBooking';
+import { useToast } from '../../hooks/use-toast';
 
 const ClientAppointments: React.FC = () => {
   const [showBooking, setShowBooking] = useState(false);
@@ -12,6 +13,8 @@ const ClientAppointments: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { client } = useClientAuth();
+  const { toast } = useToast();
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (client?.patientId) {
@@ -64,6 +67,50 @@ const ClientAppointments: React.FC = () => {
         return 'Annulé';
       default:
         return status;
+    }
+  };
+
+  const handleCancelAppointment = async (appointmentId: string, appointmentDate: string, appointmentTime: string) => {
+    const appointmentDateTime = new Date(`${appointmentDate}T${appointmentTime}`);
+    const now = new Date();
+    const hoursUntilAppointment = (appointmentDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
+
+    if (hoursUntilAppointment < 24) {
+      toast({
+        title: "Annulation impossible",
+        description: "Vous devez annuler au moins 24h avant le rendez-vous",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (window.confirm('Êtes-vous sûr de vouloir annuler ce rendez-vous ?')) {
+      setCancellingId(appointmentId);
+      try {
+        const appointment = appointments.find(a => a.id === appointmentId);
+        if (appointment) {
+          await appointmentService.update(appointmentId, {
+            ...appointment,
+            status: 'cancelled'
+          });
+          
+          await loadAppointments();
+          
+          toast({
+            title: "Rendez-vous annulé",
+            description: "Votre rendez-vous a été annulé avec succès"
+          });
+        }
+      } catch (err) {
+        console.error('Erreur lors de l\'annulation:', err);
+        toast({
+          title: "Erreur",
+          description: "Impossible d'annuler le rendez-vous",
+          variant: "destructive"
+        });
+      } finally {
+        setCancellingId(null);
+      }
     }
   };
 
@@ -147,11 +194,21 @@ const ClientAppointments: React.FC = () => {
                   </div>
                   
                   <div className="flex space-x-2 ml-6">
-                    <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">
-                      Modifier
-                    </button>
-                    <button className="text-red-600 hover:text-red-800 text-sm font-medium">
-                      Annuler
+                    <button
+                      onClick={() => handleCancelAppointment(appointment.id, appointment.date, appointment.time)}
+                      disabled={cancellingId === appointment.id || appointment.status === 'cancelled'}
+                      className={`flex items-center space-x-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        appointment.status === 'cancelled' 
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                          : 'bg-red-50 text-red-600 hover:bg-red-100'
+                      }`}
+                    >
+                      {cancellingId === appointment.id ? (
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
+                      ) : (
+                        <X className="h-4 w-4" />
+                      )}
+                      <span>{appointment.status === 'cancelled' ? 'Annulé' : 'Annuler'}</span>
                     </button>
                   </div>
                 </div>
