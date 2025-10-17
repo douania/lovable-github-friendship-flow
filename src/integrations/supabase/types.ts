@@ -653,6 +653,66 @@ export type Database = {
           },
         ]
       }
+      patient_photos: {
+        Row: {
+          consultation_id: string | null
+          created_at: string | null
+          created_by: string | null
+          id: string
+          is_visible_to_client: boolean | null
+          notes: string | null
+          patient_id: string
+          photo_date: string
+          photo_type: string
+          storage_path: string
+          treatment_area: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          consultation_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_visible_to_client?: boolean | null
+          notes?: string | null
+          patient_id: string
+          photo_date?: string
+          photo_type: string
+          storage_path: string
+          treatment_area?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          consultation_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_visible_to_client?: boolean | null
+          notes?: string | null
+          patient_id?: string
+          photo_date?: string
+          photo_type?: string
+          storage_path?: string
+          treatment_area?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_photos_consultation_id_fkey"
+            columns: ["consultation_id"]
+            isOneToOne: false
+            referencedRelation: "consultations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_photos_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       patients: {
         Row: {
           contraindications: string[] | null

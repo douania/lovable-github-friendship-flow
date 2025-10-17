@@ -1,12 +1,13 @@
 
 import React, { useState } from 'react';
-import { LogOut, Home, Calendar, History, FileText, User } from 'lucide-react';
+import { LogOut, Home, Calendar, History, FileText, User, Image } from 'lucide-react';
 import { useClientAuth } from '../../hooks/useClientAuth';
 import ClientDashboard from './ClientDashboard';
 import ClientAppointments from './ClientAppointments';
 import ClientHistory from './ClientHistory';
 import ClientInvoices from './ClientInvoices';
 import ClientProfile from './ClientProfile';
+import ClientPhotoGallery from './ClientPhotoGallery';
 
 const ClientPortal: React.FC = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -17,6 +18,7 @@ const ClientPortal: React.FC = () => {
     { id: 'appointments', name: 'Mes RDV', icon: Calendar },
     { id: 'history', name: 'Historique', icon: History },
     { id: 'invoices', name: 'Factures', icon: FileText },
+    { id: 'photos', name: 'Mes Photos', icon: Image },
     { id: 'profile', name: 'Mon Profil', icon: User },
   ];
 
@@ -34,6 +36,8 @@ const ClientPortal: React.FC = () => {
         return <ClientHistory />;
       case 'invoices':
         return <ClientInvoices />;
+      case 'photos':
+        return <ClientPhotoGallery />;
       case 'profile':
         return <ClientProfile />;
       default:
