@@ -270,7 +270,7 @@ const Invoices: React.FC = () => {
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="text-sm font-semibold text-gray-900">{invoice.amount} €</span>
+                    <span className="text-sm font-semibold text-gray-900">{invoice.amount} FCFA</span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     {getStatusBadge(invoice.status)}

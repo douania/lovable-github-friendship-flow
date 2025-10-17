@@ -211,11 +211,11 @@ export default function ForfaitsCatalog({ onForfaitSelect }: ForfaitsCatalogProp
                     <div>
                       {forfait.prixTotal > forfait.prixReduit && (
                         <div className="text-sm text-gray-500 line-through">
-                          {forfait.prixTotal} €
+                          {forfait.prixTotal} FCFA
                         </div>
                       )}
                       <div className="text-2xl font-bold text-pink-600">
-                        {forfait.prixReduit} €
+                        {forfait.prixReduit} FCFA
                       </div>
                     </div>
                     {savings > 0 && (
@@ -224,7 +224,7 @@ export default function ForfaitsCatalog({ onForfaitSelect }: ForfaitsCatalogProp
                           Économie
                         </div>
                         <div className="text-lg font-bold text-green-600">
-                          {savings} €
+                          {savings} FCFA
                         </div>
                       </div>
                     )}

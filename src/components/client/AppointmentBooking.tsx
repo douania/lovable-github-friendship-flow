@@ -226,7 +226,7 @@ const AppointmentBooking: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                       {treatment.duration} min
                     </div>
                     <div className="text-lg font-bold text-pink-600">
-                      {treatment.price}€
+                      {treatment.price} FCFA
                     </div>
                   </div>
                 </div>
@@ -391,7 +391,7 @@ const AppointmentBooking: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                 </div>
                 <div className="flex justify-between border-t border-gray-200 pt-2 mt-2">
                   <span className="text-gray-600">Prix :</span>
-                  <span className="font-bold text-lg">{selectedTreatment?.price}€</span>
+                  <span className="font-bold text-lg">{selectedTreatment?.price} FCFA</span>
                 </div>
               </div>
             </div>

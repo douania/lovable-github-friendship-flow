@@ -67,7 +67,7 @@ const InvoiceForm: React.FC<InvoiceFormProps> = ({
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Montant (€)
+              Montant (FCFA)
             </label>
             <input
               type="number"

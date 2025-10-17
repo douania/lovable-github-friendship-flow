@@ -342,7 +342,7 @@ export default function SoinsCatalogHierarchical() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
               <label className="block text-sm font-medium text-foreground mb-2">
-                Fourchette de prix (€)
+                Fourchette de prix (FCFA)
               </label>
               <div className="flex items-center gap-3">
                 <input

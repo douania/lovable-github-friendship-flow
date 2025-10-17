@@ -54,7 +54,7 @@ export function SoinCard({ soin, viewMode, showAppareilZone = false, onEdit, onD
           </div>
           <div className="flex items-center gap-1.5 font-semibold text-primary">
             <Euro className="w-4 h-4" />
-            <span>{soin.prix}€</span>
+            <span>{soin.prix} FCFA</span>
           </div>
         </div>
 
@@ -118,7 +118,7 @@ export function SoinCard({ soin, viewMode, showAppareilZone = false, onEdit, onD
           </div>
           <div className="flex items-center gap-1.5 text-sm font-semibold text-primary">
             <Euro className="w-4 h-4" />
-            <span>{soin.prix}€</span>
+            <span>{soin.prix} FCFA</span>
           </div>
           {soin.isActive && (
             <span className="px-2 py-1 rounded-lg bg-success-light text-xs font-medium text-success flex items-center gap-1">

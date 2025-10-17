@@ -85,7 +85,7 @@ const ClientHistory: React.FC = () => {
         
         <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
           <div className="text-center">
-            <p className="text-3xl font-bold text-gray-900">{totalSpent}€</p>
+            <p className="text-3xl font-bold text-gray-900">{totalSpent} FCFA</p>
             <p className="text-sm text-gray-600">Total dépensé</p>
           </div>
         </div>
@@ -155,7 +155,7 @@ const ClientHistory: React.FC = () => {
                     </div>
                     
                     <div className="text-right">
-                      <p className="text-lg font-semibold text-gray-900">{treatment.cost}€</p>
+                      <p className="text-lg font-semibold text-gray-900">{treatment.cost} FCFA</p>
                     </div>
                   </div>
                 </div>

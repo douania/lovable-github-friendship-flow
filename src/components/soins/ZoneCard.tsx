@@ -40,11 +40,11 @@ export function ZoneCard({ zone, soinsCount, priceRange, onClick }: ZoneCardProp
         </div>
         {priceRange && (
           <div className="text-sm text-muted-foreground">
-            <span className="font-medium text-foreground">{priceRange.min}€</span>
+            <span className="font-medium text-foreground">{priceRange.min} FCFA</span>
             {priceRange.min !== priceRange.max && (
               <>
                 {' - '}
-                <span className="font-medium text-foreground">{priceRange.max}€</span>
+                <span className="font-medium text-foreground">{priceRange.max} FCFA</span>
               </>
             )}
           </div>

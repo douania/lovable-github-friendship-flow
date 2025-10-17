@@ -156,7 +156,7 @@ const ClientDashboard: React.FC = () => {
               </div>
             </div>
             <div className="text-right">
-              <p className="font-medium text-gray-900">85,00 €</p>
+              <p className="font-medium text-gray-900">85 000 FCFA</p>
               <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
                 Payée
               </span>
@@ -172,7 +172,7 @@ const ClientDashboard: React.FC = () => {
               </div>
             </div>
             <div className="text-right">
-              <p className="font-medium text-gray-900">120,00 €</p>
+              <p className="font-medium text-gray-900">120 000 FCFA</p>
               <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
                 Payée
               </span>

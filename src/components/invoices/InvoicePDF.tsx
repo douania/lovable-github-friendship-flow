@@ -44,13 +44,13 @@ export const InvoicePDF: React.FC<InvoicePDFProps> = ({ invoice, patient }) => {
         <tbody>
           <tr className="border-b">
             <td className="py-3 px-4 text-gray-800">Prestations médicales</td>
-            <td className="text-right py-3 px-4 text-gray-800">{invoice.amount} €</td>
+            <td className="text-right py-3 px-4 text-gray-800">{invoice.amount} FCFA</td>
           </tr>
         </tbody>
         <tfoot>
           <tr className="bg-gray-50">
             <td className="py-3 px-4 font-bold text-gray-800">Total TTC</td>
-            <td className="text-right py-3 px-4 font-bold text-xl text-gray-800">{invoice.amount} €</td>
+            <td className="text-right py-3 px-4 font-bold text-xl text-gray-800">{invoice.amount} FCFA</td>
           </tr>
         </tfoot>
       </table>

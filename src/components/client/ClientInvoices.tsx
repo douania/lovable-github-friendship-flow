@@ -87,14 +87,14 @@ const ClientInvoices: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
           <div className="text-center">
-            <p className="text-3xl font-bold text-green-600">{totalAmount.toFixed(2)}€</p>
+            <p className="text-3xl font-bold text-green-600">{totalAmount.toFixed(0)} FCFA</p>
             <p className="text-sm text-gray-600">Total payé</p>
           </div>
         </div>
         
         <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
           <div className="text-center">
-            <p className="text-3xl font-bold text-yellow-600">{pendingAmount.toFixed(2)}€</p>
+            <p className="text-3xl font-bold text-yellow-600">{pendingAmount.toFixed(0)} FCFA</p>
             <p className="text-sm text-gray-600">En attente</p>
           </div>
         </div>
@@ -174,7 +174,7 @@ const ClientInvoices: React.FC = () => {
                            invoice.paymentMethod === 'mobile_money' ? 'Mobile Money' : 'N/A'}</p>
                       </div>
                       <div>
-                        <p><strong>Montant:</strong> <span className="font-semibold">{invoice.amount.toFixed(2)}€</span></p>
+                        <p><strong>Montant:</strong> <span className="font-semibold">{invoice.amount.toFixed(0)} FCFA</span></p>
                       </div>
                     </div>
                   </div>
