@@ -228,3 +228,14 @@ export interface CostAnalysis {
   // Relations
   soin?: Soin;
 }
+
+// Types pour la navigation hiérarchique du catalogue de soins
+export type ViewLevel = 'appareils' | 'zones' | 'soins' | 'all';
+
+export interface NavigationState {
+  level: ViewLevel;
+  selectedAppareilId?: string;
+  selectedZoneId?: string;
+  selectedAppareilName?: string;
+  selectedZoneName?: string;
+}
