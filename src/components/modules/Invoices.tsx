@@ -5,6 +5,7 @@ import { invoiceService } from '../../services/invoiceService';
 import { patientService } from '../../services/patientService';
 import InvoiceForm from '../forms/InvoiceForm';
 import { Plus, Edit, Trash2, FileText, AlertCircle } from 'lucide-react';
+import { useToast } from '../../hooks/use-toast';
 
 interface InvoiceWithPatient extends Invoice {
   patient?: Patient;
@@ -17,6 +18,7 @@ const Invoices: React.FC = () => {
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | undefined>(undefined);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     fetchInvoices();
@@ -28,7 +30,6 @@ const Invoices: React.FC = () => {
     setError(null);
     try {
       const invoicesData = await invoiceService.getAllInvoices();
-      // Fetch patient data for each invoice
       const invoicesWithPatient = await Promise.all(
         invoicesData.map(async (invoice: Invoice) => {
           const patient = await patientService.getPatientById(invoice.patientId);
@@ -37,7 +38,11 @@ const Invoices: React.FC = () => {
       );
       setInvoices(invoicesWithPatient);
     } catch (err: any) {
-      setError(err.message || 'Erreur lors de la récupération des factures');
+      toast({
+        title: "Erreur",
+        description: "Erreur lors du chargement des factures",
+        variant: "destructive"
+      });
     } finally {
       setLoading(false);
     }
@@ -48,7 +53,11 @@ const Invoices: React.FC = () => {
       const patientsData = await patientService.getAllPatients();
       setPatients(patientsData);
     } catch (err: any) {
-      setError(err.message || 'Erreur lors de la récupération des patients');
+      toast({
+        title: "Erreur",
+        description: "Erreur lors du chargement des patients",
+        variant: "destructive"
+      });
     }
   };
 
@@ -73,8 +82,16 @@ const Invoices: React.FC = () => {
       try {
         await invoiceService.deleteInvoice(id);
         setInvoices(invoices.filter((invoice) => invoice.id !== id));
+        toast({
+          title: "Succès",
+          description: "Facture supprimée avec succès"
+        });
       } catch (err: any) {
-        setError(err.message || 'Erreur lors de la suppression de la facture');
+        toast({
+          title: "Erreur",
+          description: "Erreur lors de la suppression de la facture",
+          variant: "destructive"
+        });
       } finally {
         setLoading(false);
       }
@@ -86,22 +103,31 @@ const Invoices: React.FC = () => {
     setError(null);
     try {
       if (selectedInvoice) {
-        // Update existing invoice
         const updatedInvoice = await invoiceService.updateInvoice(selectedInvoice.id, invoiceData);
         const patient = await patientService.getPatientById(updatedInvoice.patientId);
         setInvoices(
           invoices.map((invoice) => (invoice.id === updatedInvoice.id ? { ...updatedInvoice, patient: patient || undefined } : invoice))
         );
+        toast({
+          title: "Succès",
+          description: "Facture modifiée avec succès"
+        });
       } else {
-        // Create new invoice
         const newInvoice = await invoiceService.createInvoice(invoiceData);
-        // Fetch patient data for the new invoice
         const patient = await patientService.getPatientById(newInvoice.patientId);
         setInvoices([...invoices, { ...newInvoice, patient: patient || undefined }]);
+        toast({
+          title: "Succès",
+          description: "Facture créée avec succès"
+        });
       }
       closeForm();
     } catch (err: any) {
-      setError(err.message || 'Erreur lors de la sauvegarde de la facture');
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de la sauvegarde de la facture",
+        variant: "destructive"
+      });
     } finally {
       setLoading(false);
     }

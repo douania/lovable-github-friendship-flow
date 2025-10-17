@@ -3,6 +3,7 @@ import { Search, Plus, Edit, Star, Clock, DollarSign } from 'lucide-react';
 import { Treatment } from '../../types';
 import { treatmentService } from '../../services/treatmentService';
 import TreatmentForm from '../forms/TreatmentForm';
+import { useToast } from '../../hooks/use-toast';
 
 const Treatments: React.FC = () => {
   const [treatments, setTreatments] = useState<Treatment[]>([]);
@@ -12,6 +13,7 @@ const Treatments: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingTreatment, setEditingTreatment] = useState<Treatment | null>(null);
+  const { toast } = useToast();
 
   // Charger les traitements au montage du composant
   React.useEffect(() => {
@@ -26,7 +28,11 @@ const Treatments: React.FC = () => {
       setTreatments(data);
     } catch (err) {
       console.error('Erreur lors du chargement des traitements:', err);
-      setError('Erreur lors du chargement des traitements. Vérifiez votre connexion Supabase.');
+      toast({
+        title: "Erreur",
+        description: "Erreur lors du chargement des traitements",
+        variant: "destructive"
+      });
     } finally {
       setLoading(false);
     }
@@ -46,22 +52,32 @@ const Treatments: React.FC = () => {
       setError(null);
       
       if (editingTreatment) {
-        // Mise à jour d'un traitement existant
         const updatedTreatment = await treatmentService.update(editingTreatment.id, treatmentData);
         setTreatments(prev => prev.map(t => 
           t.id === editingTreatment.id ? updatedTreatment : t
         ));
+        toast({
+          title: "Succès",
+          description: "Soin modifié avec succès"
+        });
       } else {
-        // Création d'un nouveau traitement
         const newTreatment = await treatmentService.create(treatmentData);
         setTreatments(prev => [newTreatment, ...prev]);
+        toast({
+          title: "Succès",
+          description: "Soin créé avec succès"
+        });
       }
       
       setShowAddModal(false);
       setEditingTreatment(null);
     } catch (err) {
       console.error('Erreur lors de la sauvegarde du traitement:', err);
-      setError('Erreur lors de la sauvegarde. Veuillez réessayer.');
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de la sauvegarde du soin",
+        variant: "destructive"
+      });
     }
   };
 

@@ -5,6 +5,7 @@ import { productService } from '../../services/productService';
 import ProductForm from '../forms/ProductForm';
 import { usePaginatedData } from '../../hooks/usePaginatedData';
 import PaginationControls from '../ui/PaginationControls';
+import { useToast } from '../../hooks/use-toast';
 
 const Inventory: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -14,6 +15,7 @@ const Inventory: React.FC = () => {
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const { toast } = useToast();
 
   // Charger les produits depuis Supabase
   useEffect(() => {
@@ -28,7 +30,11 @@ const Inventory: React.FC = () => {
       setProducts(data);
     } catch (err) {
       console.error('Erreur lors du chargement des produits:', err);
-      setError('Erreur lors du chargement des produits. Vérifiez votre connexion Supabase.');
+      toast({
+        title: "Erreur",
+        description: "Erreur lors du chargement des produits",
+        variant: "destructive"
+      });
     } finally {
       setLoading(false);
     }
@@ -58,22 +64,32 @@ const Inventory: React.FC = () => {
       setError(null);
       
       if (editingProduct) {
-        // Mise à jour d'un produit existant
         const updatedProduct = await productService.update(editingProduct.id, productData);
         setProducts(prev => prev.map(p => 
           p.id === editingProduct.id ? updatedProduct : p
         ));
+        toast({
+          title: "Succès",
+          description: "Produit modifié avec succès"
+        });
       } else {
-        // Création d'un nouveau produit
         const newProduct = await productService.create(productData);
         setProducts(prev => [newProduct, ...prev]);
+        toast({
+          title: "Succès",
+          description: "Produit créé avec succès"
+        });
       }
       
       setShowAddModal(false);
       setEditingProduct(null);
     } catch (err) {
       console.error('Erreur lors de la sauvegarde du produit:', err);
-      setError('Erreur lors de la sauvegarde. Veuillez réessayer.');
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de la sauvegarde du produit",
+        variant: "destructive"
+      });
     }
   };
 

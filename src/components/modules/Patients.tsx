@@ -5,6 +5,7 @@ import { patientService } from '../../services/patientService';
 import PatientForm from '../forms/PatientForm';
 import { usePaginatedData } from '../../hooks/usePaginatedData';
 import PaginationControls from '../ui/PaginationControls';
+import { useToast } from '../../hooks/use-toast';
 
 const Patients: React.FC = () => {
   const [patients, setPatients] = useState<Patient[]>([]);
@@ -14,6 +15,7 @@ const Patients: React.FC = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+  const { toast } = useToast();
 
   // Utiliser la pagination simple et stable
   const {
@@ -41,7 +43,11 @@ const Patients: React.FC = () => {
       setPatients(data);
     } catch (err) {
       console.error('Erreur lors du chargement des patients:', err);
-      setError('Erreur lors du chargement des patients. Vérifiez votre connexion Supabase.');
+      toast({
+        title: "Erreur",
+        description: "Erreur lors du chargement des patients",
+        variant: "destructive"
+      });
     } finally {
       setLoading(false);
     }
@@ -52,22 +58,32 @@ const Patients: React.FC = () => {
       setError(null);
       
       if (editingPatient) {
-        // Mise à jour d'un patient existant
         const updatedPatient = await patientService.update(editingPatient.id, patientData);
         setPatients(prev => prev.map(p => 
           p.id === editingPatient.id ? updatedPatient : p
         ));
+        toast({
+          title: "Succès",
+          description: "Patient modifié avec succès"
+        });
       } else {
-        // Création d'un nouveau patient
         const newPatient = await patientService.create(patientData);
         setPatients(prev => [newPatient, ...prev]);
+        toast({
+          title: "Succès",
+          description: "Patient créé avec succès"
+        });
       }
       
       setShowAddModal(false);
       setEditingPatient(null);
     } catch (err) {
       console.error('Erreur lors de la sauvegarde du patient:', err);
-      setError('Erreur lors de la sauvegarde. Veuillez réessayer.');
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de la sauvegarde du patient",
+        variant: "destructive"
+      });
     }
   };
 
@@ -86,9 +102,17 @@ const Patients: React.FC = () => {
       await patientService.delete(patientId);
       setPatients(prev => prev.filter(p => p.id !== patientId));
       setSelectedPatient(null);
+      toast({
+        title: "Succès",
+        description: "Patient supprimé avec succès"
+      });
     } catch (err) {
       console.error('Erreur lors de la suppression du patient:', err);
-      setError('Erreur lors de la suppression. Veuillez réessayer.');
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de la suppression du patient",
+        variant: "destructive"
+      });
     }
   };
 
