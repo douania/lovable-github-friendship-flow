@@ -70,7 +70,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSave, onCancel }) 
                   onChange={handleInputChange}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
                   required
-                  placeholder="Ex: Seringue 1ml"
+                  placeholder="Ex: Botox 100U, Acide Hyaluronique 1ml"
                 />
               </div>
 
@@ -86,11 +86,16 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSave, onCancel }) 
                   required
                 >
                   <option value="">Sélectionner une catégorie</option>
-                  <option value="Consommable">Consommable</option>
+                  <option value="Injectable">Injectable (Botox, Acide hyaluronique)</option>
+                  <option value="Filler">Produits de comblement</option>
+                  <option value="Mésothérapie">Mésothérapie</option>
+                  <option value="Peeling">Peeling & Exfoliants</option>
+                  <option value="Laser">Consommables Laser</option>
                   <option value="Cosmétique">Cosmétique</option>
                   <option value="Médicament">Médicament</option>
+                  <option value="Consommable">Consommable médical</option>
+                  <option value="Stérile">Matériel stérile</option>
                   <option value="Équipement">Équipement</option>
-                  <option value="Matériel">Matériel</option>
                 </select>
               </div>
 
@@ -106,13 +111,17 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSave, onCancel }) 
                   required
                 >
                   <option value="unité">Unité</option>
+                  <option value="U">Unités (U) - Botox</option>
                   <option value="ml">Millilitre (ml)</option>
                   <option value="mg">Milligramme (mg)</option>
                   <option value="g">Gramme (g)</option>
-                  <option value="boîte">Boîte</option>
+                  <option value="seringue">Seringue</option>
                   <option value="flacon">Flacon</option>
                   <option value="tube">Tube</option>
                   <option value="ampoule">Ampoule</option>
+                  <option value="applicateur">Applicateur</option>
+                  <option value="canule">Canule</option>
+                  <option value="aiguille">Aiguille</option>
                 </select>
               </div>
 
@@ -126,10 +135,24 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSave, onCancel }) 
                   onChange={handleInputChange}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
                 >
-                  <option value="fixed">Quantité fixe</option>
-                  <option value="variable">Variable selon facteurs</option>
-                  <option value="zone_based">Selon zone de traitement</option>
+                  <option value="fixed">Quantité fixe (ex: matériel stérile)</option>
+                  <option value="variable">Variable selon facteurs (ex: Botox selon zone)</option>
+                  <option value="zone_based">Selon zone de traitement (ex: fillers)</option>
                 </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Date de dernière réception *
+                </label>
+                <input
+                  type="date"
+                  name="lastRestocked"
+                  value={formData.lastRestocked}
+                  onChange={handleInputChange}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                  required
+                />
               </div>
             </div>
           </div>
@@ -171,7 +194,10 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSave, onCancel }) 
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Quantité de base/séance
+                  <span className="flex items-center gap-1">
+                    Unités de base/séance
+                    <span className="text-xs text-gray-500">(ex: 20U Botox front)</span>
+                  </span>
                 </label>
                 <input
                   type="number"
@@ -181,6 +207,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSave, onCancel }) 
                   step="0.1"
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
                   min="0"
+                  placeholder="Ex: 20 pour Botox, 1 pour filler"
                 />
               </div>
 
@@ -215,7 +242,10 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSave, onCancel }) 
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Volume par unité (ml)
+                  <span className="flex items-center gap-1">
+                    Volume par unité
+                    <span className="text-xs text-gray-500">(ml pour injectables)</span>
+                  </span>
                 </label>
                 <input
                   type="number"
@@ -225,6 +255,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSave, onCancel }) 
                   step="0.1"
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
                   min="0"
+                  placeholder="Ex: 1.0 pour seringue 1ml"
                 />
               </div>
             </div>
@@ -265,7 +296,10 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSave, onCancel }) 
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Concentration
+                  <span className="flex items-center gap-1">
+                    Concentration
+                    <span className="text-xs text-gray-500">(Importante pour injectables)</span>
+                  </span>
                 </label>
                 <input
                   type="text"
@@ -273,7 +307,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSave, onCancel }) 
                   value={formData.concentration}
                   onChange={handleInputChange}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-                  placeholder="Ex: 100U/vial, 20mg/ml"
+                  placeholder="Ex: 100U/flacon, 20mg/ml, 24mg/ml"
                 />
               </div>
 
@@ -288,11 +322,14 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSave, onCancel }) 
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
                 >
                   <option value="">Sélectionner</option>
-                  <option value="injection">Injection</option>
-                  <option value="topique">Topique</option>
-                  <option value="oral">Oral</option>
-                  <option value="inhalation">Inhalation</option>
-                  <option value="usage_externe">Usage externe</option>
+                  <option value="injection_intramusculaire">Injection intramusculaire</option>
+                  <option value="injection_sous_cutanee">Injection sous-cutanée</option>
+                  <option value="injection_intradermique">Injection intradermique</option>
+                  <option value="topique">Application topique</option>
+                  <option value="mesotherapie">Mésothérapie</option>
+                  <option value="peeling">Peeling</option>
+                  <option value="oral">Voie orale</option>
+                  <option value="usage_externe">Usage externe uniquement</option>
                 </select>
               </div>
 
@@ -333,7 +370,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ product, onSave, onCancel }) 
                 onChange={handleInputChange}
                 rows={3}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-                placeholder="Ex: Réfrigéré 2-8°C, À l'abri de la lumière"
+                placeholder="Ex: Réfrigéré 2-8°C, À l'abri de la lumière, Conservation après ouverture: 6h"
               />
             </div>
           </div>
