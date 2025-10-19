@@ -17,35 +17,7 @@ interface ConsultationTemplatesProps {
 }
 
 export function ConsultationTemplates({ onSelectTemplate }: ConsultationTemplatesProps) {
-  const [templates, setTemplates] = useState<Template[]>([
-    {
-      id: '1',
-      name: 'Consultation initiale',
-      description: 'Première consultation avec analyse complète',
-      category: 'Standard',
-      notes: 'Antécédents médicaux\nContre-indications\nObjectifs du patient\nPlan de traitement recommandé',
-      isFavorite: true,
-      usageCount: 45
-    },
-    {
-      id: '2',
-      name: 'Suivi post-traitement',
-      description: 'Consultation de suivi après un soin',
-      category: 'Suivi',
-      notes: 'Effets observés\nSatisfaction patient\nEffets secondaires\nProchaines étapes',
-      isFavorite: false,
-      usageCount: 28
-    },
-    {
-      id: '3',
-      name: 'Consultation express',
-      description: 'Consultation rapide pour renouvellement',
-      category: 'Express',
-      notes: 'État actuel\nRenouvellement traitement\nProchain RDV',
-      isFavorite: true,
-      usageCount: 67
-    }
-  ]);
+  const [templates, setTemplates] = useState<Template[]>([]);
 
   const [isCreating, setIsCreating] = useState(false);
 

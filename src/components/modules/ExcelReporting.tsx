@@ -124,22 +124,12 @@ const ExcelReporting: React.FC = () => {
       'Date': new Date(appointment.date).toLocaleDateString('fr-FR'),
       'Patient ID': appointment.patientId,
       'Traitement ID': appointment.treatmentId,
-      'Montant estimé': '50000', // Valeur exemple
-      'Mode paiement': 'Espèces', // Valeur exemple
-      'Statut': 'Payé'
+      'Montant estimé': '0', // À calculer depuis la base de données
+      'Mode paiement': 'N/A',
+      'Statut': appointment.status
     }));
     
-    // Ajouter un résumé à la fin
-    const summary = [{
-      'Date': '--- RÉSUMÉ ---',
-      'Patient ID': '',
-      'Traitement ID': '',
-      'Montant estimé': (filteredAppointments.length * 50000).toLocaleString(),
-      'Mode paiement': `${filteredAppointments.length} séances`,
-      'Statut': 'TOTAL'
-    }];
-    
-    generateCSV([...revenueData, ...summary], `rapport_revenus_${dateRange.start}_${dateRange.end}`);
+    generateCSV(revenueData, `rapport_revenus_${dateRange.start}_${dateRange.end}`);
   };
 
   const generateInventoryReport = () => {
@@ -157,25 +147,8 @@ const ExcelReporting: React.FC = () => {
       'Valeur stock': (product.quantity * product.unitPrice).toLocaleString() + ' FCFA'
     }));
     
-    // Ajouter statistiques
-    const totalValue = products.reduce((sum, p) => sum + (p.quantity * p.unitPrice), 0);
-    const lowStockCount = products.filter(p => p.quantity <= p.minQuantity).length;
     
-    const summary = [{
-      'Nom produit': '--- STATISTIQUES ---',
-      'Catégorie': '',
-      'Stock actuel': products.length.toString(),
-      'Stock minimum': lowStockCount.toString(),
-      'Prix unitaire': '',
-      'Unité': 'produits total',
-      'Fournisseur': 'produits en stock faible',
-      'Date expiration': '',
-      'Dernier réapprovisionnement': '',
-      'Statut stock': 'RÉSUMÉ',
-      'Valeur stock': totalValue.toLocaleString() + ' FCFA TOTAL'
-    }];
-    
-    generateCSV([...data, ...summary], 'rapport_stock');
+    generateCSV(data, 'rapport_stock');
   };
 
   const handleGenerateReport = async () => {
