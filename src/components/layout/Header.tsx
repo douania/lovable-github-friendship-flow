@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Menu, LogOut, User, Settings, ExternalLink } from 'lucide-react';
+import { Menu, LogOut, User, ExternalLink } from 'lucide-react';
 import NotificationCenter from '../notifications/NotificationCenter';
 import { supabase } from '../../integrations/supabase/client';
 
@@ -24,49 +24,43 @@ const Header: React.FC<HeaderProps> = ({ user, onToggleSidebar }) => {
   };
 
   return (
-    <header className="bg-white shadow-sm border-b border-gray-200 px-4 py-3">
+    <header className="bg-card shadow-elegant-sm border-b border-border px-6 py-3">
       <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center gap-4">
           <button
             onClick={onToggleSidebar}
-            className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+            className="p-2 rounded-lg hover:bg-primary-light hover:text-primary transition-all duration-200"
+            aria-label="Toggle sidebar"
           >
-            <Menu className="w-5 h-5 text-gray-600" />
+            <Menu className="w-5 h-5" />
           </button>
-          <h1 className="text-xl font-semibold text-gray-800">
+          <h1 className="text-xl font-semibold text-foreground hidden sm:block">
             Institut de Beauté
           </h1>
         </div>
 
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center gap-3">
           <NotificationCenter />
           
-          <div className="flex items-center space-x-2 text-sm text-gray-600">
-            <User className="w-4 h-4" />
-            <span>
+          <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted/50">
+            <User className="w-4 h-4 text-muted-foreground" />
+            <span className="text-sm text-foreground font-medium">
               {user?.user_metadata?.first_name || user?.email || 'Utilisateur'}
             </span>
           </div>
 
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center gap-1">
             <button
               onClick={openClientPortal}
-              className="p-2 text-gray-600 hover:text-blue-600 transition-colors"
+              className="p-2 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary-light transition-all duration-200"
               title="Espace Client"
             >
               <ExternalLink className="w-5 h-5" />
             </button>
             
             <button
-              className="p-2 text-gray-600 hover:text-pink-600 transition-colors"
-              title="Paramètres"
-            >
-              <Settings className="w-5 h-5" />
-            </button>
-            
-            <button
               onClick={handleLogout}
-              className="p-2 text-gray-600 hover:text-red-600 transition-colors"
+              className="p-2 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all duration-200"
               title="Déconnexion"
             >
               <LogOut className="w-5 h-5" />

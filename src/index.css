@@ -59,18 +59,30 @@
 
 @layer components {
   .card-elegant {
-    @apply bg-white rounded-xl border border-border shadow-sm hover:shadow-md transition-all duration-300;
+    @apply bg-card rounded-xl border border-border shadow-elegant-sm hover:shadow-elegant-md transition-all duration-300;
   }
   
   .btn-primary {
-    @apply bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--accent))] text-white font-medium px-6 py-2.5 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 hover:scale-[1.02];
+    @apply bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--accent))] text-white font-medium px-6 py-2.5 rounded-lg shadow-elegant-sm hover:shadow-elegant-md transition-all duration-300 hover:scale-[1.02] active:scale-[0.98];
+  }
+  
+  .btn-secondary {
+    @apply bg-secondary text-secondary-foreground font-medium px-6 py-2.5 rounded-lg border border-border hover:bg-secondary/80 transition-all duration-200;
+  }
+  
+  .btn-outline {
+    @apply bg-transparent border-2 border-primary text-primary font-medium px-6 py-2.5 rounded-lg hover:bg-primary-light transition-all duration-200;
   }
   
   .input-elegant {
-    @apply border border-input bg-white rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200;
+    @apply border border-input bg-card rounded-lg px-4 py-2.5 text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 outline-none;
   }
   
   .badge-elegant {
     @apply px-3 py-1 rounded-full text-xs font-medium;
+  }
+  
+  .label-elegant {
+    @apply text-sm font-medium text-foreground mb-1.5 block;
   }
 }

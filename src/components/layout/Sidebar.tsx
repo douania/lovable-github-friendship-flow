@@ -38,48 +38,60 @@ const Sidebar: React.FC<SidebarProps> = ({ activeModule, onModuleChange, isColla
   ];
 
   return (
-    <aside className={`bg-white shadow-lg transition-all duration-300 ${
-      isCollapsed ? 'w-16' : 'w-64'
-    } flex flex-col h-full`}>
-      <div className="p-4 border-b border-gray-200">
-        {!isCollapsed && (
-          <h2 className="text-xl font-bold text-gray-800">Institut</h2>
+    <aside className={`bg-card shadow-elegant-md transition-all duration-300 ${
+      isCollapsed ? 'w-20' : 'w-64'
+    } flex flex-col h-full border-r border-border`}>
+      <div className="p-4 border-b border-border">
+        {!isCollapsed ? (
+          <h2 className="text-xl font-semibold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+            Skin 101
+          </h2>
+        ) : (
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+            <span className="text-white font-bold text-sm">S1</span>
+          </div>
         )}
       </div>
       
-      <nav className="flex-1 p-4">
-        <ul className="space-y-2">
+      <nav className="flex-1 p-3 overflow-y-auto">
+        <ul className="space-y-1">
           {menuItems.map((item) => (
             <li key={item.id}>
               <button
                 onClick={() => onModuleChange(item.id)}
-                className={`w-full flex items-center p-3 rounded-lg transition-colors ${
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group ${
                   activeModule === item.id
-                    ? 'bg-pink-100 text-pink-700 border-r-2 border-pink-500'
-                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                    ? 'bg-primary-light text-primary font-medium shadow-elegant-sm'
+                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                 }`}
                 title={isCollapsed ? item.name : ''}
               >
-                <item.icon className="w-5 h-5" />
-                {!isCollapsed && <span className="ml-3">{item.name}</span>}
+                <item.icon className={`w-5 h-5 flex-shrink-0 transition-transform group-hover:scale-110 ${
+                  activeModule === item.id ? '' : 'opacity-70'
+                }`} />
+                {!isCollapsed && (
+                  <span className="text-sm truncate">{item.name}</span>
+                )}
               </button>
             </li>
           ))}
         </ul>
       </nav>
       
-      <div className="p-4 border-t border-gray-200">
+      <div className="p-3 border-t border-border">
         <button
           onClick={() => onModuleChange('settings')}
-          className={`w-full flex items-center p-3 rounded-lg transition-colors ${
+          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group ${
             activeModule === 'settings'
-              ? 'bg-pink-100 text-pink-700'
-              : 'text-gray-600 hover:bg-gray-100'
+              ? 'bg-primary-light text-primary font-medium'
+              : 'text-muted-foreground hover:bg-muted hover:text-foreground'
           }`}
           title={isCollapsed ? 'Paramètres' : ''}
         >
-          <Settings className="w-5 h-5" />
-          {!isCollapsed && <span className="ml-3">Paramètres</span>}
+          <Settings className={`w-5 h-5 flex-shrink-0 transition-transform group-hover:rotate-90 ${
+            activeModule === 'settings' ? '' : 'opacity-70'
+          }`} />
+          {!isCollapsed && <span className="text-sm">Paramètres</span>}
         </button>
       </div>
     </aside>
