@@ -124,8 +124,33 @@ const BackupManagement: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {/* Security Warning */}
+      <div className="bg-red-50 border border-red-200 rounded-xl p-6">
+        <div className="flex items-start space-x-3">
+          <AlertCircle className="h-6 w-6 text-red-600 mt-1 flex-shrink-0" />
+          <div>
+            <h3 className="text-lg font-semibold text-red-900">Fonctionnalité désactivée pour des raisons de sécurité</h3>
+            <p className="text-red-800 mt-2">
+              La sauvegarde via localStorage a été désactivée car elle expose les données sensibles des patients 
+              (informations médicales, photos, factures) sans cryptage. Cette approche viole les normes RGPD/HIPAA.
+            </p>
+            <p className="text-red-800 mt-2 font-semibold">
+              Solution recommandée: Utilisez les sauvegardes natives de Supabase via le tableau de bord Supabase.
+            </p>
+            <a 
+              href="https://supabase.com/dashboard/project/jhxxhwvljsyxdjsnctrg/settings/storage"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block mt-3 text-red-700 underline hover:text-red-900"
+            >
+              Accéder aux paramètres de sauvegarde Supabase →
+            </a>
+          </div>
+        </div>
+      </div>
+
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-900">Gestion des sauvegardes</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Gestion des sauvegardes (Désactivé)</h1>
         <div className="flex space-x-4">
           <button
             onClick={loadBackups}
