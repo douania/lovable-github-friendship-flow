@@ -17,6 +17,9 @@ import { invoiceService } from '../../services/invoiceService';
 import { treatmentService } from '../../services/treatmentService';
 import { Skeleton } from '../ui/Skeleton';
 import { EmptyState } from '../ui/EmptyState';
+import { RevenueChart } from '../analytics/RevenueChart';
+import { ExportMenu } from '../export/ExportMenu';
+import { exportPatientsToCSV, exportAppointmentsToCSV, exportInvoicesToCSV } from '../../utils/dataExport';
 
 const Dashboard: React.FC = () => {
   const [patients, setPatients] = useState<Patient[]>([]);
@@ -151,6 +154,40 @@ const Dashboard: React.FC = () => {
       };
     });
 
+  // Calculate monthly revenue by week for chart
+  const getWeeklyRevenue = () => {
+    const weeks = ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4'];
+    const today = new Date();
+    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    
+    return weeks.map((week, index) => {
+      const weekStart = new Date(startOfMonth);
+      weekStart.setDate(weekStart.getDate() + (index * 7));
+      const weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekEnd.getDate() + 6);
+      
+      const weekRevenue = invoices
+        .filter(invoice => {
+          if (!invoice.paidAt || invoice.status !== 'paid') return false;
+          const paidDate = new Date(invoice.paidAt);
+          return paidDate >= weekStart && paidDate <= weekEnd;
+        })
+        .reduce((sum, invoice) => sum + invoice.amount, 0);
+      
+      return { label: week, value: weekRevenue };
+    });
+  };
+
+  const handleExport = (format: 'csv' | 'pdf' | 'excel') => {
+    if (format === 'csv') {
+      exportPatientsToCSV(patients);
+      exportAppointmentsToCSV(appointments, patients);
+      exportInvoicesToCSV(invoices, patients);
+    } else {
+      alert(`Export ${format.toUpperCase()} en cours de développement`);
+    }
+  };
+
   return (
     <div className="p-6 space-y-6 animate-fade-in">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -158,14 +195,17 @@ const Dashboard: React.FC = () => {
           <h1 className="text-3xl font-bold text-foreground">Tableau de bord</h1>
           <p className="text-muted-foreground mt-1">Vue d'ensemble de votre activité</p>
         </div>
-        <div className="card-elegant px-6 py-4 bg-gradient-to-br from-primary/5 to-accent/5">
-          <div className="flex items-center gap-2 mb-1">
-            <TrendingUp className="w-4 h-4 text-primary" />
-            <p className="text-sm text-muted-foreground font-medium">Revenus mensuels</p>
+        <div className="flex items-center gap-3">
+          <ExportMenu onExport={handleExport} />
+          <div className="card-elegant px-6 py-4 bg-gradient-to-br from-primary/5 to-accent/5">
+            <div className="flex items-center gap-2 mb-1">
+              <TrendingUp className="w-4 h-4 text-primary" />
+              <p className="text-sm text-muted-foreground font-medium">Revenus mensuels</p>
+            </div>
+            <p className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              {monthlyRevenue.toLocaleString()} FCFA
+            </p>
           </div>
-          <p className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            {monthlyRevenue.toLocaleString()} FCFA
-          </p>
         </div>
       </div>
 
@@ -274,6 +314,12 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Revenue Chart */}
+      <RevenueChart 
+        data={getWeeklyRevenue()}
+        title="Évolution des revenus ce mois"
+      />
 
       {lowStockItems > 0 && (
         <div className="card-elegant p-6 bg-gradient-to-r from-warning-light to-destructive/10 border-warning animate-scale-in">
