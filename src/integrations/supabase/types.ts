@@ -726,6 +726,7 @@ export type Database = {
           medical_history: string | null
           phone: string
           skin_type: string | null
+          user_id: string | null
         }
         Insert: {
           contraindications?: string[] | null
@@ -739,6 +740,7 @@ export type Database = {
           medical_history?: string | null
           phone: string
           skin_type?: string | null
+          user_id?: string | null
         }
         Update: {
           contraindications?: string[] | null
@@ -752,6 +754,7 @@ export type Database = {
           medical_history?: string | null
           phone?: string
           skin_type?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
