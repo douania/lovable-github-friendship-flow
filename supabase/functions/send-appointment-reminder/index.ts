@@ -53,12 +53,9 @@ serve(async (req) => {
           patient_id: appointment.patient_id,
           scheduled_for: new Date().toISOString(),
           metadata: {
-            patient_name: `${appointment.patients.first_name} ${appointment.patients.last_name}`,
-            patient_email: appointment.patients.email,
-            patient_phone: appointment.patients.phone,
-            appointment_date: appointment.date,
-            appointment_time: appointment.time,
-            treatment_name: appointment.treatments.name
+            patient_id: appointment.patient_id,
+            appointment_id: appointment.id,
+            treatment_id: appointment.treatment_id
           }
         });
 
