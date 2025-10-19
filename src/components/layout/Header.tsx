@@ -2,6 +2,7 @@
 import React from 'react';
 import { Menu, LogOut, User, ExternalLink } from 'lucide-react';
 import NotificationCenter from '../notifications/NotificationCenter';
+import { GlobalSearch } from '../ui/GlobalSearch';
 import { supabase } from '../../integrations/supabase/client';
 
 interface HeaderProps {
@@ -40,6 +41,7 @@ const Header: React.FC<HeaderProps> = ({ user, onToggleSidebar }) => {
         </div>
 
         <div className="flex items-center gap-3">
+          <GlobalSearch onSelect={(result) => console.log('Selected:', result)} />
           <NotificationCenter />
           
           <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted/50">

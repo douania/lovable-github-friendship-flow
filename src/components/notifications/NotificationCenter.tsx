@@ -54,33 +54,20 @@ const NotificationCenter: React.FC = () => {
     }
   };
 
+
   const getNotificationIcon = (type: SystemNotification['type']) => {
+    const iconClass = "w-4 h-4";
     switch (type) {
       case 'stock_alert':
-        return <Package className="w-4 h-4 text-orange-500" />;
+        return <Package className={`${iconClass} text-warning`} />;
       case 'appointment_reminder':
-        return <Calendar className="w-4 h-4 text-blue-500" />;
+        return <Calendar className={`${iconClass} text-primary`} />;
       case 'payment_due':
-        return <AlertCircle className="w-4 h-4 text-red-500" />;
+        return <AlertCircle className={`${iconClass} text-destructive`} />;
       case 'system_maintenance':
-        return <Clock className="w-4 h-4 text-gray-500" />;
+        return <Clock className={`${iconClass} text-muted-foreground`} />;
       default:
-        return <Bell className="w-4 h-4 text-pink-500" />;
-    }
-  };
-
-  const getPriorityColor = (priority: SystemNotification['priority']) => {
-    switch (priority) {
-      case 'urgent':
-        return 'border-l-red-500 bg-red-50';
-      case 'high':
-        return 'border-l-orange-500 bg-orange-50';
-      case 'medium':
-        return 'border-l-blue-500 bg-blue-50';
-      case 'low':
-        return 'border-l-gray-500 bg-gray-50';
-      default:
-        return 'border-l-gray-500 bg-gray-50';
+        return <Bell className={`${iconClass} text-primary`} />;
     }
   };
 
@@ -90,11 +77,11 @@ const NotificationCenter: React.FC = () => {
     <div className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 text-gray-600 hover:text-pink-600 transition-colors"
+        className="relative p-2 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary-light transition-all duration-200"
       >
-        <Bell className="w-6 h-6" />
+        <Bell className="w-5 h-5" />
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+          <span className="absolute -top-1 -right-1 bg-destructive text-white text-xs rounded-full w-5 h-5 flex items-center justify-center animate-pulse">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
@@ -106,16 +93,24 @@ const NotificationCenter: React.FC = () => {
             className="fixed inset-0 z-40"
             onClick={() => setIsOpen(false)}
           />
-          <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-lg shadow-lg border z-50 max-h-96 overflow-hidden">
-            <div className="p-4 border-b bg-gray-50">
+          <div className="absolute right-0 top-full mt-2 w-96 bg-card rounded-xl shadow-elegant-lg border border-border z-50 max-h-[32rem] overflow-hidden animate-scale-in">
+            <div className="p-4 border-b border-border bg-gradient-to-r from-primary-light/20 to-accent/10">
               <div className="flex items-center justify-between">
-                <h3 className="font-semibold text-gray-800">Notifications</h3>
+                <h3 className="font-semibold text-foreground flex items-center gap-2">
+                  <Bell className="w-5 h-5 text-primary" />
+                  Notifications
+                  {unreadCount > 0 && (
+                    <span className="px-2 py-0.5 text-xs bg-primary text-white rounded-full">
+                      {unreadCount}
+                    </span>
+                  )}
+                </h3>
                 {unreadCount > 0 && (
                   <button
                     onClick={handleMarkAllAsRead}
-                    className="text-sm text-pink-600 hover:text-pink-700"
+                    className="text-sm text-primary hover:text-primary-glow font-medium transition-colors"
                   >
-                    Tout marquer comme lu
+                    Tout lire
                   </button>
                 )}
               </div>
@@ -123,54 +118,73 @@ const NotificationCenter: React.FC = () => {
 
             <div className="max-h-80 overflow-y-auto">
               {loading ? (
-                <div className="p-4 text-center text-gray-500">
-                  Chargement...
+                <div className="p-8 text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-3"></div>
+                  <p className="text-muted-foreground text-sm">Chargement...</p>
                 </div>
               ) : notifications.length === 0 ? (
-                <div className="p-4 text-center text-gray-500">
-                  Aucune notification
+                <div className="p-8 text-center">
+                  <div className="w-16 h-16 rounded-full bg-primary-light flex items-center justify-center mx-auto mb-3">
+                    <Bell className="w-8 h-8 text-primary opacity-50" />
+                  </div>
+                  <p className="text-muted-foreground">Aucune notification</p>
                 </div>
               ) : (
                 notifications.map((notification) => (
                   <div
                     key={notification.id}
-                    className={`p-3 border-l-4 ${getPriorityColor(notification.priority)} ${
-                      !notification.isRead ? 'bg-opacity-100' : 'bg-opacity-50'
-                    }`}
+                    className={`p-4 border-l-4 transition-all hover:bg-muted/30 ${
+                      notification.priority === 'urgent' ? 'border-l-destructive bg-destructive/5' :
+                      notification.priority === 'high' ? 'border-l-warning bg-warning-light/50' :
+                      notification.priority === 'medium' ? 'border-l-primary bg-primary-light/30' :
+                      'border-l-muted bg-card'
+                    } ${!notification.isRead ? 'bg-opacity-100' : 'bg-opacity-50'}`}
                   >
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-start space-x-3 flex-1">
-                        {getNotificationIcon(notification.type)}
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-start gap-3 flex-1 min-w-0">
+                        <div className={`p-2 rounded-lg flex-shrink-0 ${
+                          notification.type === 'stock_alert' ? 'bg-warning-light' :
+                          notification.type === 'appointment_reminder' ? 'bg-primary-light' :
+                          notification.type === 'payment_due' ? 'bg-destructive/10' :
+                          'bg-muted'
+                        }`}>
+                          {getNotificationIcon(notification.type)}
+                        </div>
                         <div className="flex-1 min-w-0">
-                          <h4 className={`text-sm font-medium ${
-                            !notification.isRead ? 'text-gray-900' : 'text-gray-600'
+                          <h4 className={`text-sm font-semibold mb-1 ${
+                            !notification.isRead ? 'text-foreground' : 'text-muted-foreground'
                           }`}>
                             {notification.title}
                           </h4>
-                          <p className="text-xs text-gray-500 mt-1">
+                          <p className="text-xs text-muted-foreground mb-2 line-clamp-2">
                             {notification.message}
                           </p>
-                          <p className="text-xs text-gray-400 mt-1">
-                            {new Date(notification.createdAt).toLocaleString('fr-FR')}
+                          <p className="text-xs text-muted-foreground/70">
+                            {new Date(notification.createdAt).toLocaleString('fr-FR', {
+                              day: '2-digit',
+                              month: 'short',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
                           </p>
                         </div>
                       </div>
-                      <div className="flex items-center space-x-1 ml-2">
+                      <div className="flex flex-col gap-1 flex-shrink-0">
                         {!notification.isRead && (
                           <button
                             onClick={() => handleMarkAsRead(notification.id)}
-                            className="p-1 text-gray-400 hover:text-green-600"
+                            className="p-1.5 rounded-lg text-muted-foreground hover:text-success hover:bg-success-light transition-all"
                             title="Marquer comme lu"
                           >
-                            <Check className="w-3 h-3" />
+                            <Check className="w-4 h-4" />
                           </button>
                         )}
                         <button
                           onClick={() => handleDismiss(notification.id)}
-                          className="p-1 text-gray-400 hover:text-red-600"
+                          className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all"
                           title="Supprimer"
                         >
-                          <X className="w-3 h-3" />
+                          <X className="w-4 h-4" />
                         </button>
                       </div>
                     </div>

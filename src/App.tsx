@@ -23,6 +23,7 @@ import Availability from './components/modules/Availability';
 import ConsumptionReports from './components/modules/ConsumptionReports';
 import ProfitabilityDashboard from './components/modules/ProfitabilityDashboard';
 import ClientApp from './components/client/ClientApp';
+import { QuickActions } from './components/ui/QuickActions';
 
 function App() {
   console.log('=== APP STARTED ===');
@@ -182,6 +183,14 @@ function App() {
             {renderModule()}
           </div>
         </main>
+
+        {/* Quick Actions FAB */}
+        <QuickActions
+          onNewAppointment={() => setActiveModule('appointments')}
+          onNewPatient={() => setActiveModule('patients')}
+          onNewProduct={() => setActiveModule('inventory')}
+          onNewInvoice={() => setActiveModule('invoices')}
+        />
       </div>
     </div>
   );
