@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useAuth } from './hooks/useAuth';
 import Auth from './components/Auth';
 import Header from './components/layout/Header';
@@ -22,50 +22,27 @@ import Settings from './components/modules/Settings';
 import Availability from './components/modules/Availability';
 import ConsumptionReports from './components/modules/ConsumptionReports';
 import ProfitabilityDashboard from './components/modules/ProfitabilityDashboard';
-import ClientApp from './components/client/ClientApp';
 import { QuickActions } from './components/ui/QuickActions';
+import { logger } from './lib/logger';
 
 function App() {
-  console.log('=== APP STARTED ===');
+  logger.info('=== APP STARTED ===');
   
   const { user, loading, isAuthenticated } = useAuth();
   const [activeModule, setActiveModule] = useState('dashboard');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [sidebarVisible, setSidebarVisible] = useState(false);
-  const [isClientPortal, setIsClientPortal] = useState(false);
 
-  // Vérifier si l'URL contient "/client" pour afficher le portail client
-  useEffect(() => {
-    const checkClientPortal = () => {
-      const path = window.location.pathname;
-      setIsClientPortal(path.includes('/client') || path === '/client');
-    };
-    
-    checkClientPortal();
-    
-    // Écouter les changements d'URL
-    const handlePopState = () => checkClientPortal();
-    window.addEventListener('popstate', handlePopState);
-    
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, []);
-
-  console.log('App render - Auth state:', { 
+  logger.debug('App render - Auth state', { 
     hasUser: !!user, 
     loading, 
     isAuthenticated,
-    activeModule,
-    isClientPortal
+    activeModule
   });
-
-  // Si c'est le portail client, l'afficher directement
-  if (isClientPortal) {
-    return <ClientApp />;
-  }
 
   // Show loading while checking authentication
   if (loading) {
-    console.log('SHOWING LOADING SCREEN');
+    logger.debug('SHOWING LOADING SCREEN');
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#FDF6F3' }}>
         <div className="text-center">
@@ -79,18 +56,18 @@ function App() {
 
   // Show login page if user is not authenticated
   if (!isAuthenticated) {
-    console.log('SHOWING AUTH SCREEN');
+    logger.debug('SHOWING AUTH SCREEN');
     return (
       <div className="min-h-screen" style={{ backgroundColor: '#FDF6F3' }}>
-        <Auth onAuthSuccess={() => console.log('Auth success callback')} />
+        <Auth onAuthSuccess={() => logger.info('Auth success callback')} />
       </div>
     );
   }
 
-  console.log('SHOWING MAIN APP');
+  logger.debug('SHOWING MAIN APP');
 
   const handleToggleSidebar = () => {
-    console.log('Toggle sidebar');
+    logger.debug('Toggle sidebar');
     if (window.innerWidth < 768) {
       setSidebarVisible(!sidebarVisible);
     } else {
@@ -99,7 +76,7 @@ function App() {
   };
 
   const renderModule = () => {
-    console.log('Rendering module:', activeModule);
+    logger.debug('Rendering module:', activeModule);
     
     switch (activeModule) {
       case 'dashboard':
@@ -111,13 +88,13 @@ function App() {
       case 'appointments':
         return <Appointments />;
       case 'treatments':  
-        return <TreatmentCatalog onForfaitSelect={(forfait) => console.log('Forfait selected:', forfait)} />;
+        return <TreatmentCatalog onForfaitSelect={(forfait) => logger.debug('Forfait selected:', forfait)} />;
       case 'inventory':
         return <Inventory />;
       case 'analytics':
         return <Analytics />;
       case 'catalog':
-        return <TreatmentCatalog onForfaitSelect={(forfait) => console.log('Forfait selected:', forfait)} />;
+        return <TreatmentCatalog onForfaitSelect={(forfait) => logger.debug('Forfait selected:', forfait)} />;
       case 'consultations':
         return <Consultations />;
       case 'invoices':
@@ -169,7 +146,7 @@ function App() {
           <Sidebar 
             activeModule={activeModule} 
             onModuleChange={(module) => {
-              console.log('Module change to:', module);
+              logger.debug('Module change to:', module);
               setActiveModule(module);
               setSidebarVisible(false);
             }}
