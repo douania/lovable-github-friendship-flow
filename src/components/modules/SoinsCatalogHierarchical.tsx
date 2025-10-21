@@ -141,20 +141,22 @@ export default function SoinsCatalogHierarchical() {
   const getDisplayData = () => {
     let filteredSoins = soins;
 
-    // Apply navigation filters
-    if (navigation.selectedAppareilId) {
-      filteredSoins = filteredSoins.filter(s => s.appareilId === navigation.selectedAppareilId);
-    }
-    if (navigation.selectedZoneId) {
-      filteredSoins = filteredSoins.filter(s => s.zoneId === navigation.selectedZoneId);
-    }
-
-    // Apply search filter
+    // Apply search filter first - search is global across all soins
     if (searchTerm) {
       filteredSoins = filteredSoins.filter(soin =>
         soin.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        soin.description.toLowerCase().includes(searchTerm.toLowerCase())
+        soin.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (soin.appareil?.nom || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (soin.zone?.nom || '').toLowerCase().includes(searchTerm.toLowerCase())
       );
+    } else {
+      // Only apply navigation filters when there's no search term
+      if (navigation.selectedAppareilId) {
+        filteredSoins = filteredSoins.filter(s => s.appareilId === navigation.selectedAppareilId);
+      }
+      if (navigation.selectedZoneId) {
+        filteredSoins = filteredSoins.filter(s => s.zoneId === navigation.selectedZoneId);
+      }
     }
 
     // Apply price filter
