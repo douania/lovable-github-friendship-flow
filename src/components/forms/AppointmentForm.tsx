@@ -117,13 +117,13 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl max-w-lg w-full">
-        <div className="p-6 border-b border-gray-100">
+      <div className="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+        <div className="p-6 border-b border-gray-100 sticky top-0 bg-white rounded-t-2xl z-10">
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-bold text-gray-800">
               {appointment ? 'Modifier le rendez-vous' : 'Nouveau rendez-vous'}
             </h2>
-            <button onClick={onCancel} className="text-gray-500 hover:text-gray-700">
+            <button onClick={onCancel} className="text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full p-2 transition-all">
               <X className="w-6 h-6" />
             </button>
           </div>
