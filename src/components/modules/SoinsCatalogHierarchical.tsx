@@ -52,6 +52,11 @@ export default function SoinsCatalogHierarchical() {
       setAppareils(appareilsData);
       setZones(zonesData);
       setSoins(soinsData);
+      // Ajuster automatiquement la fourchette de prix pour couvrir toutes les valeurs
+      const prices = (soinsData || []).map(s => s.prix);
+      const minPrice = prices.length ? Math.min(...prices) : 0;
+      const maxPrice = prices.length ? Math.max(...prices) : 0;
+      setPriceRange([minPrice, maxPrice]);
     } catch (error: any) {
       console.error('Error loading data:', error);
       toast({
