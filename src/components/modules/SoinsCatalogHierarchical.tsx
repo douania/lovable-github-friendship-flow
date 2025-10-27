@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Search, Filter, Grid, List, Layers } from 'lucide-react';
+import { Plus, Search, Filter, Grid, List, Layers, HelpCircle } from 'lucide-react';
 import { Appareil, Zone, Soin, NavigationState } from '../../types';
 import { AppareilCard } from '../soins/AppareilCard';
 import { ZoneCard } from '../soins/ZoneCard';
@@ -9,6 +9,8 @@ import SoinForm from '../forms/SoinForm';
 import { soinService } from '../../services/soinService';
 import { appareilService } from '../../services/appareilService';
 import { useToast } from '../../hooks/use-toast';
+import OnboardingTutorial from '../tutorial/OnboardingTutorial';
+import { useTutorial } from '../../hooks/useTutorial';
 
 type ViewMode = 'grid' | 'list';
 type SortBy = 'name' | 'price' | 'duration' | 'created';
@@ -33,11 +35,18 @@ export default function SoinsCatalogHierarchical() {
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000]);
   const [showFilters, setShowFilters] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [showTutorial, setShowTutorial] = useState(false);
 
   const { toast } = useToast();
+  const { shouldShowTutorial, markTutorialComplete } = useTutorial();
 
   useEffect(() => {
     loadData();
+    
+    // Afficher le tutoriel pour les nouveaux utilisateurs
+    if (shouldShowTutorial('soins')) {
+      setShowTutorial(true);
+    }
   }, []);
 
   const loadData = async () => {
@@ -257,6 +266,15 @@ export default function SoinsCatalogHierarchical() {
         </div>
 
         <div className="flex items-center gap-3">
+          <button
+            onClick={() => setShowTutorial(true)}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-lg border-2 border-primary text-primary hover:bg-primary hover:text-white transition-all text-sm font-medium"
+            title="Relancer le tutoriel"
+          >
+            <HelpCircle className="w-4 h-4" />
+            <span className="hidden sm:inline">Aide</span>
+          </button>
+          
           {navigation.level !== 'all' && soins.length > 0 && (
             <button
               onClick={() => handleNavigate('all')}
@@ -463,6 +481,24 @@ export default function SoinsCatalogHierarchical() {
           soin={selectedSoin || undefined}
           onSave={handleSaveSoin}
           onCancel={closeSoinForm}
+        />
+      )}
+
+      {showTutorial && (
+        <OnboardingTutorial
+          module="soins"
+          onComplete={() => {
+            markTutorialComplete('soins');
+            setShowTutorial(false);
+            toast({
+              title: "Tutoriel terminé ! 🎉",
+              description: "Vous pouvez le relancer à tout moment avec le bouton 'Aide'.",
+            });
+          }}
+          onSkip={() => {
+            markTutorialComplete('soins');
+            setShowTutorial(false);
+          }}
         />
       )}
     </div>
