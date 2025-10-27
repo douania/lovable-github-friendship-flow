@@ -158,32 +158,40 @@ const SoinForm: React.FC<SoinFormProps> = ({ soin, onSave, onCancel }) => {
         )}
         
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Info sur les champs obligatoires */}
+          <div className="bg-yellow-50 border-l-4 border-yellow-400 p-3 rounded">
+            <p className="text-sm text-yellow-800">
+              <span className="font-semibold">⚠️ Champs obligatoires</span> : Les champs marqués d'un astérisque 
+              <span className="text-red-600 font-bold"> * </span> doivent être remplis.
+            </p>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Nom du soin *
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Nom du soin <span className="text-red-600">*</span>
               </label>
               <input
                 type="text"
                 name="nom"
                 value={formData.nom}
                 onChange={handleInputChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
                 required
                 placeholder="Ex: Épilation laser visage"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Durée (minutes) *
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Durée (minutes) <span className="text-red-600">*</span>
               </label>
               <input
                 type="number"
                 name="duree"
                 value={formData.duree}
                 onChange={handleInputChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
                 required
                 min="1"
                 placeholder="30"

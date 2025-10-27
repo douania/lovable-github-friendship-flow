@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Search, Filter, Grid, List, ArrowLeft, Layers } from 'lucide-react';
+import { Plus, Search, Filter, Grid, List, Layers } from 'lucide-react';
 import { Appareil, Zone, Soin, NavigationState } from '../../types';
 import { AppareilCard } from '../soins/AppareilCard';
 import { ZoneCard } from '../soins/ZoneCard';
@@ -234,47 +234,48 @@ export default function SoinsCatalogHierarchical() {
 
   return (
     <div className="space-y-6 animate-fade-in">
+      {/* Guide d'aide contextuel */}
+      <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-lg">
+        <div className="flex items-start gap-3">
+          <div className="text-2xl">💡</div>
+          <div>
+            <h3 className="font-semibold text-blue-900 mb-1">Comment utiliser le catalogue de soins ?</h3>
+            <p className="text-sm text-blue-800">
+              {navigation.level === 'appareils' && '1️⃣ Cliquez sur un appareil pour voir ses zones de traitement'}
+              {navigation.level === 'zones' && '2️⃣ Sélectionnez une zone pour découvrir les soins disponibles'}
+              {navigation.level === 'soins' && '3️⃣ Gérez vos soins : consultez, modifiez ou supprimez-les'}
+              {navigation.level === 'all' && '🔍 Vue complète : tous vos soins en un seul endroit avec recherche et filtres'}
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-4">
-        <div className="flex items-center gap-4">
+        <div className="flex-1">
           <SoinsBreadcrumb navigation={navigation} onNavigate={handleNavigate} />
-          
-          {navigation.level !== 'appareils' && (
-            <button
-              onClick={() => {
-                if (navigation.level === 'soins') {
-                  handleNavigate('zones', navigation.selectedAppareilId);
-                } else if (navigation.level === 'zones') {
-                  handleNavigate('appareils');
-                } else {
-                  handleNavigate('appareils');
-                }
-              }}
-              className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border hover:bg-muted transition-colors text-sm text-muted-foreground hover:text-foreground"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Retour
-            </button>
-          )}
+        </div>
 
+        <div className="flex items-center gap-3">
           {navigation.level !== 'all' && soins.length > 0 && (
             <button
               onClick={() => handleNavigate('all')}
-              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary-light text-primary hover:bg-primary hover:text-primary-foreground transition-colors text-sm font-medium"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-gradient-to-r from-primary to-accent text-white hover:shadow-lg transition-all text-sm font-medium"
+              title="Voir tous les soins de tous les appareils"
             >
               <Layers className="w-4 h-4" />
               Voir tous les soins
             </button>
           )}
+          
+          <button
+            onClick={openSoinForm}
+            className="btn-primary flex items-center gap-2 shadow-lg"
+          >
+            <Plus size={18} />
+            <span>Nouveau Soin</span>
+          </button>
         </div>
-
-        <button
-          onClick={openSoinForm}
-          className="btn-primary flex items-center gap-2"
-        >
-          <Plus size={18} />
-          <span>Nouveau Soin</span>
-        </button>
       </div>
 
       {/* Search and filters - Only show for soins view */}
