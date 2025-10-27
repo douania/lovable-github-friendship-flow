@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from './hooks/useAuth';
 import Auth from './components/Auth';
 import Header from './components/layout/Header';
@@ -24,6 +24,9 @@ import ConsumptionReports from './components/modules/ConsumptionReports';
 import ProfitabilityDashboard from './components/modules/ProfitabilityDashboard';
 import { QuickActions } from './components/ui/QuickActions';
 import { logger } from './lib/logger';
+import OnboardingTutorial from './components/tutorial/OnboardingTutorial';
+import { useTutorial } from './hooks/useTutorial';
+import { useToast } from './hooks/use-toast';
 
 function App() {
   logger.info('=== APP STARTED ===');
@@ -32,6 +35,10 @@ function App() {
   const [activeModule, setActiveModule] = useState('dashboard');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [sidebarVisible, setSidebarVisible] = useState(false);
+  const [showTutorial, setShowTutorial] = useState(false);
+  
+  const { shouldShowTutorial, markTutorialComplete } = useTutorial();
+  const { toast } = useToast();
 
   logger.debug('App render - Auth state', { 
     hasUser: !!user, 
@@ -39,6 +46,17 @@ function App() {
     isAuthenticated,
     activeModule
   });
+
+  // Afficher le tutoriel au premier lancement
+  useEffect(() => {
+    if (isAuthenticated && shouldShowTutorial()) {
+      // Petit délai pour laisser l'app se charger
+      const timer = setTimeout(() => {
+        setShowTutorial(true);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [isAuthenticated]);
 
   // Show loading while checking authentication
   if (loading) {
@@ -127,7 +145,11 @@ function App() {
 
   return (
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#FDF6F3' }}>
-      <Header user={user} onToggleSidebar={handleToggleSidebar} />
+      <Header 
+        user={user} 
+        onToggleSidebar={handleToggleSidebar}
+        onNavigateToModule={setActiveModule}
+      />
       <div className="flex flex-1 relative">
         {/* Sidebar overlay for mobile */}
         {sidebarVisible && (
@@ -169,6 +191,27 @@ function App() {
           onNewInvoice={() => setActiveModule('invoices')}
         />
       </div>
+
+      {/* Tutoriel général */}
+      {showTutorial && (
+        <OnboardingTutorial
+          onComplete={() => {
+            markTutorialComplete();
+            setShowTutorial(false);
+            toast({
+              title: "Bienvenue sur Skin 101 ! 🎉",
+              description: "Vous êtes prêt à utiliser l'application. Bon travail !",
+            });
+          }}
+          onSkip={() => {
+            markTutorialComplete();
+            setShowTutorial(false);
+          }}
+          onNavigateToModule={(module) => {
+            setActiveModule(module);
+          }}
+        />
+      )}
     </div>
   );
 }

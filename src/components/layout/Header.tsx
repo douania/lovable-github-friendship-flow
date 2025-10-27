@@ -1,16 +1,24 @@
 
-import React from 'react';
-import { Menu, LogOut, User, ExternalLink } from 'lucide-react';
+import React, { useState } from 'react';
+import { Menu, LogOut, User, ExternalLink, HelpCircle } from 'lucide-react';
 import NotificationCenter from '../notifications/NotificationCenter';
 import { GlobalSearch } from '../ui/GlobalSearch';
 import { supabase } from '../../integrations/supabase/client';
+import OnboardingTutorial from '../tutorial/OnboardingTutorial';
+import { useToast } from '../../hooks/use-toast';
+import { useTutorial } from '../../hooks/useTutorial';
 
 interface HeaderProps {
   user: any;
   onToggleSidebar: () => void;
+  onNavigateToModule?: (module: string) => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ user, onToggleSidebar }) => {
+const Header: React.FC<HeaderProps> = ({ user, onToggleSidebar, onNavigateToModule }) => {
+  const [showTutorial, setShowTutorial] = useState(false);
+  const { toast } = useToast();
+  const { markTutorialComplete } = useTutorial();
+
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut();
@@ -44,6 +52,14 @@ const Header: React.FC<HeaderProps> = ({ user, onToggleSidebar }) => {
           <GlobalSearch onSelect={(result) => console.log('Selected:', result)} />
           <NotificationCenter />
           
+          <button
+            onClick={() => setShowTutorial(true)}
+            className="p-2 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary-light transition-all duration-200"
+            title="Afficher le tutoriel"
+          >
+            <HelpCircle className="w-5 h-5" />
+          </button>
+          
           <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted/50">
             <User className="w-4 h-4 text-muted-foreground" />
             <span className="text-sm text-foreground font-medium">
@@ -70,6 +86,24 @@ const Header: React.FC<HeaderProps> = ({ user, onToggleSidebar }) => {
           </div>
         </div>
       </div>
+
+      {/* Tutoriel général */}
+      {showTutorial && (
+        <OnboardingTutorial
+          onComplete={() => {
+            markTutorialComplete();
+            setShowTutorial(false);
+            toast({
+              title: "Tutoriel terminé ! 🎉",
+              description: "Vous pouvez le relancer à tout moment depuis l'icône d'aide dans le header.",
+            });
+          }}
+          onSkip={() => {
+            setShowTutorial(false);
+          }}
+          onNavigateToModule={onNavigateToModule}
+        />
+      )}
     </header>
   );
 };

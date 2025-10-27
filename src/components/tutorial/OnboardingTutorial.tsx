@@ -1,79 +1,94 @@
 import { useState } from 'react';
-import { X, ChevronRight, ChevronLeft, Check } from 'lucide-react';
+import { X, ChevronRight, ChevronLeft, Check, Users, Scissors, Calendar, FileText, Package, BarChart3 } from 'lucide-react';
 
 interface TutorialStep {
   title: string;
   description: string;
   icon: string;
+  iconComponent?: any;
   action?: string;
+  module?: string;
 }
 
 interface OnboardingTutorialProps {
-  module: 'soins' | 'dashboard' | 'patients' | 'appointments';
   onComplete: () => void;
   onSkip: () => void;
+  onNavigateToModule?: (module: string) => void;
 }
 
-const tutorialSteps: Record<string, TutorialStep[]> = {
-  soins: [
-    {
-      title: 'Bienvenue dans le Catalogue de Soins',
-      description: 'Ce module vous permet de gérer tous vos soins organisés par appareils et zones de traitement.',
-      icon: '👋',
-    },
-    {
-      title: 'Navigation hiérarchique',
-      description: 'La navigation se fait en 3 étapes : 1) Sélectionnez un appareil, 2) Choisissez une zone, 3) Gérez vos soins.',
-      icon: '🗺️',
-      action: 'Cliquez sur un appareil pour commencer'
-    },
-    {
-      title: 'Créer un nouveau soin',
-      description: 'Utilisez le bouton "Nouveau Soin" pour ajouter un traitement. Remplissez les champs obligatoires marqués d\'un *.',
-      icon: '✨',
-      action: 'Essayez de créer votre premier soin'
-    },
-    {
-      title: 'Vue globale',
-      description: 'Le bouton "Voir tous les soins" vous permet d\'accéder rapidement à l\'ensemble de vos soins avec recherche et filtres.',
-      icon: '🔍',
-      action: 'Utilisez les filtres pour affiner votre recherche'
-    },
-    {
-      title: 'Breadcrumb de navigation',
-      description: 'Utilisez le fil d\'Ariane en haut pour revenir à tout moment à un niveau précédent de navigation.',
-      icon: '🧭',
-    }
-  ],
-  dashboard: [
-    {
-      title: 'Tableau de bord',
-      description: 'Votre vue d\'ensemble des activités, rendez-vous et statistiques importantes.',
-      icon: '📊',
-    }
-  ],
-  patients: [
-    {
-      title: 'Gestion des patients',
-      description: 'Créez, modifiez et consultez les fiches de vos patients en toute simplicité.',
-      icon: '👥',
-    }
-  ],
-  appointments: [
-    {
-      title: 'Rendez-vous',
-      description: 'Planifiez et gérez tous vos rendez-vous avec vos patients.',
-      icon: '📅',
-    }
-  ]
-};
+const tutorialSteps: TutorialStep[] = [
+  {
+    title: 'Bienvenue sur Skin 101 ! 👋',
+    description: 'Votre application de gestion complète pour votre centre esthétique. Ce tutoriel va vous guider à travers les étapes essentielles pour démarrer.',
+    icon: '🎉',
+  },
+  {
+    title: '1️⃣ Première étape : Créez vos patients',
+    description: 'Commencez par enregistrer vos patients dans le système. Cliquez sur "Patients" dans le menu latéral, puis sur le bouton "+ Nouveau Patient". Remplissez les informations essentielles : nom, prénom, email et téléphone.',
+    icon: '👥',
+    iconComponent: Users,
+    module: 'patients',
+    action: 'Allez dans Patients et créez votre premier patient'
+  },
+  {
+    title: '2️⃣ Configurez votre catalogue de soins',
+    description: 'Définissez les soins que vous proposez. Allez dans "Soins" > Sélectionnez un appareil > Choisissez une zone > Créez vos soins avec les tarifs et durées. Les soins sont organisés par appareil et zone corporelle pour faciliter la gestion.',
+    icon: '💆',
+    iconComponent: Scissors,
+    module: 'treatments',
+    action: 'Configurez au moins un soin dans le catalogue'
+  },
+  {
+    title: '3️⃣ Gérez votre stock de produits',
+    description: 'Enregistrez vos produits et consommables dans "Stock". Ajoutez le nom, la quantité disponible, le coût unitaire et les seuils d\'alerte. Cela vous permettra de suivre votre inventaire et d\'associer automatiquement les produits aux soins.',
+    icon: '📦',
+    iconComponent: Package,
+    module: 'inventory',
+    action: 'Ajoutez quelques produits dans le stock'
+  },
+  {
+    title: '4️⃣ Planifiez vos rendez-vous',
+    description: 'Créez des rendez-vous dans "Rendez-vous". Sélectionnez un patient, choisissez un soin, définissez la date et l\'heure. Le système calcule automatiquement les disponibilités et évite les chevauchements.',
+    icon: '📅',
+    iconComponent: Calendar,
+    module: 'appointments',
+    action: 'Créez votre premier rendez-vous'
+  },
+  {
+    title: '5️⃣ Réalisez des consultations',
+    description: 'Lors du rendez-vous, utilisez "Consultations" pour documenter la séance : notes, photos avant/après, produits utilisés. Toutes les informations sont sauvegardées dans le dossier patient.',
+    icon: '📝',
+    iconComponent: FileText,
+    module: 'consultations',
+    action: 'Faites une consultation de test'
+  },
+  {
+    title: '6️⃣ Générez factures et devis',
+    description: 'Créez des factures dans "Factures" ou des devis dans "Devis". Sélectionnez le patient, ajoutez les soins réalisés. Le montant est calculé automatiquement et vous pouvez imprimer ou exporter en PDF.',
+    icon: '💰',
+    iconComponent: FileText,
+    module: 'invoices',
+    action: 'Créez une facture ou un devis'
+  },
+  {
+    title: '7️⃣ Suivez vos performances',
+    description: 'Consultez "Analyses" pour voir vos statistiques : chiffre d\'affaires, soins les plus demandés, taux de remplissage. Le tableau de bord affiche aussi les rendez-vous du jour et les alertes de stock.',
+    icon: '📊',
+    iconComponent: BarChart3,
+    module: 'analytics',
+    action: 'Explorez les statistiques'
+  },
+  {
+    title: 'C\'est parti ! 🚀',
+    description: 'Vous connaissez maintenant les bases de Skin 101. N\'hésitez pas à explorer les autres fonctionnalités : sauvegardes, disponibilités, rapports de consommation... Si vous avez besoin d\'aide, utilisez le bouton "Aide" présent dans chaque module.',
+    icon: '✨',
+  }
+];
 
-export default function OnboardingTutorial({ module, onComplete, onSkip }: OnboardingTutorialProps) {
+export default function OnboardingTutorial({ onComplete, onSkip, onNavigateToModule }: OnboardingTutorialProps) {
   const [currentStep, setCurrentStep] = useState(0);
-  const steps = tutorialSteps[module] || [];
+  const steps = tutorialSteps;
   const totalSteps = steps.length;
-
-  if (totalSteps === 0) return null;
 
   const handleNext = () => {
     if (currentStep < totalSteps - 1) {
@@ -125,10 +140,24 @@ export default function OnboardingTutorial({ module, onComplete, onSkip }: Onboa
 
           {currentStepData.action && (
             <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg mb-6">
-              <p className="text-blue-900 font-medium flex items-center gap-2">
-                <span className="text-xl">💡</span>
-                {currentStepData.action}
-              </p>
+              <div className="flex items-start justify-between gap-4">
+                <p className="text-blue-900 font-medium flex items-center gap-2">
+                  <span className="text-xl">💡</span>
+                  {currentStepData.action}
+                </p>
+                {currentStepData.module && onNavigateToModule && (
+                  <button
+                    onClick={() => {
+                      onNavigateToModule(currentStepData.module!);
+                      onSkip();
+                    }}
+                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all text-sm font-medium whitespace-nowrap"
+                  >
+                    {currentStepData.iconComponent && <currentStepData.iconComponent className="w-4 h-4" />}
+                    Y aller
+                  </button>
+                )}
+              </div>
             </div>
           )}
 

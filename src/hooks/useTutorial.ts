@@ -1,62 +1,25 @@
 import { useState } from 'react';
 
-interface TutorialState {
-  soins: boolean;
-  dashboard: boolean;
-  patients: boolean;
-  appointments: boolean;
-}
-
-const TUTORIAL_KEY = 'skin101_tutorial_completed';
+const TUTORIAL_KEY = 'skin101_general_tutorial_completed';
 
 export function useTutorial() {
-  const [tutorialCompleted, setTutorialCompleted] = useState<TutorialState>(() => {
+  const [tutorialCompleted, setTutorialCompleted] = useState<boolean>(() => {
     const saved = localStorage.getItem(TUTORIAL_KEY);
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch {
-        return {
-          soins: false,
-          dashboard: false,
-          patients: false,
-          appointments: false,
-        };
-      }
-    }
-    return {
-      soins: false,
-      dashboard: false,
-      patients: false,
-      appointments: false,
-    };
+    return saved === 'true';
   });
 
-  const markTutorialComplete = (module: keyof TutorialState) => {
-    const updated = { ...tutorialCompleted, [module]: true };
-    setTutorialCompleted(updated);
-    localStorage.setItem(TUTORIAL_KEY, JSON.stringify(updated));
+  const markTutorialComplete = () => {
+    setTutorialCompleted(true);
+    localStorage.setItem(TUTORIAL_KEY, 'true');
   };
 
-  const resetTutorial = (module?: keyof TutorialState) => {
-    if (module) {
-      const updated = { ...tutorialCompleted, [module]: false };
-      setTutorialCompleted(updated);
-      localStorage.setItem(TUTORIAL_KEY, JSON.stringify(updated));
-    } else {
-      const reset = {
-        soins: false,
-        dashboard: false,
-        patients: false,
-        appointments: false,
-      };
-      setTutorialCompleted(reset);
-      localStorage.setItem(TUTORIAL_KEY, JSON.stringify(reset));
-    }
+  const resetTutorial = () => {
+    setTutorialCompleted(false);
+    localStorage.setItem(TUTORIAL_KEY, 'false');
   };
 
-  const shouldShowTutorial = (module: keyof TutorialState): boolean => {
-    return !tutorialCompleted[module];
+  const shouldShowTutorial = (): boolean => {
+    return !tutorialCompleted;
   };
 
   return {
