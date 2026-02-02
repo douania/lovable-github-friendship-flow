@@ -80,7 +80,7 @@ const Invoices: React.FC = () => {
   };
 
   const handleDeleteInvoice = async (id: string) => {
-    if (window.confirm('Êtes-vous sûr de vouloir supprimer cette facture ?')) {
+    if (window.confirm('Cette facture et toutes les données associées seront définitivement supprimées. Cette action est irréversible. Voulez-vous continuer ?')) {
       setLoading(true);
       setError(null);
       try {

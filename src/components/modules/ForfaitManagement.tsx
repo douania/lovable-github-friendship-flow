@@ -4,8 +4,10 @@ import { Search, Plus, Edit, Eye, Trash2, Package, Calendar, X } from 'lucide-re
 import { Forfait } from '../../types';
 import { forfaitService } from '../../services/forfaitService';
 import ForfaitForm from '../forms/ForfaitForm';
+import { useToast } from '../../hooks/use-toast';
 
 const ForfaitManagement: React.FC = () => {
+  const { toast } = useToast();
   const [forfaits, setForfaits] = useState<Forfait[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
@@ -46,16 +48,28 @@ const ForfaitManagement: React.FC = () => {
         setForfaits(prev => prev.map(f => 
           f.id === editingForfait.id ? updatedForfait : f
         ));
+        toast({
+          title: "Succès",
+          description: "Forfait modifié avec succès"
+        });
       } else {
         const newForfait = await forfaitService.create(forfaitData);
         setForfaits(prev => [newForfait, ...prev]);
+        toast({
+          title: "Succès",
+          description: "Forfait créé avec succès"
+        });
       }
       
       setShowAddModal(false);
       setEditingForfait(null);
     } catch (err) {
       console.error('Erreur lors de la sauvegarde du forfait:', err);
-      setError('Erreur lors de la sauvegarde. Veuillez réessayer.');
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de la sauvegarde du forfait",
+        variant: "destructive"
+      });
     }
   };
 
@@ -65,7 +79,7 @@ const ForfaitManagement: React.FC = () => {
   };
 
   const handleDeleteForfait = async (forfaitId: string) => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer ce forfait ?')) {
+    if (!confirm('Ce forfait et toutes les données associées seront définitivement supprimés. Cette action est irréversible. Voulez-vous continuer ?')) {
       return;
     }
 
@@ -74,9 +88,17 @@ const ForfaitManagement: React.FC = () => {
       await forfaitService.delete(forfaitId);
       setForfaits(prev => prev.filter(f => f.id !== forfaitId));
       setSelectedForfait(null);
+      toast({
+        title: "Succès",
+        description: "Forfait supprimé avec succès"
+      });
     } catch (err) {
       console.error('Erreur lors de la suppression du forfait:', err);
-      setError('Erreur lors de la suppression. Veuillez réessayer.');
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de la suppression du forfait",
+        variant: "destructive"
+      });
     }
   };
 

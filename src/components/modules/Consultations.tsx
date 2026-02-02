@@ -7,7 +7,7 @@ import { soinService } from '../../services/soinService';
 import { Consultation } from '../../types/consultation';
 import ConsultationForm from '../forms/ConsultationForm';
 import ConsultationDetails from '../forms/ConsultationDetails';
-import { toast } from 'sonner';
+import { useToast } from '../../hooks/use-toast';
 import { usePaginatedData } from '../../hooks/usePaginatedData';
 import PaginationControls from '../ui/PaginationControls';
 
@@ -17,6 +17,7 @@ interface EnrichedConsultation extends Consultation {
 }
 
 const Consultations: React.FC = () => {
+  const { toast } = useToast();
   const [consultations, setConsultations] = useState<EnrichedConsultation[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
@@ -75,7 +76,11 @@ const Consultations: React.FC = () => {
       setConsultations(enrichedConsultations);
     } catch (error) {
       console.error('Erreur lors du chargement des consultations:', error);
-      toast.error('Erreur lors du chargement des consultations');
+      toast({
+        title: "Erreur",
+        description: "Erreur lors du chargement des consultations",
+        variant: "destructive"
+      });
     } finally {
       setLoading(false);
     }
@@ -85,10 +90,16 @@ const Consultations: React.FC = () => {
     try {
       if (editingConsultation) {
         await consultationService.updateConsultation(editingConsultation.id, consultationData);
-        toast.success('Consultation modifiée avec succès');
+        toast({
+          title: "Succès",
+          description: "Consultation modifiée avec succès"
+        });
       } else {
         await consultationService.createConsultation(consultationData);
-        toast.success('Consultation créée avec succès');
+        toast({
+          title: "Succès",
+          description: "Consultation créée avec succès"
+        });
       }
       
       setShowForm(false);
@@ -96,7 +107,11 @@ const Consultations: React.FC = () => {
       loadConsultations();
     } catch (error) {
       console.error('Erreur lors de la sauvegarde:', error);
-      toast.error('Erreur lors de la sauvegarde de la consultation');
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de la sauvegarde de la consultation",
+        variant: "destructive"
+      });
     }
   };
 

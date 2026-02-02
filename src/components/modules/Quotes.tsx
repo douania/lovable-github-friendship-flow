@@ -161,7 +161,7 @@ const Quotes: React.FC = () => {
   };
 
   const handleDeleteQuote = async (id: string) => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer ce devis ?')) {
+    if (!confirm('Ce devis et toutes les données associées seront définitivement supprimés. Cette action est irréversible. Voulez-vous continuer ?')) {
       return;
     }
 
