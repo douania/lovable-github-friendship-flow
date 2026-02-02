@@ -1,28 +1,34 @@
-
 import React from 'react'
 import ReactDOM from 'react-dom/client'
+import { QueryClientProvider } from '@tanstack/react-query'
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import App from './App.tsx'
 import { AuthProvider } from './hooks/useAuth.tsx'
+import { queryClient } from './lib/queryClient'
+import { logger } from './lib/logger'
 import './index.css'
 
-console.log('=== MAIN.TSX STARTING ===');
+logger.debug('=== MAIN.TSX STARTING ===');
 
 const root = document.getElementById('root');
 
 if (root) {
   try {
-    console.log('Rendering React app...');
+    logger.debug('Rendering React app...');
     ReactDOM.createRoot(root).render(
       <React.StrictMode>
-        <AuthProvider>
-          <App />
-        </AuthProvider>
+        <QueryClientProvider client={queryClient}>
+          <AuthProvider>
+            <App />
+          </AuthProvider>
+          {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} />}
+        </QueryClientProvider>
       </React.StrictMode>,
     );
-    console.log('React app rendered successfully');
+    logger.debug('React app rendered successfully');
   } catch (error) {
-    console.error('Error rendering application:', error);
+    logger.error('Error rendering application:', error);
   }
 } else {
-  console.error('Root element not found');
+  logger.error('Root element not found');
 }
