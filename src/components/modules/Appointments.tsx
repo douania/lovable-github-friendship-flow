@@ -7,6 +7,10 @@ import {
   useUpdateAppointmentMutation 
 } from '../../queries/appointments.queries';
 import { usePatientsQuery } from '../../queries/patients.queries';
+import { 
+  useActivePatientForfaitsQuery, 
+  useDecrementSessionMutation 
+} from '../../queries/patientForfaits.queries';
 import { getErrorMessage } from '../../lib/errorMessage';
 import { treatmentService } from '../../services/treatmentService';
 import { productService } from '../../services/productService';
@@ -61,7 +65,15 @@ const Appointments: React.FC = () => {
   // Phase 3B - Pilier 4: State pour la raison de completion
   // Correction CTO: null par défaut pour forcer un choix explicite
   const [selectedCompletionReason, setSelectedCompletionReason] = useState<CompletionReason | null>(null);
+  // Phase 3D: State pour le forfait sélectionné
+  const [selectedPatientForfaitId, setSelectedPatientForfaitId] = useState<string | null>(null);
   const { toast } = useToast();
+  
+  // Phase 3D: Query pour récupérer les forfaits actifs du patient quand le modal est ouvert
+  const { data: activePatientForfaits = [] } = useActivePatientForfaitsQuery(
+    appointmentForInvoice?.patientId
+  );
+  const decrementSessionMutation = useDecrementSessionMutation();
 
   // Error message for display
   const currentErrorMessage = isError ? getErrorMessage(queryError) : null;
@@ -234,8 +246,24 @@ const Appointments: React.FC = () => {
     // GUARD: empêcher double création facture
     if (!appointmentForInvoice || isCreatingInvoice) return;
     
+    // Phase 3D: Si forfait sélectionné, vérifier qu'un forfait est choisi
+    if (reason === 'included_in_forfait' && !selectedPatientForfaitId) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez sélectionner un forfait",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setIsCreatingInvoice(true);
     try {
+      // Phase 3D: Décrémenter le forfait si applicable
+      if (reason === 'included_in_forfait' && selectedPatientForfaitId) {
+        await decrementSessionMutation.mutateAsync(selectedPatientForfaitId);
+        logger.info('Séance décrémentée du forfait', { patientForfaitId: selectedPatientForfaitId });
+      }
+      
       // Phase 3B - Pilier 4: Mettre à jour le RDV avec la raison de completion
       const updatedAppointmentData: Omit<Appointment, 'id'> = {
         ...appointmentForInvoice,
@@ -264,6 +292,11 @@ const Appointments: React.FC = () => {
           title: "Facture créée",
           description: "La facture a été créée avec succès",
         });
+      } else if (reason === 'included_in_forfait') {
+        toast({
+          title: "Séance utilisée",
+          description: "La séance a été déduite du forfait",
+        });
       } else {
         // Juste enregistrer la raison
         const reasonLabel = COMPLETION_REASON_LABELS[reason];
@@ -275,7 +308,8 @@ const Appointments: React.FC = () => {
       
       setShowInvoiceModal(false);
       setAppointmentForInvoice(null);
-      setSelectedCompletionReason('invoiced'); // Reset
+      setSelectedCompletionReason(null);
+      setSelectedPatientForfaitId(null);
     } catch (err) {
       logger.error('Erreur création facture', err);
       toast({
@@ -292,12 +326,12 @@ const Appointments: React.FC = () => {
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">Rendez-vous</h1>
-          <p className="text-gray-600">Gestion de l'agenda</p>
+          <h1 className="text-2xl font-bold text-foreground">Rendez-vous</h1>
+          <p className="text-muted-foreground">Gestion de l'agenda</p>
         </div>
         <button 
           onClick={() => setShowAddModal(true)}
-          className="flex items-center space-x-2 bg-gradient-to-r from-pink-500 to-orange-500 text-white px-6 py-3 rounded-xl hover:shadow-lg transition-all"
+          className="flex items-center space-x-2 bg-gradient-to-r from-primary to-accent text-primary-foreground px-6 py-3 rounded-xl hover:shadow-lg transition-all"
         >
           <Plus className="w-5 h-5" />
           <span>Nouveau RDV</span>
@@ -369,9 +403,9 @@ const Appointments: React.FC = () => {
 
       {showInvoiceModal && appointmentForInvoice && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4">
+          <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
             <h3 className="text-xl font-bold mb-4">Terminer le rendez-vous</h3>
-            <p className="text-gray-600 mb-4">
+            <p className="text-muted-foreground mb-4">
               Le rendez-vous est terminé. Comment souhaitez-vous le finaliser ?
             </p>
             
@@ -382,8 +416,8 @@ const Appointments: React.FC = () => {
                   key={value}
                   className={`flex items-center p-3 border rounded-lg cursor-pointer transition-colors ${
                     selectedCompletionReason === value 
-                      ? 'border-pink-500 bg-pink-50' 
-                      : 'border-gray-200 hover:bg-gray-50'
+                      ? 'border-primary bg-primary/10' 
+                      : 'border-border hover:bg-muted'
                   }`}
                 >
                   <input
@@ -391,19 +425,78 @@ const Appointments: React.FC = () => {
                     name="completionReason"
                     value={value}
                     checked={selectedCompletionReason === value}
-                    onChange={() => setSelectedCompletionReason(value)}
-                    className="mr-3 text-pink-500 focus:ring-pink-500"
+                    onChange={() => {
+                      setSelectedCompletionReason(value);
+                      // Reset forfait selection quand on change de raison
+                      if (value !== 'included_in_forfait') {
+                        setSelectedPatientForfaitId(null);
+                      }
+                    }}
+                    className="mr-3 text-primary focus:ring-primary"
                   />
-                  <span className="text-gray-700">{label}</span>
+                  <span className="text-foreground">{label}</span>
                 </label>
               ))}
             </div>
+            
+            {/* Phase 3D: Sélection du forfait si "included_in_forfait" est choisi */}
+            {selectedCompletionReason === 'included_in_forfait' && (
+              <div className="mb-6 p-4 bg-muted rounded-lg border border-border">
+                <h4 className="font-medium text-foreground mb-3">
+                  Sélectionner le forfait à utiliser
+                </h4>
+                {activePatientForfaits.length === 0 ? (
+                  <p className="text-sm text-muted-foreground italic">
+                    Ce patient n'a aucun forfait actif. Vous pouvez en vendre un depuis sa fiche.
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    {activePatientForfaits.map((pf) => (
+                      <label 
+                        key={pf.id}
+                        className={`flex items-center justify-between p-3 border rounded-lg cursor-pointer transition-colors ${
+                          selectedPatientForfaitId === pf.id 
+                            ? 'border-primary bg-primary/10' 
+                            : 'border-border hover:bg-background'
+                        }`}
+                      >
+                        <div className="flex items-center">
+                          <input
+                            type="radio"
+                            name="patientForfait"
+                            value={pf.id}
+                            checked={selectedPatientForfaitId === pf.id}
+                            onChange={() => setSelectedPatientForfaitId(pf.id)}
+                            className="mr-3 text-primary focus:ring-primary"
+                          />
+                          <div>
+                            <span className="text-foreground font-medium">
+                              {pf.forfait?.nom || 'Forfait'}
+                            </span>
+                            <p className="text-xs text-muted-foreground">
+                              Expire le {new Date(pf.expiryDate).toLocaleDateString('fr-FR')}
+                            </p>
+                          </div>
+                        </div>
+                        <span className="text-sm font-bold text-primary">
+                          {pf.remainingSessions}/{pf.totalSessions} séances
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className="flex space-x-4">
               <button 
                 onClick={() => selectedCompletionReason && createInvoiceFromAppointment(selectedCompletionReason)}
-                disabled={isCreatingInvoice || !selectedCompletionReason}
-                className="flex-1 bg-gradient-to-r from-pink-500 to-orange-500 text-white px-4 py-2 rounded-lg hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={
+                  isCreatingInvoice || 
+                  !selectedCompletionReason ||
+                  (selectedCompletionReason === 'included_in_forfait' && !selectedPatientForfaitId)
+                }
+                className="flex-1 bg-gradient-to-r from-primary to-accent text-primary-foreground px-4 py-2 rounded-lg hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isCreatingInvoice ? 'Traitement...' : 'Confirmer'}
               </button>
@@ -412,8 +505,9 @@ const Appointments: React.FC = () => {
                   setShowInvoiceModal(false);
                   setAppointmentForInvoice(null);
                   setSelectedCompletionReason(null);
+                  setSelectedPatientForfaitId(null);
                 }}
-                className="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition-all"
+                className="flex-1 bg-muted text-muted-foreground px-4 py-2 rounded-lg hover:bg-muted/80 transition-all"
               >
                 Annuler
               </button>
