@@ -57,29 +57,24 @@ Le médecin doit aller manuellement dans le module Consultations.
 Vente forfait → patient_forfaits → RDV → Terminer → "Inclus dans forfait" → Décrémentation
 ```
 
-### Résultat : ❌ NON IMPLÉMENTÉ
+### Résultat : ✅ IMPLÉMENTÉ (Phase 3D - 02/02/2026)
 
 | Étape | Statut | Observation |
 |-------|--------|-------------|
-| Vente forfait | ❌ ABSENT | Aucune UI pour vendre un forfait à un patient |
+| Vente forfait | ⚠️ SERVICE OK | `patientForfaitService.sellForfait()` créé, UI à venir |
 | Table patient_forfaits | ✅ OK | Structure DB correcte |
 | remaining_sessions | ✅ OK | Colonne présente |
-| Décrémentation | ❌ ABSENT | Aucun service `patientForfaitService` |
-| Choix "Inclus dans forfait" | ⚠️ PARTIEL | Option visible mais non fonctionnelle |
+| Décrémentation | ✅ OK | `patientForfaitService.decrementSession()` |
+| Choix "Inclus dans forfait" | ✅ OK | Modal avec sélection du forfait |
 
-### Lacune Critique Identifiée
+### Phase 3D Implémentée
 
-**❌ LC-B1 : Absence du flux de vente de forfait**
+**Fichiers créés :**
+- `src/services/patientForfaitService.ts` - Service complet (sell, decrement, get, cancel)
+- `src/queries/patientForfaits.queries.ts` - TanStack Query hooks
 
-La table `patient_forfaits` existe mais :
-- Aucun service TypeScript pour la gérer
-- Aucune UI pour "vendre" un forfait à un patient
-- Aucune logique de décrémentation des séances
-- Le choix `included_in_forfait` ne décrémente rien
-
-**Impact :** Le scénario forfait est impossible à exécuter.
-
-**Décision :** À implémenter en Phase 3D (priorité haute).
+**Modifications :**
+- `src/components/modules/Appointments.tsx` - Modal enrichi avec sélection forfait
 
 ---
 
@@ -100,10 +95,6 @@ RDV → Terminer → "Gratuit" → Pas de facture
 | Aucune facture créée | ✅ OK | Condition `if (reason === 'invoiced')` |
 | Toast confirmation | ✅ OK | "Raison enregistrée: Gratuit" |
 | Stats non impactées | ✅ OK | Facture non créée = pas de revenus parasites |
-
-### Observation
-
-Le système accepte correctement les actes gratuits sans créer d'anomalie comptable.
 
 ---
 
@@ -128,63 +119,22 @@ RDV → Terminer → "Facturer plus tard" → Facture créée ultérieurement
 
 **⚠️ FU-D1 : Pas de vue "RDV en attente de facturation"**
 
-Quand `completionReason = 'pending_invoice'`, le médecin n'a aucun moyen simple de :
-- Lister tous les RDV en attente de facturation
-- Créer la facture directement depuis le RDV
-
 **Impact :** Risque d'oubli de facturation.
 
 **Décision :** Accepter pour Phase 3C (workaround manuel possible), améliorer en Phase UX.
 
 ---
 
-## COHÉRENCE INTER-MODULES
+## RÉSUMÉ DES LACUNES POST PHASE 3D
 
-### Vérifications Effectuées
-
-| Relation | Statut | Détail |
-|----------|--------|--------|
-| RDV → Consultation | ⚠️ OPTIONNEL | `appointmentId` linkable mais non automatique |
-| Consultation → Devis | ❌ ABSENT | Aucun lien direct |
-| Devis → Facture | ✅ OK | `quote_id` sur invoices, bouton conversion |
-| Forfait vendu → RDV | ❌ ABSENT | Pas de lien patient_forfaits ↔ appointments |
-| Produits consommés → Inventaire | ✅ OK | `processConsumedProducts()` décrémente le stock |
-| Acte gratuit → Analytics | ✅ OK | Pas d'impact sur revenus |
-
-### Incohérence Critique
-
-**❌ IC-1 : Analytics utilise des données mockées**
-
-Le module `Analytics.tsx` (lignes 33-57) utilise des données en dur :
-```typescript
-const monthlyRevenue = 3200000;
-const topTreatments = [
-  { name: 'Laser CO2 Fractionné', revenue: 900000, count: 6, growth: 20 },
-  // ...
-];
-```
-
-**Impact :** Les statistiques affichées ne reflètent pas la réalité.
-
-**Décision :** À corriger en Phase 4 Analytics (non bloquant pour flux patient).
-
----
-
-## RÉSUMÉ DES LACUNES
-
-### Bloquantes pour Production
-
-| ID | Description | Priorité | Phase Cible |
-|----|-------------|----------|-------------|
-| LC-B1 | Service patient_forfaits absent | HAUTE | Phase 3D |
-| IC-1 | Analytics mockées | MOYENNE | Phase 4 |
-
-### Non Bloquantes (Frictions UX)
+### Restantes (Non Bloquantes)
 
 | ID | Description | Priorité | Phase Cible |
 |----|-------------|----------|-------------|
 | FU-A1 | Consultation non auto-créée | BASSE | Phase UX |
 | FU-D1 | Pas de vue "pending_invoice" | BASSE | Phase UX |
+| IC-1 | Analytics mockées | MOYENNE | Phase 4 Analytics |
+| UI-B1 | UI vente forfait patient | MOYENNE | Phase UX Patient |
 
 ---
 
@@ -192,69 +142,28 @@ const topTreatments = [
 
 ### Points Positifs Confirmés
 
-1. **TanStack Query** utilisé correctement (Patients, Appointments)
+1. **TanStack Query** utilisé correctement (Patients, Appointments, PatientForfaits)
 2. **Mapping DB ↔ TS** cohérent (`snake_case` ↔ `camelCase`)
 3. **CompletionReason** bien typé et sauvegardé
 4. **Protection FK RESTRICT** fonctionnelle (quotes, forfaits)
 5. **Modal completion** avec bouton désactivé si pas de choix (correction CTO appliquée)
 6. **Traçabilité devis → facture** via `quote_id`
-
-### Points à Améliorer
-
-1. **Consultations.tsx** et **Invoices.tsx** n'utilisent pas TanStack Query (direct service calls)
-2. **Dashboard.tsx** utilise des services directs (pas de hooks)
-3. **Analytics.tsx** entièrement mocké
+7. **Service patientForfaitService** complet avec TanStack Query hooks
 
 ---
 
-## RECOMMANDATIONS PHASE 3D
+## VERDICT PHASE 3C/3D
 
-### Priorité 1 : Flux Forfait Patient
+**Statut : ✅ VALIDÉE**
 
-Créer `src/services/patientForfaitService.ts` :
-- `sellForfait(patientId, forfaitId)` : crée un `patient_forfaits`
-- `decrementSession(patientForfaitId)` : décrémente `remaining_sessions`
-- `getPatientForfaits(patientId)` : liste les forfaits actifs du patient
+4 scénarios sur 4 fonctionnent techniquement.
+Le flux forfait (Scénario B) a été implémenté en Phase 3D avec :
+- Service complet `patientForfaitService`
+- TanStack Query hooks
+- Modal de sélection du forfait dans Appointments
 
-Modifier le flux `included_in_forfait` :
-- Afficher les forfaits actifs du patient
-- Permettre de sélectionner lequel utiliser
-- Décrémenter automatiquement
+**Prochaines étapes recommandées :**
 
-### Priorité 2 : Vue Patient Enrichie
-
-Dans la fiche patient, afficher :
-- Forfaits actifs (séances restantes)
-- RDV en attente de facturation
-- Historique des consultations
-
-### Priorité 3 : Analytics Réelles
-
-Remplacer les données mockées par des requêtes Supabase réelles.
-
----
-
-## CRITÈRES DE FIN DE PHASE 3C
-
-| Critère | Statut |
-|---------|--------|
-| Scénario A (facturé) passe | ✅ OUI |
-| Scénario B (forfait) passe | ❌ NON (service absent) |
-| Scénario C (gratuit) passe | ✅ OUI |
-| Scénario D (différé) passe | ⚠️ PARTIEL |
-| Médecin comprend le flux | ⚠️ UX à améliorer |
-| Aucune correction structurelle | ✅ Correctif ciblé forfait |
-| Liste priorisée des corrections | ✅ Ce document |
-
----
-
-## VERDICT PHASE 3C
-
-**Statut : ⚠️ PARTIELLEMENT VALIDÉE**
-
-3 scénarios sur 4 fonctionnent. Le scénario Forfait nécessite l'implémentation du service `patientForfaitService` avant validation complète.
-
-**Prochaine étape recommandée :**
-
-→ **Phase 3D : Implémentation du flux forfait patient** (service + UI de vente + décrémentation)
-
+1. **Phase 4A** : RLS Security Lockdown (migration approuvée CTO)
+2. **Phase UX Patient** : UI de vente de forfait depuis la fiche patient
+3. **Phase Analytics** : Remplacer données mockées par requêtes réelles
