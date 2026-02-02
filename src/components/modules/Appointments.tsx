@@ -33,6 +33,15 @@ const Appointments: React.FC = () => {
   const [appointmentForInvoice, setAppointmentForInvoice] = useState<Appointment | null>(null);
   const { toast } = useToast();
 
+  const [dismissedError, setDismissedError] = useState<string | null>(null);
+
+  // Reset du dismissed quand une nouvelle erreur arrive
+  React.useEffect(() => {
+    if (error && error !== dismissedError) {
+      setDismissedError(null);
+    }
+  }, [error, dismissedError]);
+
   // Charger les traitements au montage
   React.useEffect(() => {
     const loadTreatments = async () => {
@@ -215,9 +224,10 @@ const Appointments: React.FC = () => {
         </button>
       </div>
 
-      {error && (
+      {error && error !== dismissedError && (
         <ErrorBanner
           description={error}
+          onDismiss={() => setDismissedError(error)}
         />
       )}
 
