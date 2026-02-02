@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { patientService } from '../services/patientService';
 import { Patient } from '../types';
+import { logger } from '../lib/logger';
 
 export const usePatients = () => {
   const [patients, setPatients] = useState<Patient[]>([]);
@@ -15,7 +16,7 @@ export const usePatients = () => {
       const data = await patientService.getAll();
       setPatients(data);
     } catch (err) {
-      console.error('Error fetching patients:', err);
+      logger.error('Error fetching patients', err);
       setError('Erreur lors du chargement des patients');
     } finally {
       setLoading(false);
@@ -28,7 +29,7 @@ export const usePatients = () => {
       setPatients(prev => [newPatient, ...prev]);
       return newPatient;
     } catch (err) {
-      console.error('Error creating patient:', err);
+      logger.error('Error creating patient', err);
       throw err;
     }
   };
@@ -41,7 +42,7 @@ export const usePatients = () => {
       );
       return updatedPatient;
     } catch (err) {
-      console.error('Error updating patient:', err);
+      logger.error('Error updating patient', err);
       throw err;
     }
   };
@@ -51,7 +52,7 @@ export const usePatients = () => {
       await patientService.delete(id);
       setPatients(prev => prev.filter(patient => patient.id !== id));
     } catch (err) {
-      console.error('Error deleting patient:', err);
+      logger.error('Error deleting patient', err);
       throw err;
     }
   };
@@ -62,7 +63,7 @@ export const usePatients = () => {
       const results = await patientService.search(searchTerm);
       return results;
     } catch (err) {
-      console.error('Error searching patients:', err);
+      logger.error('Error searching patients', err);
       setError('Erreur lors de la recherche');
       return [];
     }

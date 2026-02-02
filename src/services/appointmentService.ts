@@ -1,6 +1,7 @@
 
 import { supabase } from '../integrations/supabase/client';
 import { Appointment } from '../types';
+import { logger } from '../lib/logger';
 
 // Fonction pour convertir les données de la DB vers le type Appointment
 const mapDbAppointmentToAppointment = (dbAppointment: any): Appointment => ({
@@ -38,13 +39,13 @@ export const appointmentService = {
         .order('time', { ascending: true });
 
       if (error) {
-        console.error('Erreur lors de la récupération des rendez-vous:', error);
+        logger.error('Erreur lors de la récupération des rendez-vous', error);
         throw error;
       }
 
       return data?.map(mapDbAppointmentToAppointment) || [];
     } catch (error) {
-      console.error('Erreur dans getAll appointments:', error);
+      logger.error('Erreur dans getAll appointments', error);
       throw error;
     }
   },
@@ -59,13 +60,13 @@ export const appointmentService = {
         .order('time', { ascending: true });
 
       if (error) {
-        console.error('Erreur lors de la récupération des rendez-vous par date:', error);
+        logger.error('Erreur lors de la récupération des rendez-vous par date', error);
         throw error;
       }
 
       return data?.map(mapDbAppointmentToAppointment) || [];
     } catch (error) {
-      console.error('Erreur dans getByDate appointments:', error);
+      logger.error('Erreur dans getByDate appointments', error);
       throw error;
     }
   },
@@ -81,13 +82,13 @@ export const appointmentService = {
         .order('time', { ascending: true });
 
       if (error) {
-        console.error('Erreur lors de la récupération des rendez-vous du patient:', error);
+        logger.error('Erreur lors de la récupération des rendez-vous du patient', error);
         throw error;
       }
 
       return data?.map(mapDbAppointmentToAppointment) || [];
     } catch (error) {
-      console.error('Erreur dans getByPatient appointments:', error);
+      logger.error('Erreur dans getByPatient appointments', error);
       throw error;
     }
   },
@@ -105,13 +106,13 @@ export const appointmentService = {
         if (error.code === 'PGRST116') {
           return null;
         }
-        console.error('Erreur lors de la récupération du rendez-vous:', error);
+        logger.error('Erreur lors de la récupération du rendez-vous', error);
         throw error;
       }
 
       return data ? mapDbAppointmentToAppointment(data) : null;
     } catch (error) {
-      console.error('Erreur dans getById appointment:', error);
+      logger.error('Erreur dans getById appointment', error);
       throw error;
     }
   },
@@ -128,13 +129,13 @@ export const appointmentService = {
         .single();
 
       if (error) {
-        console.error('Erreur lors de la création du rendez-vous:', error);
+        logger.error('Erreur lors de la création du rendez-vous', error);
         throw error;
       }
 
       return mapDbAppointmentToAppointment(data);
     } catch (error) {
-      console.error('Erreur dans create appointment:', error);
+      logger.error('Erreur dans create appointment', error);
       throw error;
     }
   },
@@ -152,13 +153,13 @@ export const appointmentService = {
         .single();
 
       if (error) {
-        console.error('Erreur lors de la mise à jour du rendez-vous:', error);
+        logger.error('Erreur lors de la mise à jour du rendez-vous', error);
         throw error;
       }
 
       return mapDbAppointmentToAppointment(data);
     } catch (error) {
-      console.error('Erreur dans update appointment:', error);
+      logger.error('Erreur dans update appointment', error);
       throw error;
     }
   },
@@ -174,13 +175,13 @@ export const appointmentService = {
         .single();
 
       if (error) {
-        console.error('Erreur lors de la mise à jour du statut:', error);
+        logger.error('Erreur lors de la mise à jour du statut', error);
         throw error;
       }
 
       return mapDbAppointmentToAppointment(data);
     } catch (error) {
-      console.error('Erreur dans updateStatus appointment:', error);
+      logger.error('Erreur dans updateStatus appointment', error);
       throw error;
     }
   },
@@ -194,11 +195,11 @@ export const appointmentService = {
         .eq('id', id);
 
       if (error) {
-        console.error('Erreur lors de la suppression du rendez-vous:', error);
+        logger.error('Erreur lors de la suppression du rendez-vous', error);
         throw error;
       }
     } catch (error) {
-      console.error('Erreur dans delete appointment:', error);
+      logger.error('Erreur dans delete appointment', error);
       throw error;
     }
   }

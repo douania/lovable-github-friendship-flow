@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { appointmentService } from '../services/appointmentService';
 import { Appointment } from '../types';
 import { useCache } from './useCache';
+import { logger } from '../lib/logger';
 
 export const useCachedAppointments = () => {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -20,7 +21,7 @@ export const useCachedAppointments = () => {
   });
 
   const fetchAppointments = useCallback(async (forceRefresh = false) => {
-    console.log('Fetching appointments with cache...');
+    logger.debug('Fetching appointments with cache...');
     try {
       const data = await fetchWithCache(
         'appointments_list',
@@ -29,16 +30,16 @@ export const useCachedAppointments = () => {
       );
       setAppointments(data);
       setError(null);
-      console.log('Appointments loaded from cache:', data.length);
+      logger.debug('Appointments loaded from cache', data.length);
     } catch (err) {
-      console.error('Error fetching appointments:', err);
+      logger.error('Error fetching appointments', err);
       setError('Erreur lors du chargement des rendez-vous');
     }
   }, [fetchWithCache]);
 
   const createAppointment = useCallback(async (appointmentData: Omit<Appointment, 'id'>) => {
     try {
-      console.log('Creating appointment and invalidating cache...');
+      logger.debug('Creating appointment and invalidating cache...');
       const newAppointment = await appointmentService.create(appointmentData);
       
       // Invalider tout le cache des RDV
@@ -47,14 +48,14 @@ export const useCachedAppointments = () => {
       
       return newAppointment;
     } catch (err) {
-      console.error('Error creating appointment:', err);
+      logger.error('Error creating appointment', err);
       throw err;
     }
   }, [invalidateByPattern, fetchAppointments]);
 
   const updateAppointment = useCallback(async (id: string, appointmentData: Omit<Appointment, 'id'>) => {
     try {
-      console.log('Updating appointment and invalidating cache...');
+      logger.debug('Updating appointment and invalidating cache...');
       const updatedAppointment = await appointmentService.update(id, appointmentData);
       
       // Invalider tout le cache des RDV
@@ -63,21 +64,21 @@ export const useCachedAppointments = () => {
       
       return updatedAppointment;
     } catch (err) {
-      console.error('Error updating appointment:', err);
+      logger.error('Error updating appointment', err);
       throw err;
     }
   }, [invalidateByPattern, fetchAppointments]);
 
   const deleteAppointment = useCallback(async (id: string) => {
     try {
-      console.log('Deleting appointment and invalidating cache...');
+      logger.debug('Deleting appointment and invalidating cache...');
       await appointmentService.delete(id);
       
       // Invalider tout le cache des RDV
       invalidateByPattern(/^appointments_/);
       await fetchAppointments(true);
     } catch (err) {
-      console.error('Error deleting appointment:', err);
+      logger.error('Error deleting appointment', err);
       throw err;
     }
   }, [invalidateByPattern, fetchAppointments]);
@@ -93,7 +94,7 @@ export const useCachedAppointments = () => {
         return await appointmentService.getByDate(date);
       }
     } catch (err) {
-      console.error('Error fetching appointments by date:', err);
+      logger.error('Error fetching appointments by date', err);
       throw err;
     }
   }, [fetchWithCache]);
@@ -109,14 +110,14 @@ export const useCachedAppointments = () => {
         return await appointmentService.getByPatient(patientId);
       }
     } catch (err) {
-      console.error('Error fetching appointments by patient:', err);
+      logger.error('Error fetching appointments by patient', err);
       throw err;
     }
   }, [fetchWithCache]);
 
   // Précharger les données au montage
   useEffect(() => {
-    console.log('useCachedAppointments useEffect triggered');
+    logger.debug('useCachedAppointments useEffect triggered');
     fetchAppointments();
   }, [fetchAppointments]);
 
