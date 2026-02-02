@@ -127,6 +127,12 @@ const Appointments: React.FC = () => {
       if (editingAppointment) {
         await updateMutation.mutateAsync({ id: editingAppointment.id, data: appointmentData });
         
+        // Toast succès APRÈS mutation réussie (jamais en finally)
+        toast({
+          title: "Succès",
+          description: "Rendez-vous modifié avec succès"
+        });
+        
         if (appointmentData.status === 'completed' && appointmentData.consumedProducts && appointmentData.consumedProducts.length > 0) {
           await processConsumedProducts(appointmentData.consumedProducts);
         }
@@ -138,6 +144,12 @@ const Appointments: React.FC = () => {
         }
       } else {
         await createMutation.mutateAsync(appointmentData);
+        
+        // Toast succès APRÈS mutation réussie (jamais en finally)
+        toast({
+          title: "Succès",
+          description: "Rendez-vous créé avec succès"
+        });
       }
       
       setShowAddModal(false);
@@ -183,6 +195,12 @@ const Appointments: React.FC = () => {
             status
           };
           await updateMutation.mutateAsync({ id: appointmentId, data: updatedAppointment });
+          
+          // Toast succès APRÈS mutation réussie (jamais en finally)
+          toast({
+            title: "Succès",
+            description: "Statut du rendez-vous mis à jour"
+          });
         }
       }
     } catch (err) {
