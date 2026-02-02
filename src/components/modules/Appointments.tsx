@@ -12,6 +12,8 @@ import AppointmentsList from '../appointments/AppointmentsList';
 import { usePaginatedData } from '../../hooks/usePaginatedData';
 import PaginationControls from '../ui/PaginationControls';
 import { useToast } from '../../hooks/use-toast';
+import { logger } from '../../lib/logger';
+import ErrorBanner from '../ui/ErrorBanner';
 
 const Appointments: React.FC = () => {
   const { appointments, loading, error, refetch, updateAppointment, createAppointment } = useAppointments();
@@ -38,7 +40,7 @@ const Appointments: React.FC = () => {
         const data = await treatmentService.getActive();
         setTreatments(data);
       } catch (err) {
-        console.error('Erreur lors du chargement des traitements:', err);
+        logger.error('Erreur lors du chargement des traitements', err);
       }
     };
     loadTreatments();
@@ -111,7 +113,7 @@ const Appointments: React.FC = () => {
       setEditingAppointment(null);
       refetch();
     } catch (err) {
-      console.error('Erreur lors de la sauvegarde du rendez-vous:', err);
+      logger.error('Erreur lors de la sauvegarde du rendez-vous', err);
       toast({
         title: "Erreur",
         description: "Erreur lors de la sauvegarde du rendez-vous",
@@ -126,7 +128,7 @@ const Appointments: React.FC = () => {
         await productService.decrementProductQuantity(item.productId, item.quantity);
       }
     } catch (err) {
-      console.error('Erreur lors de la mise à jour du stock:', err);
+      logger.error('Erreur lors de la mise à jour du stock', err);
     }
   };
 
@@ -150,7 +152,7 @@ const Appointments: React.FC = () => {
         }
       }
     } catch (err) {
-      console.error('Erreur lors de la mise à jour du statut:', err);
+      logger.error('Erreur lors de la mise à jour du statut', err);
     }
   };
 
@@ -188,7 +190,7 @@ const Appointments: React.FC = () => {
       setShowInvoiceModal(false);
       setAppointmentForInvoice(null);
     } catch (err) {
-      console.error('Erreur création facture:', err);
+      logger.error('Erreur création facture', err);
       toast({
         title: "Erreur",
         description: "Erreur lors de la création de la facture",
@@ -214,9 +216,9 @@ const Appointments: React.FC = () => {
       </div>
 
       {error && (
-        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl">
-          <p className="text-red-800 text-sm">{error}</p>
-        </div>
+        <ErrorBanner
+          description={error}
+        />
       )}
 
       <AppointmentFilters

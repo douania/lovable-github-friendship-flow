@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { patientService } from '../services/patientService';
 import { Patient } from '../types';
 import { useCache } from './useCache';
+import { logger } from '../lib/logger';
 
 export const useCachedPatients = () => {
   const [patients, setPatients] = useState<Patient[]>([]);
@@ -29,7 +30,7 @@ export const useCachedPatients = () => {
       setPatients(data);
       setError(null);
     } catch (err) {
-      console.error('Error fetching patients:', err);
+      logger.error('Error fetching patients', err);
       setError('Erreur lors du chargement des patients');
     }
   }, [fetchWithCache]);
@@ -44,7 +45,7 @@ export const useCachedPatients = () => {
       
       return newPatient;
     } catch (err) {
-      console.error('Error creating patient:', err);
+      logger.error('Error creating patient', err);
       throw err;
     }
   }, [invalidateByPattern, fetchPatients]);
@@ -59,7 +60,7 @@ export const useCachedPatients = () => {
       
       return updatedPatient;
     } catch (err) {
-      console.error('Error updating patient:', err);
+      logger.error('Error updating patient', err);
       throw err;
     }
   }, [invalidateByPattern, fetchPatients]);
@@ -72,7 +73,7 @@ export const useCachedPatients = () => {
       invalidateByPattern(/^patients_/);
       await fetchPatients(true);
     } catch (err) {
-      console.error('Error deleting patient:', err);
+      logger.error('Error deleting patient', err);
       throw err;
     }
   }, [invalidateByPattern, fetchPatients]);
@@ -87,7 +88,7 @@ export const useCachedPatients = () => {
       const results = await patientService.search(searchTerm);
       return results;
     } catch (err) {
-      console.error('Error searching patients:', err);
+      logger.error('Error searching patients', err);
       setError('Erreur lors de la recherche');
       return [];
     }
@@ -104,7 +105,7 @@ export const useCachedPatients = () => {
         return await patientService.getById(id);
       }
     } catch (err) {
-      console.error('Error fetching patient:', err);
+      logger.error('Error fetching patient', err);
       throw err;
     }
   }, [fetchWithCache]);

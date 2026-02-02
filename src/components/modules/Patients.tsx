@@ -6,6 +6,8 @@ import PatientForm from '../forms/PatientForm';
 import { usePaginatedData } from '../../hooks/usePaginatedData';
 import PaginationControls from '../ui/PaginationControls';
 import { useToast } from '../../hooks/use-toast';
+import { logger } from '../../lib/logger';
+import ErrorBanner from '../ui/ErrorBanner';
 
 const Patients: React.FC = () => {
   const [patients, setPatients] = useState<Patient[]>([]);
@@ -42,7 +44,7 @@ const Patients: React.FC = () => {
       const data = await patientService.getAll();
       setPatients(data);
     } catch (err) {
-      console.error('Erreur lors du chargement des patients:', err);
+      logger.error('Erreur lors du chargement des patients', err);
       toast({
         title: "Erreur",
         description: "Erreur lors du chargement des patients",
@@ -78,7 +80,7 @@ const Patients: React.FC = () => {
       setShowAddModal(false);
       setEditingPatient(null);
     } catch (err) {
-      console.error('Erreur lors de la sauvegarde du patient:', err);
+      logger.error('Erreur lors de la sauvegarde du patient', err);
       toast({
         title: "Erreur",
         description: "Erreur lors de la sauvegarde du patient",
@@ -107,7 +109,7 @@ const Patients: React.FC = () => {
         description: "Patient supprimé avec succès"
       });
     } catch (err) {
-      console.error('Erreur lors de la suppression du patient:', err);
+      logger.error('Erreur lors de la suppression du patient', err);
       toast({
         title: "Erreur",
         description: "Erreur lors de la suppression du patient",
@@ -189,15 +191,10 @@ const Patients: React.FC = () => {
       </div>
 
       {error && (
-        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl">
-          <p className="text-red-800 text-sm">{error}</p>
-          <button 
-            onClick={() => setError(null)}
-            className="text-red-600 hover:text-red-800 text-sm underline mt-1"
-          >
-            Fermer
-          </button>
-        </div>
+        <ErrorBanner
+          description={error}
+          onDismiss={() => setError(null)}
+        />
       )}
 
       <div className="flex items-center space-x-4">

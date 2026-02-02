@@ -1213,30 +1213,12 @@ export type Database = {
         Args: { appointment_id_param: string }
         Returns: Json
       }
-      create_appointment_reminders: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      generate_smart_alerts: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      get_user_id_by_email: {
-        Args: { email_address: string }
-        Returns: string
-      }
-      get_user_role: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      has_role: {
-        Args: { required_role: string }
-        Returns: boolean
-      }
-      is_admin: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
+      create_appointment_reminders: { Args: never; Returns: undefined }
+      generate_smart_alerts: { Args: never; Returns: undefined }
+      get_user_id_by_email: { Args: { email_address: string }; Returns: string }
+      get_user_role: { Args: never; Returns: string }
+      has_role: { Args: { required_role: string }; Returns: boolean }
+      is_admin: { Args: never; Returns: boolean }
     }
     Enums: {
       [_ in never]: never

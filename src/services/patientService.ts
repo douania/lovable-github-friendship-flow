@@ -1,6 +1,7 @@
 import { supabase } from '../integrations/supabase/client';
 import { Patient } from '../types';
 import { patientSchema } from '../lib/validation';
+import { logger } from '../lib/logger';
 
 export const patientService = {
   async getAll(): Promise<Patient[]> {
@@ -26,7 +27,7 @@ export const patientService = {
         lastVisit: patient.last_visit || undefined
       })) || [];
     } catch (error) {
-      console.error('Error fetching patients:', error);
+      logger.error('Error fetching patients', error);
       throw error;
     }
   },
@@ -61,7 +62,7 @@ export const patientService = {
         lastVisit: data.last_visit || undefined
       };
     } catch (error) {
-      console.error('Error fetching patient by ID:', error);
+      logger.error('Error fetching patient by ID', error);
       throw error;
     }  
   },
@@ -107,7 +108,7 @@ export const patientService = {
         lastVisit: data.last_visit || undefined
       };
     } catch (error) {
-      console.error('Error creating patient:', error);
+      logger.error('Error creating patient', error);
       throw error;
     }
   },
@@ -150,7 +151,7 @@ export const patientService = {
         lastVisit: data.last_visit || undefined
       };
     } catch (error) {
-      console.error('Error updating patient:', error);
+      logger.error('Error updating patient', error);
       throw error;
     }
   },
@@ -164,7 +165,7 @@ export const patientService = {
 
       if (error) throw error;
     } catch (error) {
-      console.error('Error deleting patient:', error);
+      logger.error('Error deleting patient', error);
       throw error;
     }
   },
@@ -193,7 +194,7 @@ export const patientService = {
         lastVisit: patient.last_visit || undefined
       })) || [];
     } catch (error) {
-      console.error('Error searching patients:', error);
+      logger.error('Error searching patients', error);
       throw error;
     }
   }
