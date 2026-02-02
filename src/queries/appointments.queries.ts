@@ -45,9 +45,12 @@ export const useAppointmentsQuery = (params?: AppointmentsQueryParams) => {
 };
 
 // Hook pour récupérer les RDV d'un patient spécifique (Phase 3B - Pilier 1)
+// Correction CTO: clé de cache robuste pour éviter collisions avec ''
 export const usePatientAppointmentsQuery = (patientId: string | undefined) => {
   return useQuery({
-    queryKey: appointmentKeys.byPatient(patientId || ''),
+    queryKey: patientId 
+      ? appointmentKeys.byPatient(patientId) 
+      : ['appointments', 'byPatient', 'none'] as const,
     queryFn: () => appointmentService.getByPatient(patientId!),
     enabled: !!patientId, // Ne s'exécute que si patientId est défini
   });
