@@ -59,7 +59,8 @@ const Appointments: React.FC = () => {
   const [dismissedError, setDismissedError] = useState<string | null>(null);
   const [isCreatingInvoice, setIsCreatingInvoice] = useState(false);
   // Phase 3B - Pilier 4: State pour la raison de completion
-  const [selectedCompletionReason, setSelectedCompletionReason] = useState<CompletionReason>('invoiced');
+  // Correction CTO: null par défaut pour forcer un choix explicite
+  const [selectedCompletionReason, setSelectedCompletionReason] = useState<CompletionReason | null>(null);
   const { toast } = useToast();
 
   // Error message for display
@@ -400,8 +401,8 @@ const Appointments: React.FC = () => {
 
             <div className="flex space-x-4">
               <button 
-                onClick={() => createInvoiceFromAppointment(selectedCompletionReason)}
-                disabled={isCreatingInvoice}
+                onClick={() => selectedCompletionReason && createInvoiceFromAppointment(selectedCompletionReason)}
+                disabled={isCreatingInvoice || !selectedCompletionReason}
                 className="flex-1 bg-gradient-to-r from-pink-500 to-orange-500 text-white px-4 py-2 rounded-lg hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isCreatingInvoice ? 'Traitement...' : 'Confirmer'}
@@ -410,7 +411,7 @@ const Appointments: React.FC = () => {
                 onClick={() => {
                   setShowInvoiceModal(false);
                   setAppointmentForInvoice(null);
-                  setSelectedCompletionReason('invoiced');
+                  setSelectedCompletionReason(null);
                 }}
                 className="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition-all"
               >

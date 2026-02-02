@@ -289,10 +289,21 @@ export const invoiceService = {
       }
       
       // 2. Créer la facture avec référence au devis
-      const treatmentItems = quote.treatment_items as any[];
+      // NOTE CTO: treatment_items utilise treatmentId comme clé normalisée.
+      // Fallback soinId maintenu pour rétrocompatibilité données existantes.
+      // TODO Phase 4: Migrer toutes les données vers treatmentId uniquement.
+      const treatmentItems = quote.treatment_items as Array<{ treatmentId?: string; soinId?: string }>;
+      const treatmentIds = treatmentItems?.map((item) => {
+        const id = item.treatmentId || item.soinId;
+        if (!id) {
+          console.warn('treatment_items contient un item sans treatmentId ni soinId:', item);
+        }
+        return id;
+      }).filter((id): id is string => !!id) || [];
+      
       const invoiceData: Omit<Invoice, 'id'> = {
         patientId: quote.patient_id,
-        treatmentIds: treatmentItems?.map((item: any) => item.soinId || item.treatmentId) || [],
+        treatmentIds,
         amount: quote.total_amount,
         status: 'unpaid',
         paymentMethod: 'cash',

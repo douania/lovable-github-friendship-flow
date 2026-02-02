@@ -1,0 +1,2 @@
+-- Phase 3B Correction CTO #4: Commentaire métier sur patient_forfaits
+COMMENT ON TABLE patient_forfaits IS 'Table de liaison patient ↔ forfait avec suivi des séances. Créée Phase 3B pour protéger les forfaits vendus contre suppression accidentelle.';
