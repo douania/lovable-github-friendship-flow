@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { FileSpreadsheet, Download, Calendar, Users, TrendingUp, Package } from 'lucide-react';
-import { usePatients } from '../../hooks/usePatients';
-import { useAppointments } from '../../hooks/useAppointments';
+import { usePatientsQuery } from '../../queries/patients.queries';
+import { useAppointmentsQuery } from '../../queries/appointments.queries';
 import { useInventory } from '../../hooks/useInventory';
 
 const ExcelReporting: React.FC = () => {
@@ -12,8 +12,8 @@ const ExcelReporting: React.FC = () => {
   });
   const [isGenerating, setIsGenerating] = useState(false);
 
-  const { patients } = usePatients();
-  const { appointments } = useAppointments();
+  const { data: patients = [] } = usePatientsQuery();
+  const { data: appointments = [] } = useAppointmentsQuery();
   const { products } = useInventory();
 
   const reportTypes = [

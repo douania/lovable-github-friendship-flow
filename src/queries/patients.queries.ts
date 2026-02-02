@@ -1,3 +1,17 @@
+/**
+ * SOURCE OF TRUTH — Patients data access
+ * 
+ * Toute récupération ou mutation des patients DOIT passer par ce fichier.
+ * Interdiction d'accès direct à patientService depuis les composants.
+ * 
+ * Hooks disponibles:
+ * - usePatientsQuery(params?) — lecture
+ * - useCreatePatientMutation() — création
+ * - useUpdatePatientMutation() — modification  
+ * - useDeletePatientMutation() — suppression
+ * 
+ * @see Phase 2B migration TanStack Query
+ */
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { patientService } from '../services/patientService';
 import { Patient } from '../types';
