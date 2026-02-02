@@ -1,302 +1,202 @@
 
 
-# PHASE 2F — Harmonisation UX Fonctionnelle (NON VISUELLE)
+# PHASE 3A — Correctifs Fonctionnels BLOQUANTS (v2 AJUSTÉE CTO)
 
-## Résultat de l'audit
+## Récapitulatif des ajustements CTO intégrés
 
-### Problèmes identifiés (UNIQUEMENT fonctionnels)
-
-| # | Fichier | Problème | Type |
-|---|---------|----------|------|
-| 1 | `Consultations.tsx` | Utilise `toast` de `sonner` directement (ligne 10) au lieu de `useToast` | Toast system |
-| 2 | `Quotes.tsx` | Message suppression générique (ligne 164) | Message métier |
-| 3 | `Invoices.tsx` | Message suppression générique (ligne 83) | Message métier |
-| 4 | `ForfaitManagement.tsx` | Message suppression générique (ligne 68) | Message métier |
-| 5 | `ForfaitManagement.tsx` | Aucun toast succès après création/modification/suppression | Feedback manquant |
-
-### Ce qui est DÉJÀ conforme ✅
-
-- `Quotes.tsx` : Utilise déjà `useToast` ✅
-- `Invoices.tsx` : Utilise déjà `useToast`, toasts succès/erreur présents ✅
-- `Consultations.tsx` : Toasts succès/erreur présents (mais via sonner direct)
+| # | Point CTO | Ajustement appliqué |
+|---|-----------|---------------------|
+| 1 | Validation stock | Erreur métier standardisée `STOCK_INSUFFICIENT` avec métadonnées |
+| 2 | Rapport revenus | Chargement factures **à la demande** (pas de useState/useEffect) |
 
 ---
 
-## Scope Phase 2F (4 fichiers)
+## Correction 1 — Suppression devis (BLOQUANT)
 
-| # | Fichier | Modifications |
-|---|---------|---------------|
-| 1 | `Consultations.tsx` | Remplacer import `sonner` par `useToast` + adapter appels |
-| 2 | `Quotes.tsx` | Message suppression métier standardisé |
-| 3 | `Invoices.tsx` | Message suppression métier standardisé |
-| 4 | `ForfaitManagement.tsx` | Message suppression métier + import `useToast` + toasts succès/erreur |
+### Fichier 1 : `src/services/quoteService.ts`
+
+**Ajouter après ligne 172** — Nouvelle méthode `deleteQuote()`
+
+```typescript
+async deleteQuote(id: string): Promise<void> {
+  const { error } = await supabase
+    .from('quotes')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    console.error('Erreur lors de la suppression du devis:', error);
+    throw error;
+  }
+}
+```
+
+### Fichier 2 : `src/components/modules/Quotes.tsx`
+
+**Lignes 168-173** — Remplacer le toast placeholder par l'appel réel
+
+```typescript
+// AVANT (lignes 168-173)
+try {
+  console.log('Suppression du devis avec ID:', id);
+  toast({
+    title: 'Information',
+    description: 'Fonction de suppression à implémenter.',
+  });
+
+// APRÈS
+try {
+  await quoteService.deleteQuote(id);
+  await loadQuotes();
+  toast({
+    title: 'Succès',
+    description: 'Devis supprimé avec succès.',
+  });
+```
 
 ---
 
-## Détail des modifications
+## Correction 2 — Validation stock (MAJEUR) — AJUSTEMENT CTO
 
-### 1. Consultations.tsx — Harmonisation système toast
+### Fichier : `src/services/productService.ts`
 
-**Ligne 10** — Remplacer import sonner
+**Lignes 228-232** — Ajouter validation avec erreur métier standardisée
 
-```text
-AVANT:
-import { toast } from 'sonner';
+```typescript
+// AVANT (lignes 228-232)
+if (!product) {
+  throw new Error('Product not found');
+}
 
-APRÈS:
+const newQuantity = Math.max(0, product.quantity - quantity);
+
+// APRÈS
+if (!product) {
+  throw new Error('Produit introuvable');
+}
+
+// VALIDATION : stock suffisant (erreur métier standardisée)
+if (product.quantity < quantity) {
+  const error = new Error('STOCK_INSUFFICIENT');
+  (error as any).meta = {
+    available: product.quantity,
+    requested: quantity
+  };
+  throw error;
+}
+
+const newQuantity = product.quantity - quantity;
+```
+
+**Avantages de l'approche CTO :**
+- Permet au frontend de différencier erreur métier vs technique
+- Aucun impact UI immédiat (toast existant fonctionne)
+- Prépare Phase 3B proprement
+- Aucun refactor requis
+
+---
+
+## Correction 3 — Rapport revenus Excel (MAJEUR) — AJUSTEMENT CTO
+
+### Fichier : `src/components/modules/ExcelReporting.tsx`
+
+**Ligne 6** — Ajouter import du service
+
+```typescript
+// AVANT
 import { useToast } from '../../hooks/use-toast';
-```
 
-**Ligne 20** — Ajouter hook (après useState)
-
-```text
-AVANT:
-const Consultations: React.FC = () => {
-  const [consultations, setConsultations] = useState<EnrichedConsultation[]>([]);
-
-APRÈS:
-const Consultations: React.FC = () => {
-  const { toast } = useToast();
-  const [consultations, setConsultations] = useState<EnrichedConsultation[]>([]);
-```
-
-**Ligne 78** — Adapter appel toast erreur
-
-```text
-AVANT:
-toast.error('Erreur lors du chargement des consultations');
-
-APRÈS:
-toast({
-  title: "Erreur",
-  description: "Erreur lors du chargement des consultations",
-  variant: "destructive"
-});
-```
-
-**Lignes 88, 91** — Adapter appels toast succès
-
-```text
-AVANT:
-toast.success('Consultation modifiée avec succès');
-...
-toast.success('Consultation créée avec succès');
-
-APRÈS:
-toast({
-  title: "Succès",
-  description: "Consultation modifiée avec succès"
-});
-...
-toast({
-  title: "Succès",
-  description: "Consultation créée avec succès"
-});
-```
-
-**Ligne 99** — Adapter appel toast erreur
-
-```text
-AVANT:
-toast.error('Erreur lors de la sauvegarde de la consultation');
-
-APRÈS:
-toast({
-  title: "Erreur",
-  description: "Erreur lors de la sauvegarde de la consultation",
-  variant: "destructive"
-});
-```
-
----
-
-### 2. Quotes.tsx — Message suppression métier
-
-**Ligne 164** — Message suppression standardisé
-
-```text
-AVANT:
-if (!confirm('Êtes-vous sûr de vouloir supprimer ce devis ?')) {
-
-APRÈS:
-if (!confirm('Ce devis et toutes les données associées seront définitivement supprimés. Cette action est irréversible. Voulez-vous continuer ?')) {
-```
-
----
-
-### 3. Invoices.tsx — Message suppression métier
-
-**Ligne 83** — Message suppression standardisé
-
-```text
-AVANT:
-if (window.confirm('Êtes-vous sûr de vouloir supprimer cette facture ?')) {
-
-APRÈS:
-if (window.confirm('Cette facture et toutes les données associées seront définitivement supprimées. Cette action est irréversible. Voulez-vous continuer ?')) {
-```
-
----
-
-### 4. ForfaitManagement.tsx — Toasts succès/erreur + message suppression
-
-**Ligne 6** — Ajouter import
-
-```text
-AVANT:
-import ForfaitForm from '../forms/ForfaitForm';
-
-APRÈS:
-import ForfaitForm from '../forms/ForfaitForm';
+// APRÈS
 import { useToast } from '../../hooks/use-toast';
+import { invoiceService } from '../../services/invoiceService';
 ```
 
-**Ligne 9** — Ajouter hook
+**Lignes 116-135** — Réécrire `generateRevenueReport()` avec chargement à la demande
 
-```text
-AVANT:
-const ForfaitManagement: React.FC = () => {
-  const [forfaits, setForfaits] = useState<Forfait[]>([]);
-
-APRÈS:
-const ForfaitManagement: React.FC = () => {
-  const { toast } = useToast();
-  const [forfaits, setForfaits] = useState<Forfait[]>([]);
-```
-
-**Lignes 44-52** — Ajouter toasts succès après mutation
-
-```text
-AVANT:
-if (editingForfait) {
-  const updatedForfait = await forfaitService.update(editingForfait.id, forfaitData);
-  setForfaits(prev => prev.map(f => 
-    f.id === editingForfait.id ? updatedForfait : f
-  ));
-} else {
-  const newForfait = await forfaitService.create(forfaitData);
-  setForfaits(prev => [newForfait, ...prev]);
-}
-
-APRÈS:
-if (editingForfait) {
-  const updatedForfait = await forfaitService.update(editingForfait.id, forfaitData);
-  setForfaits(prev => prev.map(f => 
-    f.id === editingForfait.id ? updatedForfait : f
-  ));
-  toast({
-    title: "Succès",
-    description: "Forfait modifié avec succès"
+```typescript
+// AVANT
+const generateRevenueReport = () => {
+  // Simuler des données de revenus basées sur les rendez-vous
+  const filteredAppointments = appointments.filter(apt => {
+    const aptDate = new Date(apt.date);
+    const startDate = new Date(dateRange.start);
+    const endDate = new Date(dateRange.end);
+    return aptDate >= startDate && aptDate <= endDate && apt.status === 'completed';
   });
-} else {
-  const newForfait = await forfaitService.create(forfaitData);
-  setForfaits(prev => [newForfait, ...prev]);
-  toast({
-    title: "Succès",
-    description: "Forfait créé avec succès"
+
+  const revenueData = filteredAppointments.map(appointment => ({
+    'Date': new Date(appointment.date).toLocaleDateString('fr-FR'),
+    'Patient ID': appointment.patientId,
+    'Traitement ID': appointment.treatmentId,
+    'Montant estimé': '0', // À calculer depuis la base de données
+    'Mode paiement': 'N/A',
+    'Statut': appointment.status
+  }));
+  
+  generateCSV(revenueData, `rapport_revenus_${dateRange.start}_${dateRange.end}`);
+};
+
+// APRÈS (chargement à la demande — ajustement CTO)
+const generateRevenueReport = async () => {
+  // Charger les factures uniquement au moment de la génération
+  const invoices = await invoiceService.getAll();
+  
+  const filteredInvoices = invoices.filter(inv => {
+    const invDate = new Date(inv.createdAt);
+    const startDate = new Date(dateRange.start);
+    const endDate = new Date(dateRange.end);
+    return invDate >= startDate && invDate <= endDate;
   });
-}
+
+  const revenueData = filteredInvoices.map(invoice => ({
+    'Numéro facture': invoice.id,
+    'Date': new Date(invoice.createdAt).toLocaleDateString('fr-FR'),
+    'Patient ID': invoice.patientId,
+    'Montant': invoice.amount.toLocaleString() + ' FCFA',
+    'Mode paiement': invoice.paymentMethod || 'N/A',
+    'Statut': invoice.status === 'paid' ? 'Payée' : invoice.status === 'partial' ? 'Partiel' : 'Impayée',
+    'Date paiement': invoice.paidAt ? new Date(invoice.paidAt).toLocaleDateString('fr-FR') : '-'
+  }));
+  
+  generateCSV(revenueData, `rapport_revenus_${dateRange.start}_${dateRange.end}`);
+};
 ```
 
-**Lignes 56-59** — Ajouter toast erreur
-
-```text
-AVANT:
-} catch (err) {
-  console.error('Erreur lors de la sauvegarde du forfait:', err);
-  setError('Erreur lors de la sauvegarde. Veuillez réessayer.');
-}
-
-APRÈS:
-} catch (err) {
-  console.error('Erreur lors de la sauvegarde du forfait:', err);
-  toast({
-    title: "Erreur",
-    description: "Erreur lors de la sauvegarde du forfait",
-    variant: "destructive"
-  });
-}
-```
-
-**Ligne 68** — Message suppression standardisé
-
-```text
-AVANT:
-if (!confirm('Êtes-vous sûr de vouloir supprimer ce forfait ?')) {
-
-APRÈS:
-if (!confirm('Ce forfait et toutes les données associées seront définitivement supprimés. Cette action est irréversible. Voulez-vous continuer ?')) {
-```
-
-**Lignes 74-76** — Ajouter toast succès après suppression
-
-```text
-AVANT:
-await forfaitService.delete(forfaitId);
-setForfaits(prev => prev.filter(f => f.id !== forfaitId));
-setSelectedForfait(null);
-
-APRÈS:
-await forfaitService.delete(forfaitId);
-setForfaits(prev => prev.filter(f => f.id !== forfaitId));
-setSelectedForfait(null);
-toast({
-  title: "Succès",
-  description: "Forfait supprimé avec succès"
-});
-```
-
-**Lignes 77-80** — Ajouter toast erreur suppression
-
-```text
-AVANT:
-} catch (err) {
-  console.error('Erreur lors de la suppression du forfait:', err);
-  setError('Erreur lors de la suppression. Veuillez réessayer.');
-}
-
-APRÈS:
-} catch (err) {
-  console.error('Erreur lors de la suppression du forfait:', err);
-  toast({
-    title: "Erreur",
-    description: "Erreur lors de la suppression du forfait",
-    variant: "destructive"
-  });
-}
-```
+**Note importante :** La fonction devient `async`, ce qui est géré automatiquement par le `try/catch` dans `handleGenerateReport()` ligne 156.
 
 ---
 
-## Résumé des modifications
+## Récapitulatif des modifications
 
-| Fichier | Lignes modifiées | Description |
-|---------|------------------|-------------|
-| `Consultations.tsx` | ~10, ~20, ~78, ~88, ~91, ~99 | Hook useToast + adaptation 4 appels toast |
-| `Quotes.tsx` | ~164 | Message suppression métier |
-| `Invoices.tsx` | ~83 | Message suppression métier |
-| `ForfaitManagement.tsx` | ~6-9, ~48-52, ~56-59, ~68, ~74-80 | Hook + 5 toasts + message suppression |
+| Fichier | Lignes | Description |
+|---------|--------|-------------|
+| `src/services/quoteService.ts` | +8 (après 172) | Ajout méthode `deleteQuote()` |
+| `src/components/modules/Quotes.tsx` | 168-173 | Appel réel `quoteService.deleteQuote()` |
+| `src/services/productService.ts` | 228-232 | Validation stock + erreur métier `STOCK_INSUFFICIENT` |
+| `src/components/modules/ExcelReporting.tsx` | 6, 116-135 | Import invoiceService + vraies données factures (async) |
 
-**Total : 4 fichiers, ~35 lignes modifiées**
-
----
-
-## Ce qui NE change PAS (explicitement exclu)
-
-- ❌ Aucune classe CSS modifiée
-- ❌ Aucun bouton restyled
-- ❌ Aucun gradient ajouté
-- ❌ Aucune icône modifiée
-- ❌ Aucun padding/margin/radius modifié
-- ❌ Aucune animation ajoutée
+**Total : 4 fichiers, ~45 lignes modifiées**
 
 ---
 
-## Critères d'acceptation Phase 2F
+## Ce qui NE change PAS
 
-- [ ] Plus aucun `import { toast } from 'sonner'` direct
-- [ ] Plus aucun message de suppression générique
-- [ ] Toutes les mutations CRUD de ForfaitManagement ont un toast
-- [ ] AUCUN pixel visuel n'a changé (hors texte)
-- [ ] Aucune régression Phases 2A → 2E
+- ❌ Aucune modification UI
+- ❌ Aucun nouveau composant  
+- ❌ Aucune migration DB
+- ❌ Aucun useState/useEffect ajouté pour les factures
+- ❌ Aucun refactor structurel
+
+---
+
+## Critères d'acceptation Phase 3A
+
+- [ ] Supprimer un devis supprime réellement la ligne en base
+- [ ] Toast succès affiché après suppression devis
+- [ ] Tentative de décrémentation > stock disponible → erreur `STOCK_INSUFFICIENT` levée
+- [ ] Erreur contient métadonnées `{ available, requested }`
+- [ ] Rapport revenus Excel contient les vrais montants des factures
+- [ ] Chargement factures uniquement à la génération (pas au montage)
+- [ ] Aucun pixel modifié
+- [ ] Aucune régression Phases 2A → 2F
 
