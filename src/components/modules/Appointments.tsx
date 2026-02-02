@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Plus } from 'lucide-react';
-import { Appointment } from '../../types';
+import { Appointment, CompletionReason } from '../../types';
 import { 
   useAppointmentsQuery, 
   useCreateAppointmentMutation, 
@@ -19,6 +19,15 @@ import PaginationControls from '../ui/PaginationControls';
 import { useToast } from '../../hooks/use-toast';
 import { logger } from '../../lib/logger';
 import ErrorBanner from '../ui/ErrorBanner';
+
+// Phase 3B - Pilier 4: Labels pour les raisons de fin de RDV
+const COMPLETION_REASON_LABELS: Record<CompletionReason, string> = {
+  invoiced: 'Créer la facture',
+  included_in_forfait: 'Inclus dans un forfait',
+  free: 'Gratuit',
+  pending_invoice: 'Facturer plus tard',
+  other: 'Autre'
+};
 
 const Appointments: React.FC = () => {
   // TanStack Query hooks
@@ -49,6 +58,8 @@ const Appointments: React.FC = () => {
   const [appointmentForInvoice, setAppointmentForInvoice] = useState<Appointment | null>(null);
   const [dismissedError, setDismissedError] = useState<string | null>(null);
   const [isCreatingInvoice, setIsCreatingInvoice] = useState(false);
+  // Phase 3B - Pilier 4: State pour la raison de completion
+  const [selectedCompletionReason, setSelectedCompletionReason] = useState<CompletionReason>('invoiced');
   const { toast } = useToast();
 
   // Error message for display
@@ -218,31 +229,52 @@ const Appointments: React.FC = () => {
     return treatment ? treatment.name : 'Soin inconnu';
   };
 
-  const createInvoiceFromAppointment = async () => {
+  const createInvoiceFromAppointment = async (reason: CompletionReason) => {
     // GUARD: empêcher double création facture
     if (!appointmentForInvoice || isCreatingInvoice) return;
     
     setIsCreatingInvoice(true);
     try {
-      const treatment = treatments.find(t => t.id === appointmentForInvoice.treatmentId);
-      const invoiceData = {
-        patientId: appointmentForInvoice.patientId,
-        treatmentIds: [appointmentForInvoice.treatmentId],
-        amount: treatment?.price || 0,
-        status: 'unpaid' as const,
-        paymentMethod: 'cash' as const,
-        createdAt: new Date().toISOString(),
+      // Phase 3B - Pilier 4: Mettre à jour le RDV avec la raison de completion
+      const updatedAppointmentData: Omit<Appointment, 'id'> = {
+        ...appointmentForInvoice,
+        completionReason: reason
       };
-      
-      await invoiceService.create(invoiceData);
-      
-      toast({
-        title: "Facture créée",
-        description: "La facture a été créée avec succès",
+      await updateMutation.mutateAsync({ 
+        id: appointmentForInvoice.id, 
+        data: updatedAppointmentData 
       });
+
+      // Si "invoiced", créer la facture
+      if (reason === 'invoiced') {
+        const treatment = treatments.find(t => t.id === appointmentForInvoice.treatmentId);
+        const invoiceData = {
+          patientId: appointmentForInvoice.patientId,
+          treatmentIds: [appointmentForInvoice.treatmentId],
+          amount: treatment?.price || 0,
+          status: 'unpaid' as const,
+          paymentMethod: 'cash' as const,
+          createdAt: new Date().toISOString(),
+        };
+        
+        await invoiceService.create(invoiceData);
+        
+        toast({
+          title: "Facture créée",
+          description: "La facture a été créée avec succès",
+        });
+      } else {
+        // Juste enregistrer la raison
+        const reasonLabel = COMPLETION_REASON_LABELS[reason];
+        toast({
+          title: "RDV terminé",
+          description: `Raison enregistrée: ${reasonLabel}`,
+        });
+      }
       
       setShowInvoiceModal(false);
       setAppointmentForInvoice(null);
+      setSelectedCompletionReason('invoiced'); // Reset
     } catch (err) {
       logger.error('Erreur création facture', err);
       toast({
@@ -336,27 +368,53 @@ const Appointments: React.FC = () => {
 
       {showInvoiceModal && appointmentForInvoice && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 max-w-md">
-            <h3 className="text-xl font-bold mb-4">Créer la facture ?</h3>
-            <p className="text-gray-600 mb-6">
-              Le rendez-vous est terminé. Voulez-vous créer la facture maintenant ?
+          <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4">
+            <h3 className="text-xl font-bold mb-4">Terminer le rendez-vous</h3>
+            <p className="text-gray-600 mb-4">
+              Le rendez-vous est terminé. Comment souhaitez-vous le finaliser ?
             </p>
+            
+            {/* Phase 3B - Pilier 4: Choix de la raison */}
+            <div className="space-y-2 mb-6">
+              {(Object.entries(COMPLETION_REASON_LABELS) as [CompletionReason, string][]).map(([value, label]) => (
+                <label 
+                  key={value}
+                  className={`flex items-center p-3 border rounded-lg cursor-pointer transition-colors ${
+                    selectedCompletionReason === value 
+                      ? 'border-pink-500 bg-pink-50' 
+                      : 'border-gray-200 hover:bg-gray-50'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="completionReason"
+                    value={value}
+                    checked={selectedCompletionReason === value}
+                    onChange={() => setSelectedCompletionReason(value)}
+                    className="mr-3 text-pink-500 focus:ring-pink-500"
+                  />
+                  <span className="text-gray-700">{label}</span>
+                </label>
+              ))}
+            </div>
+
             <div className="flex space-x-4">
               <button 
-                onClick={createInvoiceFromAppointment}
+                onClick={() => createInvoiceFromAppointment(selectedCompletionReason)}
                 disabled={isCreatingInvoice}
                 className="flex-1 bg-gradient-to-r from-pink-500 to-orange-500 text-white px-4 py-2 rounded-lg hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isCreatingInvoice ? 'Création...' : 'Créer la facture'}
+                {isCreatingInvoice ? 'Traitement...' : 'Confirmer'}
               </button>
               <button 
                 onClick={() => {
                   setShowInvoiceModal(false);
                   setAppointmentForInvoice(null);
+                  setSelectedCompletionReason('invoiced');
                 }}
                 className="flex-1 bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition-all"
               >
-                Plus tard
+                Annuler
               </button>
             </div>
           </div>

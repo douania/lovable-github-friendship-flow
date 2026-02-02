@@ -171,6 +171,7 @@ export const quoteService = {
     return `DEV-${year}${month}${day}-${String(sequenceNumber).padStart(4, '0')}`;
   },
 
+  // Phase 3B: Supprimer un devis (avec protection FK RESTRICT si facturé)
   async deleteQuote(id: string): Promise<void> {
     const { error } = await supabase
       .from('quotes')
@@ -178,6 +179,12 @@ export const quoteService = {
       .eq('id', id);
 
     if (error) {
+      // Détecter si c'est une erreur de FK RESTRICT (devis déjà facturé)
+      if (error.code === '23503') { // FK violation
+        const businessError = new Error('QUOTE_ALREADY_INVOICED');
+        (businessError as any).meta = { quoteId: id };
+        throw businessError;
+      }
       console.error('Erreur lors de la suppression du devis:', error);
       throw error;
     }

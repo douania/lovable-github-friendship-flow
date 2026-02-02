@@ -1,202 +1,87 @@
 
+# PHASE 3B — Verrouillage du Modèle Métier (IMPLÉMENTÉE)
 
-# PHASE 3A — Correctifs Fonctionnels BLOQUANTS (v2 AJUSTÉE CTO)
+## ✅ Status: IMPLÉMENTÉE
 
-## Récapitulatif des ajustements CTO intégrés
-
-| # | Point CTO | Ajustement appliqué |
-|---|-----------|---------------------|
-| 1 | Validation stock | Erreur métier standardisée `STOCK_INSUFFICIENT` avec métadonnées |
-| 2 | Rapport revenus | Chargement factures **à la demande** (pas de useState/useEffect) |
+Date d'implémentation: 2026-02-02
 
 ---
 
-## Correction 1 — Suppression devis (BLOQUANT)
+## Migrations DB Exécutées
 
-### Fichier 1 : `src/services/quoteService.ts`
-
-**Ajouter après ligne 172** — Nouvelle méthode `deleteQuote()`
-
-```typescript
-async deleteQuote(id: string): Promise<void> {
-  const { error } = await supabase
-    .from('quotes')
-    .delete()
-    .eq('id', id);
-
-  if (error) {
-    console.error('Erreur lors de la suppression du devis:', error);
-    throw error;
-  }
-}
+### Migration 1: quote_id sur invoices
+```sql
+ALTER TABLE invoices 
+  ADD COLUMN IF NOT EXISTS quote_id uuid REFERENCES quotes(id) ON DELETE RESTRICT;
+CREATE INDEX IF NOT EXISTS idx_invoices_quote_id ON invoices(quote_id);
+CREATE UNIQUE INDEX IF NOT EXISTS ux_invoices_quote_id ON invoices(quote_id) WHERE quote_id IS NOT NULL;
 ```
 
-### Fichier 2 : `src/components/modules/Quotes.tsx`
+### Migration 2: Table patient_forfaits
+```sql
+CREATE TABLE IF NOT EXISTS patient_forfaits (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  patient_id uuid NOT NULL REFERENCES patients(id) ON DELETE CASCADE,
+  forfait_id uuid NOT NULL REFERENCES forfaits(id) ON DELETE RESTRICT,
+  purchase_date date NOT NULL DEFAULT CURRENT_DATE,
+  expiry_date date NOT NULL,
+  total_sessions integer NOT NULL,
+  remaining_sessions integer NOT NULL,
+  status text NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'expired', 'completed', 'cancelled')),
+  notes text DEFAULT '',
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
+);
+-- RLS avec has_role() existant
+```
 
-**Lignes 168-173** — Remplacer le toast placeholder par l'appel réel
-
-```typescript
-// AVANT (lignes 168-173)
-try {
-  console.log('Suppression du devis avec ID:', id);
-  toast({
-    title: 'Information',
-    description: 'Fonction de suppression à implémenter.',
-  });
-
-// APRÈS
-try {
-  await quoteService.deleteQuote(id);
-  await loadQuotes();
-  toast({
-    title: 'Succès',
-    description: 'Devis supprimé avec succès.',
-  });
+### Migration 3: completion_reason sur appointments
+```sql
+ALTER TABLE appointments ADD COLUMN IF NOT EXISTS completion_reason text 
+  CHECK (completion_reason IS NULL OR completion_reason IN (
+    'invoiced', 'included_in_forfait', 'free', 'pending_invoice', 'other'
+  ));
 ```
 
 ---
 
-## Correction 2 — Validation stock (MAJEUR) — AJUSTEMENT CTO
+## Fichiers Modifiés
 
-### Fichier : `src/services/productService.ts`
-
-**Lignes 228-232** — Ajouter validation avec erreur métier standardisée
-
-```typescript
-// AVANT (lignes 228-232)
-if (!product) {
-  throw new Error('Product not found');
-}
-
-const newQuantity = Math.max(0, product.quantity - quantity);
-
-// APRÈS
-if (!product) {
-  throw new Error('Produit introuvable');
-}
-
-// VALIDATION : stock suffisant (erreur métier standardisée)
-if (product.quantity < quantity) {
-  const error = new Error('STOCK_INSUFFICIENT');
-  (error as any).meta = {
-    available: product.quantity,
-    requested: quantity
-  };
-  throw error;
-}
-
-const newQuantity = product.quantity - quantity;
-```
-
-**Avantages de l'approche CTO :**
-- Permet au frontend de différencier erreur métier vs technique
-- Aucun impact UI immédiat (toast existant fonctionne)
-- Prépare Phase 3B proprement
-- Aucun refactor requis
+| Fichier | Description |
+|---------|-------------|
+| `src/types/index.ts` | Ajout `CompletionReason`, `quoteId` sur Invoice, `completionReason` sur Appointment |
+| `src/queries/appointments.queries.ts` | Ajout hook `usePatientAppointmentsQuery()` |
+| `src/services/appointmentService.ts` | Mapping `completion_reason` |
+| `src/services/invoiceService.ts` | Mapping `quote_id` + méthode `createFromQuote()` |
+| `src/services/quoteService.ts` | Protection FK RESTRICT → erreur `QUOTE_ALREADY_INVOICED` |
+| `src/services/forfaitService.ts` | Protection FK RESTRICT → erreur `FORFAIT_IN_USE` |
+| `src/components/forms/ConsultationForm.tsx` | Sélection RDV optionnel via TanStack Query |
+| `src/components/modules/Quotes.tsx` | Bouton "Convertir en facture" + gestion erreurs |
+| `src/components/modules/ForfaitManagement.tsx` | Gestion erreur `FORFAIT_IN_USE` |
+| `src/components/modules/Appointments.tsx` | Modal avec choix raison de completion |
 
 ---
 
-## Correction 3 — Rapport revenus Excel (MAJEUR) — AJUSTEMENT CTO
+## Critères d'Acceptation
 
-### Fichier : `src/components/modules/ExcelReporting.tsx`
-
-**Ligne 6** — Ajouter import du service
-
-```typescript
-// AVANT
-import { useToast } from '../../hooks/use-toast';
-
-// APRÈS
-import { useToast } from '../../hooks/use-toast';
-import { invoiceService } from '../../services/invoiceService';
-```
-
-**Lignes 116-135** — Réécrire `generateRevenueReport()` avec chargement à la demande
-
-```typescript
-// AVANT
-const generateRevenueReport = () => {
-  // Simuler des données de revenus basées sur les rendez-vous
-  const filteredAppointments = appointments.filter(apt => {
-    const aptDate = new Date(apt.date);
-    const startDate = new Date(dateRange.start);
-    const endDate = new Date(dateRange.end);
-    return aptDate >= startDate && aptDate <= endDate && apt.status === 'completed';
-  });
-
-  const revenueData = filteredAppointments.map(appointment => ({
-    'Date': new Date(appointment.date).toLocaleDateString('fr-FR'),
-    'Patient ID': appointment.patientId,
-    'Traitement ID': appointment.treatmentId,
-    'Montant estimé': '0', // À calculer depuis la base de données
-    'Mode paiement': 'N/A',
-    'Statut': appointment.status
-  }));
-  
-  generateCSV(revenueData, `rapport_revenus_${dateRange.start}_${dateRange.end}`);
-};
-
-// APRÈS (chargement à la demande — ajustement CTO)
-const generateRevenueReport = async () => {
-  // Charger les factures uniquement au moment de la génération
-  const invoices = await invoiceService.getAll();
-  
-  const filteredInvoices = invoices.filter(inv => {
-    const invDate = new Date(inv.createdAt);
-    const startDate = new Date(dateRange.start);
-    const endDate = new Date(dateRange.end);
-    return invDate >= startDate && invDate <= endDate;
-  });
-
-  const revenueData = filteredInvoices.map(invoice => ({
-    'Numéro facture': invoice.id,
-    'Date': new Date(invoice.createdAt).toLocaleDateString('fr-FR'),
-    'Patient ID': invoice.patientId,
-    'Montant': invoice.amount.toLocaleString() + ' FCFA',
-    'Mode paiement': invoice.paymentMethod || 'N/A',
-    'Statut': invoice.status === 'paid' ? 'Payée' : invoice.status === 'partial' ? 'Partiel' : 'Impayée',
-    'Date paiement': invoice.paidAt ? new Date(invoice.paidAt).toLocaleDateString('fr-FR') : '-'
-  }));
-  
-  generateCSV(revenueData, `rapport_revenus_${dateRange.start}_${dateRange.end}`);
-};
-```
-
-**Note importante :** La fonction devient `async`, ce qui est géré automatiquement par le `try/catch` dans `handleGenerateReport()` ligne 156.
+- [x] Consultation créée depuis contexte RDV → `appointment_id` sélectionnable
+- [x] Consultation manuelle → possibilité de lier un RDV du patient (hook TanStack Query)
+- [x] Devis accepté → bouton "Convertir en facture" visible
+- [x] Conversion devis → facture crée facture avec `quote_id` renseigné
+- [x] Suppression devis déjà facturé → erreur `QUOTE_ALREADY_INVOICED` (FK RESTRICT)
+- [x] Double facturation impossible (unique index partiel)
+- [x] Table `patient_forfaits` créée avec RLS `has_role()`
+- [x] Suppression forfait utilisé → erreur `FORFAIT_IN_USE` (FK RESTRICT)
+- [x] RDV terminé → modal avec choix de raison
+- [x] `completion_reason` sauvegardé en base (nullable)
+- [x] Aucune régression Phases 2A → 3A
 
 ---
 
-## Récapitulatif des modifications
+## Ce qui N'A PAS changé
 
-| Fichier | Lignes | Description |
-|---------|--------|-------------|
-| `src/services/quoteService.ts` | +8 (après 172) | Ajout méthode `deleteQuote()` |
-| `src/components/modules/Quotes.tsx` | 168-173 | Appel réel `quoteService.deleteQuote()` |
-| `src/services/productService.ts` | 228-232 | Validation stock + erreur métier `STOCK_INSUFFICIENT` |
-| `src/components/modules/ExcelReporting.tsx` | 6, 116-135 | Import invoiceService + vraies données factures (async) |
-
-**Total : 4 fichiers, ~45 lignes modifiées**
-
----
-
-## Ce qui NE change PAS
-
-- ❌ Aucune modification UI
-- ❌ Aucun nouveau composant  
-- ❌ Aucune migration DB
-- ❌ Aucun useState/useEffect ajouté pour les factures
-- ❌ Aucun refactor structurel
-
----
-
-## Critères d'acceptation Phase 3A
-
-- [ ] Supprimer un devis supprime réellement la ligne en base
-- [ ] Toast succès affiché après suppression devis
-- [ ] Tentative de décrémentation > stock disponible → erreur `STOCK_INSUFFICIENT` levée
-- [ ] Erreur contient métadonnées `{ available, requested }`
-- [ ] Rapport revenus Excel contient les vrais montants des factures
-- [ ] Chargement factures uniquement à la génération (pas au montage)
-- [ ] Aucun pixel modifié
-- [ ] Aucune régression Phases 2A → 2F
-
+- ❌ Aucun redesign UI global
+- ❌ Aucun nouveau dashboard
+- ❌ Aucune refonte de formulaires (ajouts ciblés uniquement)
+- ❌ Aucun figement du catalogue des soins
+- ❌ Aucune logique métier spécifique aux traitements

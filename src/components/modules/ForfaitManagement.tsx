@@ -92,11 +92,15 @@ const ForfaitManagement: React.FC = () => {
         title: "Succès",
         description: "Forfait supprimé avec succès"
       });
-    } catch (err) {
+    } catch (err: any) {
       console.error('Erreur lors de la suppression du forfait:', err);
+      // Phase 3B: Gestion erreur FORFAIT_IN_USE
+      const message = err.message === 'FORFAIT_IN_USE'
+        ? 'Ce forfait a été vendu à des patients et ne peut pas être supprimé. Vous pouvez le désactiver.'
+        : 'Erreur lors de la suppression du forfait';
       toast({
         title: "Erreur",
-        description: "Erreur lors de la suppression du forfait",
+        description: message,
         variant: "destructive"
       });
     }

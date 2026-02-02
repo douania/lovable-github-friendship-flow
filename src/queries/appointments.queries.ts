@@ -44,6 +44,15 @@ export const useAppointmentsQuery = (params?: AppointmentsQueryParams) => {
   });
 };
 
+// Hook pour récupérer les RDV d'un patient spécifique (Phase 3B - Pilier 1)
+export const usePatientAppointmentsQuery = (patientId: string | undefined) => {
+  return useQuery({
+    queryKey: appointmentKeys.byPatient(patientId || ''),
+    queryFn: () => appointmentService.getByPatient(patientId!),
+    enabled: !!patientId, // Ne s'exécute que si patientId est défini
+  });
+};
+
 // Mutations avec invalidation dans onSuccess
 export const useCreateAppointmentMutation = () => {
   const queryClient = useQueryClient();
