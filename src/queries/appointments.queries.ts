@@ -15,6 +15,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { appointmentService } from '../services/appointmentService';
 import { Appointment } from '../types';
+import { logger } from '../lib/logger';
 
 // Types pour extensibilité future (Ajustement CTO #1)
 export interface AppointmentsQueryParams {
@@ -52,6 +53,9 @@ export const useCreateAppointmentMutation = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: appointmentKeys.all });
     },
+    onError: (error, variables) => {
+      logger.error('Erreur création rendez-vous', { error, payload: variables });
+    },
   });
 };
 
@@ -64,6 +68,9 @@ export const useUpdateAppointmentMutation = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: appointmentKeys.all });
     },
+    onError: (error, variables) => {
+      logger.error('Erreur modification rendez-vous', { error, payload: variables });
+    },
   });
 };
 
@@ -74,6 +81,9 @@ export const useDeleteAppointmentMutation = () => {
     mutationFn: (id: string) => appointmentService.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: appointmentKeys.all });
+    },
+    onError: (error, variables) => {
+      logger.error('Erreur suppression rendez-vous', { error, appointmentId: variables });
     },
   });
 };

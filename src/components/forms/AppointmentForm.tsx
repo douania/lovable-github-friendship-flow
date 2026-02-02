@@ -10,6 +10,7 @@ interface AppointmentFormProps {
   onSave: (appointment: Omit<Appointment, 'id'>) => void;
   onCancel: () => void;
   selectedDate?: string;
+  isSubmitting?: boolean;
 }
 
 const AppointmentForm: React.FC<AppointmentFormProps> = ({ 
@@ -18,7 +19,8 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({
   treatments,
   onSave, 
   onCancel, 
-  selectedDate 
+  selectedDate,
+  isSubmitting = false
 }) => {
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [selectedConsumedProducts, setSelectedConsumedProducts] = useState<Array<{ productId: string; quantity: number; }>>([]);
@@ -66,6 +68,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
     onSave({
       ...formData,
       consumedProducts: selectedConsumedProducts,
@@ -322,10 +325,11 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({
             </button>
             <button
               type="submit"
-              className="flex items-center space-x-2 bg-gradient-to-r from-pink-500 to-orange-500 text-white px-6 py-3 rounded-xl hover:shadow-lg transition-all"
+              disabled={isSubmitting}
+              className="flex items-center space-x-2 bg-gradient-to-r from-pink-500 to-orange-500 text-white px-6 py-3 rounded-xl hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Save className="w-5 h-5" />
-              <span>Enregistrer</span>
+              <span>{isSubmitting ? 'Enregistrement...' : 'Enregistrer'}</span>
             </button>
           </div>
         </form>

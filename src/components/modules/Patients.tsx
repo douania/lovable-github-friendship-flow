@@ -57,6 +57,9 @@ const Patients: React.FC = () => {
   }, [currentErrorMessage, dismissedError]);
 
   const handleSavePatient = async (patientData: Omit<Patient, 'id'>) => {
+    // GUARD: empêcher double submit
+    if (createMutation.isPending || updateMutation.isPending) return;
+    
     try {
       if (editingPatient) {
         await updateMutation.mutateAsync({ id: editingPatient.id, data: patientData });
@@ -90,6 +93,9 @@ const Patients: React.FC = () => {
   };
 
   const handleDeletePatient = async (patientId: string) => {
+    // GUARD: empêcher double suppression
+    if (deleteMutation.isPending) return;
+    
     if (!confirm('Êtes-vous sûr de vouloir supprimer ce patient ?')) {
       return;
     }
@@ -305,9 +311,10 @@ const Patients: React.FC = () => {
             <div className="flex justify-end space-x-4 pt-6 border-t border-gray-100 p-6">
               <button
                 onClick={() => handleDeletePatient(selectedPatient.id)}
-                className="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors"
+                disabled={deleteMutation.isPending}
+                className="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Supprimer
+                {deleteMutation.isPending ? 'Suppression...' : 'Supprimer'}
               </button>
               <button
                 onClick={() => handleEditPatient(selectedPatient)}
@@ -328,6 +335,7 @@ const Patients: React.FC = () => {
             setShowAddModal(false);
             setEditingPatient(null);
           }}
+          isSubmitting={createMutation.isPending || updateMutation.isPending}
         />
       )}
     </div>

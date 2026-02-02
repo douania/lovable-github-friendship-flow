@@ -48,6 +48,7 @@ const Appointments: React.FC = () => {
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
   const [appointmentForInvoice, setAppointmentForInvoice] = useState<Appointment | null>(null);
   const [dismissedError, setDismissedError] = useState<string | null>(null);
+  const [isCreatingInvoice, setIsCreatingInvoice] = useState(false);
   const { toast } = useToast();
 
   // Error message for display
@@ -119,6 +120,9 @@ const Appointments: React.FC = () => {
   });
 
   const handleSaveAppointment = async (appointmentData: Omit<Appointment, 'id'>) => {
+    // GUARD: empêcher double submit
+    if (createMutation.isPending || updateMutation.isPending) return;
+    
     try {
       if (editingAppointment) {
         await updateMutation.mutateAsync({ id: editingAppointment.id, data: appointmentData });
@@ -160,6 +164,9 @@ const Appointments: React.FC = () => {
   };
 
   const updateAppointmentStatus = async (appointmentId: string, status: Appointment['status']) => {
+    // GUARD: empêcher double mise à jour
+    if (updateMutation.isPending) return;
+    
     try {
       if (status === 'completed') {
         const appointment = appointments.find(a => a.id === appointmentId);
@@ -194,8 +201,10 @@ const Appointments: React.FC = () => {
   };
 
   const createInvoiceFromAppointment = async () => {
-    if (!appointmentForInvoice) return;
+    // GUARD: empêcher double création facture
+    if (!appointmentForInvoice || isCreatingInvoice) return;
     
+    setIsCreatingInvoice(true);
     try {
       const treatment = treatments.find(t => t.id === appointmentForInvoice.treatmentId);
       const invoiceData = {
@@ -223,6 +232,8 @@ const Appointments: React.FC = () => {
         description: getErrorMessage(err),
         variant: "destructive"
       });
+    } finally {
+      setIsCreatingInvoice(false);
     }
   };
 
@@ -301,6 +312,7 @@ const Appointments: React.FC = () => {
             setShowAddModal(false);
             setEditingAppointment(null);
           }}
+          isSubmitting={createMutation.isPending || updateMutation.isPending}
         />
       )}
 
@@ -314,9 +326,10 @@ const Appointments: React.FC = () => {
             <div className="flex space-x-4">
               <button 
                 onClick={createInvoiceFromAppointment}
-                className="flex-1 bg-gradient-to-r from-pink-500 to-orange-500 text-white px-4 py-2 rounded-lg hover:shadow-lg transition-all"
+                disabled={isCreatingInvoice}
+                className="flex-1 bg-gradient-to-r from-pink-500 to-orange-500 text-white px-4 py-2 rounded-lg hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Créer la facture
+                {isCreatingInvoice ? 'Création...' : 'Créer la facture'}
               </button>
               <button 
                 onClick={() => {
