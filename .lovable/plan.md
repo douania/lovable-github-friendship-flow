@@ -1,329 +1,269 @@
 
 
-# PHASE 2E — Cohérence UX Métier & Prévisibilité Utilisateur
+# PHASE 2F — Harmonisation UX Fonctionnelle (NON VISUELLE)
 
-## Validation CTO intégrée
+## Résultat de l'audit
 
-Ce plan inclut les 2 micro-ajustements CTO obligatoires :
-1. **ExcelReporting.tsx** : Commentaire documentant l'hypothèse synchrone
-2. **Appointments.tsx** : Commentaires confirmant que les toasts sont strictement APRÈS `await mutateAsync` dans le `try`
+### Problèmes identifiés (UNIQUEMENT fonctionnels)
+
+| # | Fichier | Problème | Type |
+|---|---------|----------|------|
+| 1 | `Consultations.tsx` | Utilise `toast` de `sonner` directement (ligne 10) au lieu de `useToast` | Toast system |
+| 2 | `Quotes.tsx` | Message suppression générique (ligne 164) | Message métier |
+| 3 | `Invoices.tsx` | Message suppression générique (ligne 83) | Message métier |
+| 4 | `ForfaitManagement.tsx` | Message suppression générique (ligne 68) | Message métier |
+| 5 | `ForfaitManagement.tsx` | Aucun toast succès après création/modification/suppression | Feedback manquant |
+
+### Ce qui est DÉJÀ conforme ✅
+
+- `Quotes.tsx` : Utilise déjà `useToast` ✅
+- `Invoices.tsx` : Utilise déjà `useToast`, toasts succès/erreur présents ✅
+- `Consultations.tsx` : Toasts succès/erreur présents (mais via sonner direct)
 
 ---
 
-## Scope final (3 fichiers)
+## Scope Phase 2F (4 fichiers)
 
 | # | Fichier | Modifications |
 |---|---------|---------------|
-| 1 | `src/components/modules/Appointments.tsx` | 3 toasts succès + commentaires CTO |
-| 2 | `src/components/modules/ExcelReporting.tsx` | Import hook + toast succès/erreur + commentaire CTO |
-| 3 | `src/components/modules/Patients.tsx` | Message confirmation métier |
+| 1 | `Consultations.tsx` | Remplacer import `sonner` par `useToast` + adapter appels |
+| 2 | `Quotes.tsx` | Message suppression métier standardisé |
+| 3 | `Invoices.tsx` | Message suppression métier standardisé |
+| 4 | `ForfaitManagement.tsx` | Message suppression métier + import `useToast` + toasts succès/erreur |
 
 ---
 
-## Modifications détaillées
+## Détail des modifications
 
-### 1. Appointments.tsx
+### 1. Consultations.tsx — Harmonisation système toast
 
-**Lignes 127-141** — `handleSaveAppointment`
-
-```text
-AVANT:
-if (editingAppointment) {
-  await updateMutation.mutateAsync({ id: editingAppointment.id, data: appointmentData });
-  
-  if (appointmentData.status === 'completed' && appointmentData.consumedProducts && appointmentData.consumedProducts.length > 0) {
-    await processConsumedProducts(appointmentData.consumedProducts);
-  }
-  
-  if (appointmentData.status === 'completed') {
-    const fullAppointment = { ...appointmentData, id: editingAppointment.id };
-    setAppointmentForInvoice(fullAppointment as Appointment);
-    setShowInvoiceModal(true);
-  }
-} else {
-  await createMutation.mutateAsync(appointmentData);
-}
-
-APRES:
-if (editingAppointment) {
-  await updateMutation.mutateAsync({ id: editingAppointment.id, data: appointmentData });
-  
-  // Toast succès APRÈS mutation réussie (jamais en finally)
-  toast({
-    title: "Succès",
-    description: "Rendez-vous modifié avec succès"
-  });
-  
-  if (appointmentData.status === 'completed' && appointmentData.consumedProducts && appointmentData.consumedProducts.length > 0) {
-    await processConsumedProducts(appointmentData.consumedProducts);
-  }
-  
-  if (appointmentData.status === 'completed') {
-    const fullAppointment = { ...appointmentData, id: editingAppointment.id };
-    setAppointmentForInvoice(fullAppointment as Appointment);
-    setShowInvoiceModal(true);
-  }
-} else {
-  await createMutation.mutateAsync(appointmentData);
-  
-  // Toast succès APRÈS mutation réussie (jamais en finally)
-  toast({
-    title: "Succès",
-    description: "Rendez-vous créé avec succès"
-  });
-}
-```
-
-**Lignes 177-186** — `updateAppointmentStatus`
+**Ligne 10** — Remplacer import sonner
 
 ```text
 AVANT:
-} else {
-  // Récupérer l'appointment complet et mettre à jour seulement le statut
-  const appointment = appointments.find(a => a.id === appointmentId);
-  if (appointment) {
-    const updatedAppointment: Omit<Appointment, 'id'> = {
-      ...appointment,
-      status
-    };
-    await updateMutation.mutateAsync({ id: appointmentId, data: updatedAppointment });
-  }
-}
+import { toast } from 'sonner';
 
-APRES:
-} else {
-  // Récupérer l'appointment complet et mettre à jour seulement le statut
-  const appointment = appointments.find(a => a.id === appointmentId);
-  if (appointment) {
-    const updatedAppointment: Omit<Appointment, 'id'> = {
-      ...appointment,
-      status
-    };
-    await updateMutation.mutateAsync({ id: appointmentId, data: updatedAppointment });
-    
-    // Toast succès APRÈS mutation réussie (jamais en finally)
-    toast({
-      title: "Succès",
-      description: "Statut du rendez-vous mis à jour"
-    });
-  }
-}
-```
-
----
-
-### 2. ExcelReporting.tsx
-
-**Lignes 1-7** — Ajout import + hook
-
-```text
-AVANT:
-import React, { useState } from 'react';
-import { FileSpreadsheet, Download, Calendar, Users, TrendingUp, Package } from 'lucide-react';
-import { usePatientsQuery } from '../../queries/patients.queries';
-import { useAppointmentsQuery } from '../../queries/appointments.queries';
-import { useInventory } from '../../hooks/useInventory';
-
-const ExcelReporting: React.FC = () => {
-
-APRES:
-import React, { useState } from 'react';
-import { FileSpreadsheet, Download, Calendar, Users, TrendingUp, Package } from 'lucide-react';
-import { usePatientsQuery } from '../../queries/patients.queries';
-import { useAppointmentsQuery } from '../../queries/appointments.queries';
-import { useInventory } from '../../hooks/useInventory';
+APRÈS:
 import { useToast } from '../../hooks/use-toast';
+```
 
-const ExcelReporting: React.FC = () => {
+**Ligne 20** — Ajouter hook (après useState)
+
+```text
+AVANT:
+const Consultations: React.FC = () => {
+  const [consultations, setConsultations] = useState<EnrichedConsultation[]>([]);
+
+APRÈS:
+const Consultations: React.FC = () => {
   const { toast } = useToast();
+  const [consultations, setConsultations] = useState<EnrichedConsultation[]>([]);
 ```
 
-**Lignes 154-181** — `handleGenerateReport` avec commentaire CTO
+**Ligne 78** — Adapter appel toast erreur
 
 ```text
 AVANT:
-const handleGenerateReport = async () => {
-  // GUARD: empêcher double génération
-  if (!selectedReport || isGenerating) return;
-  
-  setIsGenerating(true);
-  
-  try {
-    switch (selectedReport) {
-      case 'patients':
-        generatePatientsReport();
-        break;
-      case 'appointments':
-        generateAppointmentsReport();
-        break;
-      case 'revenue':
-        generateRevenueReport();
-        break;
-      case 'inventory':
-        generateInventoryReport();
-        break;
-    }
-  } catch (error) {
-    console.error('Erreur génération rapport:', error);
-    alert('Erreur lors de la génération du rapport');
-  } finally {
-    setIsGenerating(false);
-  }
-};
+toast.error('Erreur lors du chargement des consultations');
 
-APRES:
-const handleGenerateReport = async () => {
-  // GUARD: empêcher double génération
-  if (!selectedReport || isGenerating) return;
-  
-  setIsGenerating(true);
-  
-  try {
-    switch (selectedReport) {
-      case 'patients':
-        generatePatientsReport();
-        break;
-      case 'appointments':
-        generateAppointmentsReport();
-        break;
-      case 'revenue':
-        generateRevenueReport();
-        break;
-      case 'inventory':
-        generateInventoryReport();
-        break;
-    }
-    
-    // Hypothèse : la génération Excel est synchrone (generateCSV / Blob).
-    // Si asynchrone à l'avenir, déplacer ce toast après await.
-    toast({
-      title: "Succès",
-      description: "Rapport Excel généré avec succès"
-    });
-  } catch (error) {
-    console.error('Erreur génération rapport:', error);
-    toast({
-      title: "Erreur",
-      description: "Erreur lors de la génération du rapport",
-      variant: "destructive"
-    });
-  } finally {
-    setIsGenerating(false);
-  }
-};
+APRÈS:
+toast({
+  title: "Erreur",
+  description: "Erreur lors du chargement des consultations",
+  variant: "destructive"
+});
+```
+
+**Lignes 88, 91** — Adapter appels toast succès
+
+```text
+AVANT:
+toast.success('Consultation modifiée avec succès');
+...
+toast.success('Consultation créée avec succès');
+
+APRÈS:
+toast({
+  title: "Succès",
+  description: "Consultation modifiée avec succès"
+});
+...
+toast({
+  title: "Succès",
+  description: "Consultation créée avec succès"
+});
+```
+
+**Ligne 99** — Adapter appel toast erreur
+
+```text
+AVANT:
+toast.error('Erreur lors de la sauvegarde de la consultation');
+
+APRÈS:
+toast({
+  title: "Erreur",
+  description: "Erreur lors de la sauvegarde de la consultation",
+  variant: "destructive"
+});
 ```
 
 ---
 
-### 3. Patients.tsx
+### 2. Quotes.tsx — Message suppression métier
 
-**Ligne 99** — Message confirmation métier
+**Ligne 164** — Message suppression standardisé
 
 ```text
 AVANT:
-if (!confirm('Êtes-vous sûr de vouloir supprimer ce patient ?')) {
+if (!confirm('Êtes-vous sûr de vouloir supprimer ce devis ?')) {
 
-APRES:
-if (!confirm('Ce patient et tout son historique seront définitivement supprimés. Cette action est irréversible. Voulez-vous continuer ?')) {
+APRÈS:
+if (!confirm('Ce devis et toutes les données associées seront définitivement supprimés. Cette action est irréversible. Voulez-vous continuer ?')) {
 ```
 
 ---
 
-## Diff Git attendu
+### 3. Invoices.tsx — Message suppression métier
 
-```diff
---- a/src/components/modules/Appointments.tsx
-+++ b/src/components/modules/Appointments.tsx
-@@ -127,6 +127,11 @@ const Appointments: React.FC = () => {
-       if (editingAppointment) {
-         await updateMutation.mutateAsync({ id: editingAppointment.id, data: appointmentData });
-         
-+        // Toast succès APRÈS mutation réussie (jamais en finally)
-+        toast({
-+          title: "Succès",
-+          description: "Rendez-vous modifié avec succès"
-+        });
-+        
-         if (appointmentData.status === 'completed' && appointmentData.consumedProducts && appointmentData.consumedProducts.length > 0) {
-           await processConsumedProducts(appointmentData.consumedProducts);
-         }
-@@ -139,6 +144,11 @@ const Appointments: React.FC = () => {
-         }
-       } else {
-         await createMutation.mutateAsync(appointmentData);
-+        
-+        // Toast succès APRÈS mutation réussie (jamais en finally)
-+        toast({
-+          title: "Succès",
-+          description: "Rendez-vous créé avec succès"
-+        });
-       }
-       
-       setShowAddModal(false);
-@@ -183,6 +193,11 @@ const Appointments: React.FC = () => {
-           status
-         };
-         await updateMutation.mutateAsync({ id: appointmentId, data: updatedAppointment });
-+        
-+        // Toast succès APRÈS mutation réussie (jamais en finally)
-+        toast({
-+          title: "Succès",
-+          description: "Statut du rendez-vous mis à jour"
-+        });
-       }
-     }
-   } catch (err) {
+**Ligne 83** — Message suppression standardisé
+
+```text
+AVANT:
+if (window.confirm('Êtes-vous sûr de vouloir supprimer cette facture ?')) {
+
+APRÈS:
+if (window.confirm('Cette facture et toutes les données associées seront définitivement supprimées. Cette action est irréversible. Voulez-vous continuer ?')) {
 ```
 
-```diff
---- a/src/components/modules/ExcelReporting.tsx
-+++ b/src/components/modules/ExcelReporting.tsx
-@@ -4,7 +4,10 @@ import { FileSpreadsheet, Download, Calendar, Users, TrendingUp, Package } from
- import { usePatientsQuery } from '../../queries/patients.queries';
- import { useAppointmentsQuery } from '../../queries/appointments.queries';
- import { useInventory } from '../../hooks/useInventory';
-+import { useToast } from '../../hooks/use-toast';
- 
- const ExcelReporting: React.FC = () => {
-+  const { toast } = useToast();
-+
-   const [selectedReport, setSelectedReport] = useState<string>('');
-@@ -171,10 +174,21 @@ const ExcelReporting: React.FC = () => {
-         case 'inventory':
-           generateInventoryReport();
-           break;
-       }
-+      
-+      // Hypothèse : la génération Excel est synchrone (generateCSV / Blob).
-+      // Si asynchrone à l'avenir, déplacer ce toast après await.
-+      toast({
-+        title: "Succès",
-+        description: "Rapport Excel généré avec succès"
-+      });
-     } catch (error) {
-       console.error('Erreur génération rapport:', error);
--      alert('Erreur lors de la génération du rapport');
-+      toast({
-+        title: "Erreur",
-+        description: "Erreur lors de la génération du rapport",
-+        variant: "destructive"
-+      });
-     } finally {
-       setIsGenerating(false);
-     }
+---
+
+### 4. ForfaitManagement.tsx — Toasts succès/erreur + message suppression
+
+**Ligne 6** — Ajouter import
+
+```text
+AVANT:
+import ForfaitForm from '../forms/ForfaitForm';
+
+APRÈS:
+import ForfaitForm from '../forms/ForfaitForm';
+import { useToast } from '../../hooks/use-toast';
 ```
 
-```diff
---- a/src/components/modules/Patients.tsx
-+++ b/src/components/modules/Patients.tsx
-@@ -96,7 +96,7 @@ const Patients: React.FC = () => {
-     // GUARD: empêcher double suppression
-     if (deleteMutation.isPending) return;
-     
--    if (!confirm('Êtes-vous sûr de vouloir supprimer ce patient ?')) {
-+    if (!confirm('Ce patient et tout son historique seront définitivement supprimés. Cette action est irréversible. Voulez-vous continuer ?')) {
-       return;
-     }
+**Ligne 9** — Ajouter hook
+
+```text
+AVANT:
+const ForfaitManagement: React.FC = () => {
+  const [forfaits, setForfaits] = useState<Forfait[]>([]);
+
+APRÈS:
+const ForfaitManagement: React.FC = () => {
+  const { toast } = useToast();
+  const [forfaits, setForfaits] = useState<Forfait[]>([]);
+```
+
+**Lignes 44-52** — Ajouter toasts succès après mutation
+
+```text
+AVANT:
+if (editingForfait) {
+  const updatedForfait = await forfaitService.update(editingForfait.id, forfaitData);
+  setForfaits(prev => prev.map(f => 
+    f.id === editingForfait.id ? updatedForfait : f
+  ));
+} else {
+  const newForfait = await forfaitService.create(forfaitData);
+  setForfaits(prev => [newForfait, ...prev]);
+}
+
+APRÈS:
+if (editingForfait) {
+  const updatedForfait = await forfaitService.update(editingForfait.id, forfaitData);
+  setForfaits(prev => prev.map(f => 
+    f.id === editingForfait.id ? updatedForfait : f
+  ));
+  toast({
+    title: "Succès",
+    description: "Forfait modifié avec succès"
+  });
+} else {
+  const newForfait = await forfaitService.create(forfaitData);
+  setForfaits(prev => [newForfait, ...prev]);
+  toast({
+    title: "Succès",
+    description: "Forfait créé avec succès"
+  });
+}
+```
+
+**Lignes 56-59** — Ajouter toast erreur
+
+```text
+AVANT:
+} catch (err) {
+  console.error('Erreur lors de la sauvegarde du forfait:', err);
+  setError('Erreur lors de la sauvegarde. Veuillez réessayer.');
+}
+
+APRÈS:
+} catch (err) {
+  console.error('Erreur lors de la sauvegarde du forfait:', err);
+  toast({
+    title: "Erreur",
+    description: "Erreur lors de la sauvegarde du forfait",
+    variant: "destructive"
+  });
+}
+```
+
+**Ligne 68** — Message suppression standardisé
+
+```text
+AVANT:
+if (!confirm('Êtes-vous sûr de vouloir supprimer ce forfait ?')) {
+
+APRÈS:
+if (!confirm('Ce forfait et toutes les données associées seront définitivement supprimés. Cette action est irréversible. Voulez-vous continuer ?')) {
+```
+
+**Lignes 74-76** — Ajouter toast succès après suppression
+
+```text
+AVANT:
+await forfaitService.delete(forfaitId);
+setForfaits(prev => prev.filter(f => f.id !== forfaitId));
+setSelectedForfait(null);
+
+APRÈS:
+await forfaitService.delete(forfaitId);
+setForfaits(prev => prev.filter(f => f.id !== forfaitId));
+setSelectedForfait(null);
+toast({
+  title: "Succès",
+  description: "Forfait supprimé avec succès"
+});
+```
+
+**Lignes 77-80** — Ajouter toast erreur suppression
+
+```text
+AVANT:
+} catch (err) {
+  console.error('Erreur lors de la suppression du forfait:', err);
+  setError('Erreur lors de la suppression. Veuillez réessayer.');
+}
+
+APRÈS:
+} catch (err) {
+  console.error('Erreur lors de la suppression du forfait:', err);
+  toast({
+    title: "Erreur",
+    description: "Erreur lors de la suppression du forfait",
+    variant: "destructive"
+  });
+}
 ```
 
 ---
@@ -332,23 +272,31 @@ if (!confirm('Ce patient et tout son historique seront définitivement supprimé
 
 | Fichier | Lignes modifiées | Description |
 |---------|------------------|-------------|
-| `Appointments.tsx` | ~129, ~147, ~193 | 3 toasts succès + commentaires CTO |
-| `ExcelReporting.tsx` | ~6, ~9, ~174-185 | Import + hook + toast succès/erreur + commentaire CTO |
-| `Patients.tsx` | ~99 | Message confirmation métier |
+| `Consultations.tsx` | ~10, ~20, ~78, ~88, ~91, ~99 | Hook useToast + adaptation 4 appels toast |
+| `Quotes.tsx` | ~164 | Message suppression métier |
+| `Invoices.tsx` | ~83 | Message suppression métier |
+| `ForfaitManagement.tsx` | ~6-9, ~48-52, ~56-59, ~68, ~74-80 | Hook + 5 toasts + message suppression |
 
-**Total : 3 fichiers, ~25 lignes modifiées**
+**Total : 4 fichiers, ~35 lignes modifiées**
 
 ---
 
-## Critères d'acceptation
+## Ce qui NE change PAS (explicitement exclu)
 
-- [ ] Création RDV : toast "Rendez-vous créé avec succès"
-- [ ] Modification RDV : toast "Rendez-vous modifié avec succès"
-- [ ] Changement statut RDV : toast "Statut du rendez-vous mis à jour"
-- [ ] Génération Excel : toast "Rapport Excel généré avec succès"
-- [ ] Erreur Excel : toast erreur (rouge, pas alert)
-- [ ] Suppression patient : message métier complet
-- [ ] Commentaires CTO présents (3 occurrences)
-- [ ] Aucune régression Phase 2D
-- [ ] UI strictement identique
+- ❌ Aucune classe CSS modifiée
+- ❌ Aucun bouton restyled
+- ❌ Aucun gradient ajouté
+- ❌ Aucune icône modifiée
+- ❌ Aucun padding/margin/radius modifié
+- ❌ Aucune animation ajoutée
+
+---
+
+## Critères d'acceptation Phase 2F
+
+- [ ] Plus aucun `import { toast } from 'sonner'` direct
+- [ ] Plus aucun message de suppression générique
+- [ ] Toutes les mutations CRUD de ForfaitManagement ont un toast
+- [ ] AUCUN pixel visuel n'a changé (hors texte)
+- [ ] Aucune régression Phases 2A → 2E
 
