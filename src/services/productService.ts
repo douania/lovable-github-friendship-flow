@@ -226,10 +226,20 @@ export const productService = {
       }
 
       if (!product) {
-        throw new Error('Product not found');
+        throw new Error('Produit introuvable');
       }
 
-      const newQuantity = Math.max(0, product.quantity - quantity);
+      // VALIDATION : stock suffisant (erreur métier standardisée)
+      if (product.quantity < quantity) {
+        const error = new Error('STOCK_INSUFFICIENT');
+        (error as any).meta = {
+          available: product.quantity,
+          requested: quantity
+        };
+        throw error;
+      }
+
+      const newQuantity = product.quantity - quantity;
 
       const { error } = await supabase
         .from('products')

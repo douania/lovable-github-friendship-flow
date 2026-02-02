@@ -169,5 +169,17 @@ export const quoteService = {
     }
 
     return `DEV-${year}${month}${day}-${String(sequenceNumber).padStart(4, '0')}`;
+  },
+
+  async deleteQuote(id: string): Promise<void> {
+    const { error } = await supabase
+      .from('quotes')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Erreur lors de la suppression du devis:', error);
+      throw error;
+    }
   }
 };
