@@ -45,6 +45,7 @@ export const invoiceService = {
         amount: invoice.amount,
         status: invoice.status as Invoice['status'],
         paymentMethod: invoice.payment_method as Invoice['paymentMethod'],
+        quoteId: invoice.quote_id || undefined,
         createdAt: invoice.created_at || '',
         paidAt: invoice.paid_at || undefined
       })) || [];
@@ -150,6 +151,7 @@ export const invoiceService = {
           amount: invoiceData.amount,
           status: invoiceData.status,
           payment_method: invoiceData.paymentMethod,
+          quote_id: invoiceData.quoteId || null,
           paid_at: invoiceData.paidAt || null
         })
         .select()
@@ -164,6 +166,7 @@ export const invoiceService = {
         amount: data.amount,
         status: data.status as Invoice['status'],
         paymentMethod: data.payment_method as Invoice['paymentMethod'],
+        quoteId: data.quote_id || undefined,
         createdAt: data.created_at || '',
         paidAt: data.paid_at || undefined
       };
@@ -264,6 +267,42 @@ export const invoiceService = {
       return data?.reduce((sum, invoice) => sum + invoice.amount, 0) || 0;
     } catch (error) {
       console.error('Error calculating monthly revenue:', error);
+      throw error;
+    }
+  },
+
+  // Phase 3B: Créer une facture à partir d'un devis accepté
+  async createFromQuote(quoteId: string): Promise<Invoice> {
+    try {
+      // 1. Récupérer le devis
+      const { data: quote, error: quoteError } = await supabase
+        .from('quotes')
+        .select('*')
+        .eq('id', quoteId)
+        .maybeSingle();
+      
+      if (quoteError) throw quoteError;
+      if (!quote) throw new Error('Devis introuvable');
+      if (quote.status !== 'accepted') {
+        const error = new Error('QUOTE_NOT_ACCEPTED');
+        throw error;
+      }
+      
+      // 2. Créer la facture avec référence au devis
+      const treatmentItems = quote.treatment_items as any[];
+      const invoiceData: Omit<Invoice, 'id'> = {
+        patientId: quote.patient_id,
+        treatmentIds: treatmentItems?.map((item: any) => item.soinId || item.treatmentId) || [],
+        amount: quote.total_amount,
+        status: 'unpaid',
+        paymentMethod: 'cash',
+        quoteId: quoteId,
+        createdAt: new Date().toISOString()
+      };
+      
+      return this.createInvoice(invoiceData);
+    } catch (error) {
+      console.error('Error creating invoice from quote:', error);
       throw error;
     }
   }

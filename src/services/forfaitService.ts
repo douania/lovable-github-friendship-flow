@@ -199,7 +199,7 @@ export const forfaitService = {
     }
   },
 
-  // Supprimer un forfait
+  // Supprimer un forfait (avec protection FK RESTRICT si utilisé par des patients)
   async delete(id: string): Promise<void> {
     try {
       const { error } = await supabase
@@ -208,6 +208,12 @@ export const forfaitService = {
         .eq('id', id);
 
       if (error) {
+        // Détecter si c'est une erreur de FK RESTRICT (forfait utilisé)
+        if (error.code === '23503') { // FK violation
+          const businessError = new Error('FORFAIT_IN_USE');
+          (businessError as any).meta = { forfaitId: id };
+          throw businessError;
+        }
         console.error('Erreur lors de la suppression du forfait:', error);
         throw error;
       }

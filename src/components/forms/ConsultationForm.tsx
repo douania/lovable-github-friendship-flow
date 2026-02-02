@@ -4,6 +4,7 @@ import { X, Save, Calendar, User, Stethoscope } from 'lucide-react';
 import { Consultation } from '../../types/consultation';
 import { patientService } from '../../services/patientService';
 import { soinService } from '../../services/soinService';
+import { usePatientAppointmentsQuery } from '../../queries/appointments.queries';
 import { Patient, Soin } from '../../types';
 import PhotoUpload from './PhotoUpload';
 import SignaturePad from './SignaturePad';
@@ -39,6 +40,16 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
     satisfactionRating: consultation?.satisfactionRating || 0,
     signature: ''
   });
+
+  // Phase 3B - Pilier 1: Charger les RDV du patient via TanStack Query
+  const { data: patientAppointments = [] } = usePatientAppointmentsQuery(
+    formData.patientId || undefined
+  );
+
+  // Filtrer les RDV pertinents (completed ou scheduled)
+  const eligibleAppointments = patientAppointments.filter(apt => 
+    ['completed', 'scheduled'].includes(apt.status)
+  );
 
   useEffect(() => {
     loadData();
@@ -179,6 +190,31 @@ const ConsultationForm: React.FC<ConsultationFormProps> = ({
                   ))}
                 </select>
               </div>
+
+              {/* Phase 3B - Pilier 1: Lier à un RDV existant (optionnel) */}
+              {formData.patientId && eligibleAppointments.length > 0 && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Lier à un rendez-vous (optionnel)
+                  </label>
+                  <select
+                    name="appointmentId"
+                    value={formData.appointmentId}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
+                  >
+                    <option value="">Aucun rendez-vous lié</option>
+                    {eligibleAppointments.map(apt => (
+                      <option key={apt.id} value={apt.id}>
+                        {new Date(apt.date).toLocaleDateString('fr-FR')} à {apt.time} - {apt.status === 'completed' ? 'Terminé' : 'Planifié'}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="mt-1 text-xs text-gray-500">
+                    Lier cette consultation à un rendez-vous existant du patient
+                  </p>
+                </div>
+              )}
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">

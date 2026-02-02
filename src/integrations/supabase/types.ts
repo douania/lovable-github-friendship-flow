@@ -123,6 +123,7 @@ export type Database = {
       appointments: {
         Row: {
           actual_consumption: Json | null
+          completion_reason: string | null
           consumed_products: Json | null
           consumption_variance: Json | null
           created_at: string | null
@@ -136,6 +137,7 @@ export type Database = {
         }
         Insert: {
           actual_consumption?: Json | null
+          completion_reason?: string | null
           consumed_products?: Json | null
           consumption_variance?: Json | null
           created_at?: string | null
@@ -149,6 +151,7 @@ export type Database = {
         }
         Update: {
           actual_consumption?: Json | null
+          completion_reason?: string | null
           consumed_products?: Json | null
           consumption_variance?: Json | null
           created_at?: string | null
@@ -515,6 +518,7 @@ export type Database = {
           paid_at: string | null
           patient_id: string
           payment_method: string
+          quote_id: string | null
           status: string
           treatment_ids: string[]
         }
@@ -525,6 +529,7 @@ export type Database = {
           paid_at?: string | null
           patient_id: string
           payment_method?: string
+          quote_id?: string | null
           status?: string
           treatment_ids?: string[]
         }
@@ -535,6 +540,7 @@ export type Database = {
           paid_at?: string | null
           patient_id?: string
           payment_method?: string
+          quote_id?: string | null
           status?: string
           treatment_ids?: string[]
         }
@@ -544,6 +550,13 @@ export type Database = {
             columns: ["patient_id"]
             isOneToOne: false
             referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
             referencedColumns: ["id"]
           },
         ]
@@ -646,6 +659,63 @@ export type Database = {
           },
           {
             foreignKeyName: "notifications_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      patient_forfaits: {
+        Row: {
+          created_at: string | null
+          expiry_date: string
+          forfait_id: string
+          id: string
+          notes: string | null
+          patient_id: string
+          purchase_date: string
+          remaining_sessions: number
+          status: string
+          total_sessions: number
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          expiry_date: string
+          forfait_id: string
+          id?: string
+          notes?: string | null
+          patient_id: string
+          purchase_date?: string
+          remaining_sessions: number
+          status?: string
+          total_sessions: number
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          expiry_date?: string
+          forfait_id?: string
+          id?: string
+          notes?: string | null
+          patient_id?: string
+          purchase_date?: string
+          remaining_sessions?: number
+          status?: string
+          total_sessions?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_forfaits_forfait_id_fkey"
+            columns: ["forfait_id"]
+            isOneToOne: false
+            referencedRelation: "forfaits"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_forfaits_patient_id_fkey"
             columns: ["patient_id"]
             isOneToOne: false
             referencedRelation: "patients"

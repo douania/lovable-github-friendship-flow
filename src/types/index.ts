@@ -1,4 +1,8 @@
 
+// Types de base pour le modèle métier du cabinet esthétique
+
+export type CompletionReason = 'invoiced' | 'included_in_forfait' | 'free' | 'pending_invoice' | 'other';
+
 export interface Patient {
   id: string;
   firstName: string;
@@ -36,6 +40,7 @@ export interface Appointment {
   status: 'scheduled' | 'completed' | 'cancelled' | 'no-show';
   notes?: string;
   consumedProducts?: Array<{ productId: string; quantity: number; }>;
+  completionReason?: CompletionReason;
   createdAt: string;
 }
 
@@ -47,6 +52,7 @@ export interface Invoice {
   amount: number;
   status: 'paid' | 'partial' | 'unpaid';
   paymentMethod: 'cash' | 'mobile_money' | 'card' | 'bank_transfer';
+  quoteId?: string;
   createdAt: string;
   paidAt?: string;
 }

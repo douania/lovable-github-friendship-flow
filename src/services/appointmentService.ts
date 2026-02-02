@@ -13,6 +13,7 @@ const mapDbAppointmentToAppointment = (dbAppointment: any): Appointment => ({
   status: dbAppointment.status,
   notes: dbAppointment.notes || '',
   consumedProducts: dbAppointment.consumed_products || [],
+  completionReason: dbAppointment.completion_reason || undefined,
   createdAt: dbAppointment.created_at
 });
 
@@ -25,6 +26,7 @@ const mapAppointmentToDbAppointment = (appointment: Omit<Appointment, 'id'>) => 
   status: appointment.status,
   notes: appointment.notes || '',
   consumed_products: appointment.consumedProducts || [],
+  completion_reason: appointment.completionReason || null,
   created_at: appointment.createdAt
 });
 

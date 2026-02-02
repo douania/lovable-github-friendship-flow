@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { FileText, Plus, Search, Eye, Edit, Trash2, Printer } from 'lucide-react';
+import { FileText, Plus, Search, Eye, Edit, Trash2, Printer, Receipt } from 'lucide-react';
 import { quoteService } from '../../services/quoteService';
 import { patientService } from '../../services/patientService';
 import { soinService } from '../../services/soinService';
+import { invoiceService } from '../../services/invoiceService';
 import { Quote } from '../../types/consultation';
 import { Patient, Soin } from '../../types';
 import QuoteForm from '../forms/QuoteForm';
@@ -22,6 +23,7 @@ const Quotes: React.FC = () => {
   const [editingQuote, setEditingQuote] = useState<Quote | null>(null);
   const [printingQuote, setPrintingQuote] = useState<Quote | null>(null);
   const [quoteNumber, setQuoteNumber] = useState('');
+  const [convertingQuoteId, setConvertingQuoteId] = useState<string | null>(null);
 
   useEffect(() => {
     loadQuotes();
@@ -172,13 +174,46 @@ const Quotes: React.FC = () => {
         title: 'Succès',
         description: 'Devis supprimé avec succès.',
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erreur lors de la suppression:', error);
+      const message = error.message === 'QUOTE_ALREADY_INVOICED'
+        ? 'Ce devis a déjà été facturé et ne peut pas être supprimé.'
+        : 'Impossible de supprimer le devis.';
       toast({
         title: 'Erreur',
-        description: 'Impossible de supprimer le devis.',
+        description: message,
         variant: 'destructive'
       });
+    }
+  };
+
+  // Phase 3B: Convertir un devis accepté en facture
+  const handleConvertToInvoice = async (quote: Quote) => {
+    if (convertingQuoteId) return; // Guard
+    
+    if (!confirm(`Convertir le devis ${quote.quoteNumber} en facture ?`)) return;
+    
+    setConvertingQuoteId(quote.id);
+    try {
+      await invoiceService.createFromQuote(quote.id);
+      toast({
+        title: 'Succès',
+        description: 'Facture créée à partir du devis.',
+      });
+      await loadQuotes(); // Refresh pour afficher le changement éventuel
+    } catch (error: any) {
+      console.error('Erreur lors de la conversion:', error);
+      let message = 'Impossible de créer la facture.';
+      if (error.message === 'QUOTE_NOT_ACCEPTED') {
+        message = 'Seuls les devis acceptés peuvent être convertis.';
+      }
+      toast({
+        title: 'Erreur',
+        description: message,
+        variant: 'destructive'
+      });
+    } finally {
+      setConvertingQuoteId(null);
     }
   };
 
@@ -341,6 +376,17 @@ const Quotes: React.FC = () => {
                         >
                           <Printer className="w-4 h-4" />
                         </button>
+                        {/* Phase 3B: Bouton conversion en facture pour devis acceptés */}
+                        {quote.status === 'accepted' && (
+                          <button 
+                            onClick={() => handleConvertToInvoice(quote)}
+                            disabled={convertingQuoteId === quote.id}
+                            className="text-emerald-600 hover:text-emerald-900 p-1 disabled:opacity-50"
+                            title="Convertir en facture"
+                          >
+                            <Receipt className="w-4 h-4" />
+                          </button>
+                        )}
                         <button 
                           onClick={() => handleDeleteQuote(quote.id)}
                           className="text-red-600 hover:text-red-900 p-1"
