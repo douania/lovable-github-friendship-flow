@@ -1,7 +1,13 @@
 import React, { useState } from 'react';
 import { Search, Plus, Eye, Edit, Phone, Mail, Calendar } from 'lucide-react';
 import { Patient } from '../../types';
-import { patientService } from '../../services/patientService';
+import { 
+  usePatientsQuery, 
+  useCreatePatientMutation, 
+  useUpdatePatientMutation, 
+  useDeletePatientMutation 
+} from '../../queries/patients.queries';
+import { getErrorMessage } from '../../lib/errorMessage';
 import PatientForm from '../forms/PatientForm';
 import { usePaginatedData } from '../../hooks/usePaginatedData';
 import PaginationControls from '../ui/PaginationControls';
@@ -10,14 +16,24 @@ import { logger } from '../../lib/logger';
 import ErrorBanner from '../ui/ErrorBanner';
 
 const Patients: React.FC = () => {
-  const [patients, setPatients] = useState<Patient[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+  const [dismissedError, setDismissedError] = useState<string | null>(null);
   const { toast } = useToast();
+
+  // TanStack Query hooks
+  const { 
+    data: patients = [], 
+    isLoading: loading, 
+    isError, 
+    error: queryError 
+  } = usePatientsQuery();
+  
+  const createMutation = useCreatePatientMutation();
+  const updateMutation = useUpdatePatientMutation();
+  const deleteMutation = useDeletePatientMutation();
 
   // Utiliser la pagination simple et stable
   const {
@@ -32,45 +48,24 @@ const Patients: React.FC = () => {
     initialPageSize: 12
   });
 
-  // Charger les patients au montage du composant
+  // Reset dismissed error when a new error occurs
+  const currentErrorMessage = isError ? getErrorMessage(queryError) : null;
   React.useEffect(() => {
-    loadPatients();
-  }, []);
-
-  const loadPatients = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await patientService.getAll();
-      setPatients(data);
-    } catch (err) {
-      logger.error('Erreur lors du chargement des patients', err);
-      toast({
-        title: "Erreur",
-        description: "Erreur lors du chargement des patients",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
+    if (currentErrorMessage && currentErrorMessage !== dismissedError) {
+      setDismissedError(null);
     }
-  };
+  }, [currentErrorMessage, dismissedError]);
 
   const handleSavePatient = async (patientData: Omit<Patient, 'id'>) => {
     try {
-      setError(null);
-      
       if (editingPatient) {
-        const updatedPatient = await patientService.update(editingPatient.id, patientData);
-        setPatients(prev => prev.map(p => 
-          p.id === editingPatient.id ? updatedPatient : p
-        ));
+        await updateMutation.mutateAsync({ id: editingPatient.id, data: patientData });
         toast({
           title: "Succès",
           description: "Patient modifié avec succès"
         });
       } else {
-        const newPatient = await patientService.create(patientData);
-        setPatients(prev => [newPatient, ...prev]);
+        await createMutation.mutateAsync(patientData);
         toast({
           title: "Succès",
           description: "Patient créé avec succès"
@@ -83,7 +78,7 @@ const Patients: React.FC = () => {
       logger.error('Erreur lors de la sauvegarde du patient', err);
       toast({
         title: "Erreur",
-        description: "Erreur lors de la sauvegarde du patient",
+        description: getErrorMessage(err),
         variant: "destructive"
       });
     }
@@ -100,9 +95,7 @@ const Patients: React.FC = () => {
     }
 
     try {
-      setError(null);
-      await patientService.delete(patientId);
-      setPatients(prev => prev.filter(p => p.id !== patientId));
+      await deleteMutation.mutateAsync(patientId);
       setSelectedPatient(null);
       toast({
         title: "Succès",
@@ -112,7 +105,7 @@ const Patients: React.FC = () => {
       logger.error('Erreur lors de la suppression du patient', err);
       toast({
         title: "Erreur",
-        description: "Erreur lors de la suppression du patient",
+        description: getErrorMessage(err),
         variant: "destructive"
       });
     }
@@ -190,10 +183,10 @@ const Patients: React.FC = () => {
         </button>
       </div>
 
-      {error && (
+      {isError && currentErrorMessage !== dismissedError && (
         <ErrorBanner
-          description={error}
-          onDismiss={() => setError(null)}
+          description={currentErrorMessage || 'Une erreur s\'est produite'}
+          onDismiss={() => setDismissedError(currentErrorMessage)}
         />
       )}
 
@@ -309,7 +302,7 @@ const Patients: React.FC = () => {
                 </div>
               )}
             </div>
-            <div className="flex justify-end space-x-4 pt-6 border-t border-gray-100">
+            <div className="flex justify-end space-x-4 pt-6 border-t border-gray-100 p-6">
               <button
                 onClick={() => handleDeletePatient(selectedPatient.id)}
                 className="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors"

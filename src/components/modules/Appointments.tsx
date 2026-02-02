@@ -1,8 +1,13 @@
 import React, { useState } from 'react';
 import { Plus } from 'lucide-react';
 import { Appointment } from '../../types';
-import { useAppointments } from '../../hooks/useAppointments';
-import { usePatients } from '../../hooks/usePatients';
+import { 
+  useAppointmentsQuery, 
+  useCreateAppointmentMutation, 
+  useUpdateAppointmentMutation 
+} from '../../queries/appointments.queries';
+import { usePatientsQuery } from '../../queries/patients.queries';
+import { getErrorMessage } from '../../lib/errorMessage';
 import { treatmentService } from '../../services/treatmentService';
 import { productService } from '../../services/productService';
 import { invoiceService } from '../../services/invoiceService';
@@ -16,8 +21,19 @@ import { logger } from '../../lib/logger';
 import ErrorBanner from '../ui/ErrorBanner';
 
 const Appointments: React.FC = () => {
-  const { appointments, loading, error, refetch, updateAppointment, createAppointment } = useAppointments();
-  const { patients } = usePatients();
+  // TanStack Query hooks
+  const { 
+    data: appointments = [], 
+    isLoading: loading, 
+    isError, 
+    error: queryError 
+  } = useAppointmentsQuery();
+  
+  const { data: patients = [] } = usePatientsQuery();
+  
+  const createMutation = useCreateAppointmentMutation();
+  const updateMutation = useUpdateAppointmentMutation();
+
   const [treatments, setTreatments] = useState<any[]>([]);
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
@@ -31,16 +47,18 @@ const Appointments: React.FC = () => {
   const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
   const [appointmentForInvoice, setAppointmentForInvoice] = useState<Appointment | null>(null);
+  const [dismissedError, setDismissedError] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const [dismissedError, setDismissedError] = useState<string | null>(null);
+  // Error message for display
+  const currentErrorMessage = isError ? getErrorMessage(queryError) : null;
 
   // Reset du dismissed quand une nouvelle erreur arrive
   React.useEffect(() => {
-    if (error && error !== dismissedError) {
+    if (currentErrorMessage && currentErrorMessage !== dismissedError) {
       setDismissedError(null);
     }
-  }, [error, dismissedError]);
+  }, [currentErrorMessage, dismissedError]);
 
   // Charger les traitements au montage
   React.useEffect(() => {
@@ -103,7 +121,7 @@ const Appointments: React.FC = () => {
   const handleSaveAppointment = async (appointmentData: Omit<Appointment, 'id'>) => {
     try {
       if (editingAppointment) {
-        await updateAppointment(editingAppointment.id, appointmentData);
+        await updateMutation.mutateAsync({ id: editingAppointment.id, data: appointmentData });
         
         if (appointmentData.status === 'completed' && appointmentData.consumedProducts && appointmentData.consumedProducts.length > 0) {
           await processConsumedProducts(appointmentData.consumedProducts);
@@ -115,17 +133,17 @@ const Appointments: React.FC = () => {
           setShowInvoiceModal(true);
         }
       } else {
-        await createAppointment(appointmentData);
+        await createMutation.mutateAsync(appointmentData);
       }
       
       setShowAddModal(false);
       setEditingAppointment(null);
-      refetch();
+      // Pas de refetch() manuel - invalidation automatique via TanStack Query
     } catch (err) {
       logger.error('Erreur lors de la sauvegarde du rendez-vous', err);
       toast({
         title: "Erreur",
-        description: "Erreur lors de la sauvegarde du rendez-vous",
+        description: getErrorMessage(err),
         variant: "destructive"
       });
     }
@@ -157,7 +175,7 @@ const Appointments: React.FC = () => {
             ...appointment,
             status
           };
-          await updateAppointment(appointmentId, updatedAppointment);
+          await updateMutation.mutateAsync({ id: appointmentId, data: updatedAppointment });
         }
       }
     } catch (err) {
@@ -202,7 +220,7 @@ const Appointments: React.FC = () => {
       logger.error('Erreur création facture', err);
       toast({
         title: "Erreur",
-        description: "Erreur lors de la création de la facture",
+        description: getErrorMessage(err),
         variant: "destructive"
       });
     }
@@ -224,10 +242,10 @@ const Appointments: React.FC = () => {
         </button>
       </div>
 
-      {error && error !== dismissedError && (
+      {isError && currentErrorMessage !== dismissedError && (
         <ErrorBanner
-          description={error}
-          onDismiss={() => setDismissedError(error)}
+          description={currentErrorMessage || 'Une erreur s\'est produite'}
+          onDismiss={() => setDismissedError(currentErrorMessage)}
         />
       )}
 
