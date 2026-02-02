@@ -96,7 +96,7 @@ const Patients: React.FC = () => {
     // GUARD: empêcher double suppression
     if (deleteMutation.isPending) return;
     
-    if (!confirm('Êtes-vous sûr de vouloir supprimer ce patient ?')) {
+    if (!confirm('Ce patient et tout son historique seront définitivement supprimés. Cette action est irréversible. Voulez-vous continuer ?')) {
       return;
     }
 

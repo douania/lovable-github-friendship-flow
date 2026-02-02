@@ -3,8 +3,10 @@ import { FileSpreadsheet, Download, Calendar, Users, TrendingUp, Package } from 
 import { usePatientsQuery } from '../../queries/patients.queries';
 import { useAppointmentsQuery } from '../../queries/appointments.queries';
 import { useInventory } from '../../hooks/useInventory';
+import { useToast } from '../../hooks/use-toast';
 
 const ExcelReporting: React.FC = () => {
+  const { toast } = useToast();
   const [selectedReport, setSelectedReport] = useState<string>('');
   const [dateRange, setDateRange] = useState({
     start: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
@@ -172,9 +174,20 @@ const ExcelReporting: React.FC = () => {
           generateInventoryReport();
           break;
       }
+      
+      // Hypothèse : la génération Excel est synchrone (generateCSV / Blob).
+      // Si asynchrone à l'avenir, déplacer ce toast après await.
+      toast({
+        title: "Succès",
+        description: "Rapport Excel généré avec succès"
+      });
     } catch (error) {
       console.error('Erreur génération rapport:', error);
-      alert('Erreur lors de la génération du rapport');
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de la génération du rapport",
+        variant: "destructive"
+      });
     } finally {
       setIsGenerating(false);
     }
