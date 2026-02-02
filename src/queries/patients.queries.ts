@@ -15,6 +15,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { patientService } from '../services/patientService';
 import { Patient } from '../types';
+import { logger } from '../lib/logger';
 
 // Types pour extensibilité future (Ajustement CTO #1)
 export interface PatientsQueryParams {
@@ -49,6 +50,9 @@ export const useCreatePatientMutation = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: patientKeys.all });
     },
+    onError: (error, variables) => {
+      logger.error('Erreur création patient', { error, payload: variables });
+    },
   });
 };
 
@@ -61,6 +65,9 @@ export const useUpdatePatientMutation = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: patientKeys.all });
     },
+    onError: (error, variables) => {
+      logger.error('Erreur modification patient', { error, payload: variables });
+    },
   });
 };
 
@@ -71,6 +78,9 @@ export const useDeletePatientMutation = () => {
     mutationFn: (id: string) => patientService.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: patientKeys.all });
+    },
+    onError: (error, variables) => {
+      logger.error('Erreur suppression patient', { error, patientId: variables });
     },
   });
 };

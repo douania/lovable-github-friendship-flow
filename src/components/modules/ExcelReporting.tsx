@@ -152,7 +152,8 @@ const ExcelReporting: React.FC = () => {
   };
 
   const handleGenerateReport = async () => {
-    if (!selectedReport) return;
+    // GUARD: empêcher double génération
+    if (!selectedReport || isGenerating) return;
     
     setIsGenerating(true);
     

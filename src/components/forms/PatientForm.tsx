@@ -7,9 +7,10 @@ interface PatientFormProps {
   patient?: Patient;
   onSave: (patientData: Omit<Patient, 'id'>) => void;
   onCancel: () => void;
+  isSubmitting?: boolean;
 }
 
-const PatientForm: React.FC<PatientFormProps> = ({ patient, onSave, onCancel }) => {
+const PatientForm: React.FC<PatientFormProps> = ({ patient, onSave, onCancel, isSubmitting = false }) => {
   const [formData, setFormData] = useState({
     firstName: patient?.firstName || '',
     lastName: patient?.lastName || '',
@@ -25,6 +26,7 @@ const PatientForm: React.FC<PatientFormProps> = ({ patient, onSave, onCancel }) 
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
     onSave(formData);
   };
 
@@ -184,9 +186,10 @@ const PatientForm: React.FC<PatientFormProps> = ({ patient, onSave, onCancel }) 
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-pink-500 text-white rounded-md hover:bg-pink-600"
+              disabled={isSubmitting}
+              className="px-4 py-2 bg-pink-500 text-white rounded-md hover:bg-pink-600 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {patient ? 'Modifier' : 'Créer'}
+              {isSubmitting ? 'Enregistrement...' : patient ? 'Modifier' : 'Créer'}
             </button>
           </div>
         </form>
