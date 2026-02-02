@@ -166,10 +166,11 @@ const Quotes: React.FC = () => {
     }
 
     try {
-      console.log('Suppression du devis avec ID:', id);
+      await quoteService.deleteQuote(id);
+      await loadQuotes();
       toast({
-        title: 'Information',
-        description: 'Fonction de suppression à implémenter.',
+        title: 'Succès',
+        description: 'Devis supprimé avec succès.',
       });
     } catch (error) {
       console.error('Erreur lors de la suppression:', error);

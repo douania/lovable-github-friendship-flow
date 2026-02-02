@@ -4,6 +4,7 @@ import { usePatientsQuery } from '../../queries/patients.queries';
 import { useAppointmentsQuery } from '../../queries/appointments.queries';
 import { useInventory } from '../../hooks/useInventory';
 import { useToast } from '../../hooks/use-toast';
+import { invoiceService } from '../../services/invoiceService';
 
 const ExcelReporting: React.FC = () => {
   const { toast } = useToast();
@@ -113,22 +114,25 @@ const ExcelReporting: React.FC = () => {
     generateCSV(data, `rapport_rdv_${dateRange.start}_${dateRange.end}`);
   };
 
-  const generateRevenueReport = () => {
-    // Simuler des données de revenus basées sur les rendez-vous
-    const filteredAppointments = appointments.filter(apt => {
-      const aptDate = new Date(apt.date);
+  const generateRevenueReport = async () => {
+    // Charger les factures uniquement au moment de la génération
+    const invoices = await invoiceService.getAll();
+    
+    const filteredInvoices = invoices.filter(inv => {
+      const invDate = new Date(inv.createdAt);
       const startDate = new Date(dateRange.start);
       const endDate = new Date(dateRange.end);
-      return aptDate >= startDate && aptDate <= endDate && apt.status === 'completed';
+      return invDate >= startDate && invDate <= endDate;
     });
 
-    const revenueData = filteredAppointments.map(appointment => ({
-      'Date': new Date(appointment.date).toLocaleDateString('fr-FR'),
-      'Patient ID': appointment.patientId,
-      'Traitement ID': appointment.treatmentId,
-      'Montant estimé': '0', // À calculer depuis la base de données
-      'Mode paiement': 'N/A',
-      'Statut': appointment.status
+    const revenueData = filteredInvoices.map(invoice => ({
+      'Numéro facture': invoice.id,
+      'Date': new Date(invoice.createdAt).toLocaleDateString('fr-FR'),
+      'Patient ID': invoice.patientId,
+      'Montant': invoice.amount.toLocaleString() + ' FCFA',
+      'Mode paiement': invoice.paymentMethod || 'N/A',
+      'Statut': invoice.status === 'paid' ? 'Payée' : invoice.status === 'partial' ? 'Partiel' : 'Impayée',
+      'Date paiement': invoice.paidAt ? new Date(invoice.paidAt).toLocaleDateString('fr-FR') : '-'
     }));
     
     generateCSV(revenueData, `rapport_revenus_${dateRange.start}_${dateRange.end}`);
