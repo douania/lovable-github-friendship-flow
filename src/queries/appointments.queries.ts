@@ -1,3 +1,17 @@
+/**
+ * SOURCE OF TRUTH — Appointments data access
+ * 
+ * Toute récupération ou mutation des rendez-vous DOIT passer par ce fichier.
+ * Interdiction d'accès direct à appointmentService depuis les composants.
+ * 
+ * Hooks disponibles:
+ * - useAppointmentsQuery(params?) — lecture
+ * - useCreateAppointmentMutation() — création
+ * - useUpdateAppointmentMutation() — modification
+ * - useDeleteAppointmentMutation() — suppression
+ * 
+ * @see Phase 2B migration TanStack Query
+ */
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { appointmentService } from '../services/appointmentService';
 import { Appointment } from '../types';
